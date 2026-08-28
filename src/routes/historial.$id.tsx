@@ -30,7 +30,8 @@ function EjecucionDetalle() {
   if (isLoading) return <p className="text-sm text-muted-foreground">Cargando…</p>;
   if (!data?.ejecucion) return <p className="text-sm text-muted-foreground">Ejecución no encontrada.</p>;
 
-  const { ejecucion, resultados } = data;
+  const { ejecucion } = data;
+  const resultados = data.resultados ?? [];
   const cargo = ejecucion.cargos;
   const sueldoInterno = cargo?.sueldo != null ? Number(cargo.sueldo) : null;
 
