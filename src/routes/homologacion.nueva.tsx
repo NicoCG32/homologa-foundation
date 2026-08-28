@@ -38,7 +38,9 @@ function NuevaHomologacion() {
 
   const mut = useMutation({
     mutationFn: () => create({ data: { cargo_id: cargoId } }),
-    onSuccess: (res) => navigate({ to: "/historial/$id", params: { id: res.id } }),
+    onSuccess: (res) => {
+      if (res) navigate({ to: "/historial/$id", params: { id: res.id } });
+    },
     onError: (e: Error) => setError(e.message),
   });
 
