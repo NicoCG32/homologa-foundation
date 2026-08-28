@@ -13,6 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CargosRouteImport } from './routes/cargos'
 import { Route as CriteriosRouteImport } from './routes/criterios'
 import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as HistorialIndexRouteImport } from './routes/historial.index'
+import { Route as HistorialIdRouteImport } from './routes/historial.$id'
+import { Route as HomologacionNuevaRouteImport } from './routes/homologacion.nueva'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +37,39 @@ const EmpresasRoute = EmpresasRouteImport.update({
   path: '/empresas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistorialIndexRoute = HistorialIndexRouteImport.update({
+  id: '/historial/',
+  path: '/historial/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistorialIdRoute = HistorialIdRouteImport.update({
+  id: '/historial/$id',
+  path: '/historial/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomologacionNuevaRoute = HomologacionNuevaRouteImport.update({
+  id: '/homologacion/nueva',
+  path: '/homologacion/nueva',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cargos': typeof CargosRoute
   '/criterios': typeof CriteriosRoute
   '/empresas': typeof EmpresasRoute
+  '/historial/$id': typeof HistorialIdRoute
+  '/homologacion/nueva': typeof HomologacionNuevaRoute
+  '/historial/': typeof HistorialIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cargos': typeof CargosRoute
   '/criterios': typeof CriteriosRoute
   '/empresas': typeof EmpresasRoute
+  '/historial/$id': typeof HistorialIdRoute
+  '/homologacion/nueva': typeof HomologacionNuevaRoute
+  '/historial': typeof HistorialIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +77,38 @@ export interface FileRoutesById {
   '/cargos': typeof CargosRoute
   '/criterios': typeof CriteriosRoute
   '/empresas': typeof EmpresasRoute
+  '/historial/$id': typeof HistorialIdRoute
+  '/homologacion/nueva': typeof HomologacionNuevaRoute
+  '/historial/': typeof HistorialIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cargos' | '/criterios' | '/empresas'
+  fullPaths:
+    | '/'
+    | '/cargos'
+    | '/criterios'
+    | '/empresas'
+    | '/historial/$id'
+    | '/homologacion/nueva'
+    | '/historial/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cargos' | '/criterios' | '/empresas'
-  id: '__root__' | '/' | '/cargos' | '/criterios' | '/empresas'
+  to:
+    | '/'
+    | '/cargos'
+    | '/criterios'
+    | '/empresas'
+    | '/historial/$id'
+    | '/homologacion/nueva'
+    | '/historial'
+  id:
+    | '__root__'
+    | '/'
+    | '/cargos'
+    | '/criterios'
+    | '/empresas'
+    | '/historial/$id'
+    | '/homologacion/nueva'
+    | '/historial/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +116,9 @@ export interface RootRouteChildren {
   CargosRoute: typeof CargosRoute
   CriteriosRoute: typeof CriteriosRoute
   EmpresasRoute: typeof EmpresasRoute
+  HistorialIdRoute: typeof HistorialIdRoute
+  HomologacionNuevaRoute: typeof HomologacionNuevaRoute
+  HistorialIndexRoute: typeof HistorialIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +151,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmpresasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/historial/': {
+      id: '/historial/'
+      path: '/historial'
+      fullPath: '/historial/'
+      preLoaderRoute: typeof HistorialIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historial/$id': {
+      id: '/historial/$id'
+      path: '/historial/$id'
+      fullPath: '/historial/$id'
+      preLoaderRoute: typeof HistorialIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/homologacion/nueva': {
+      id: '/homologacion/nueva'
+      path: '/homologacion/nueva'
+      fullPath: '/homologacion/nueva'
+      preLoaderRoute: typeof HomologacionNuevaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   CargosRoute: CargosRoute,
   CriteriosRoute: CriteriosRoute,
   EmpresasRoute: EmpresasRoute,
+  HistorialIdRoute: HistorialIdRoute,
+  HomologacionNuevaRoute: HomologacionNuevaRoute,
+  HistorialIndexRoute: HistorialIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

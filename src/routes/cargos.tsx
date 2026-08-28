@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { createCargo, deleteCargo, listCargos, type CargoTipo } from "@/lib/cargos.functions";
 import { listEmpresas } from "@/lib/empresas.functions";
+import { formatSueldo } from "@/lib/format";
 
 export const Route = createFileRoute("/cargos")({
   head: () => ({
@@ -19,11 +20,6 @@ export const Route = createFileRoute("/cargos")({
   }),
   component: CargosPage,
 });
-
-export function formatSueldo(v: number | string | null | undefined) {
-  if (v === null || v === undefined || v === "") return "—";
-  return new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 }).format(Number(v));
-}
 
 function CargosPage() {
   const qc = useQueryClient();

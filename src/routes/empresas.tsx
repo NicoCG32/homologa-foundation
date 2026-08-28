@@ -9,6 +9,7 @@ import {
   listEmpresas,
   type EmpresaTipo,
 } from "@/lib/empresas.functions";
+import { TIPOS_EMPRESA } from "@/lib/format";
 
 export const Route = createFileRoute("/empresas")({
   head: () => ({
@@ -24,11 +25,7 @@ export const Route = createFileRoute("/empresas")({
   component: EmpresasPage,
 });
 
-export const TIPOS: Record<EmpresaTipo, string> = {
-  P: "Pequeña",
-  M: "Mediana",
-  G: "Grande",
-};
+
 
 function EmpresasPage() {
   const qc = useQueryClient();
@@ -87,7 +84,7 @@ function EmpresasPage() {
             value={tipo}
             onChange={(e) => setTipo(e.target.value as EmpresaTipo)}
           >
-            {Object.entries(TIPOS).map(([k, v]) => (
+            {Object.entries(TIPOS_EMPRESA).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>
@@ -122,7 +119,7 @@ function EmpresasPage() {
             {data.map((e) => (
               <tr key={e.id}>
                 <td className="border-b py-2">{e.nombre}</td>
-                <td className="border-b py-2">{TIPOS[e.tipo as EmpresaTipo]}</td>
+                <td className="border-b py-2">{TIPOS_EMPRESA[e.tipo]}</td>
                 <td className="border-b py-2 text-right">
                   <button
                     className="text-destructive hover:underline"
