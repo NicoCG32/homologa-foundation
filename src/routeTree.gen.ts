@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CargosRouteImport } from './routes/cargos'
+import { Route as CriteriosRouteImport } from './routes/criterios'
+import { Route as EmpresasRouteImport } from './routes/empresas'
+import { Route as HistorialIndexRouteImport } from './routes/historial.index'
+import { Route as HistorialIdRouteImport } from './routes/historial.$id'
+import { Route as HomologacionNuevaRouteImport } from './routes/homologacion.nueva'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CargosRoute = CargosRouteImport.update({
+  id: '/cargos',
+  path: '/cargos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CriteriosRoute = CriteriosRouteImport.update({
+  id: '/criterios',
+  path: '/criterios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmpresasRoute = EmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistorialIndexRoute = HistorialIndexRouteImport.update({
+  id: '/historial/',
+  path: '/historial/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistorialIdRoute = HistorialIdRouteImport.update({
+  id: '/historial/$id',
+  path: '/historial/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomologacionNuevaRoute = HomologacionNuevaRouteImport.update({
+  id: '/homologacion/nueva',
+  path: '/homologacion/nueva',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cargos': typeof CargosRoute
+  '/criterios': typeof CriteriosRoute
+  '/empresas': typeof EmpresasRoute
+  '/historial/$id': typeof HistorialIdRoute
+  '/homologacion/nueva': typeof HomologacionNuevaRoute
+  '/historial/': typeof HistorialIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cargos': typeof CargosRoute
+  '/criterios': typeof CriteriosRoute
+  '/empresas': typeof EmpresasRoute
+  '/historial/$id': typeof HistorialIdRoute
+  '/homologacion/nueva': typeof HomologacionNuevaRoute
+  '/historial': typeof HistorialIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cargos': typeof CargosRoute
+  '/criterios': typeof CriteriosRoute
+  '/empresas': typeof EmpresasRoute
+  '/historial/$id': typeof HistorialIdRoute
+  '/homologacion/nueva': typeof HomologacionNuevaRoute
+  '/historial/': typeof HistorialIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/cargos'
+    | '/criterios'
+    | '/empresas'
+    | '/historial/$id'
+    | '/homologacion/nueva'
+    | '/historial/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/cargos'
+    | '/criterios'
+    | '/empresas'
+    | '/historial/$id'
+    | '/homologacion/nueva'
+    | '/historial'
+  id:
+    | '__root__'
+    | '/'
+    | '/cargos'
+    | '/criterios'
+    | '/empresas'
+    | '/historial/$id'
+    | '/homologacion/nueva'
+    | '/historial/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CargosRoute: typeof CargosRoute
+  CriteriosRoute: typeof CriteriosRoute
+  EmpresasRoute: typeof EmpresasRoute
+  HistorialIdRoute: typeof HistorialIdRoute
+  HomologacionNuevaRoute: typeof HomologacionNuevaRoute
+  HistorialIndexRoute: typeof HistorialIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cargos': {
+      id: '/cargos'
+      path: '/cargos'
+      fullPath: '/cargos'
+      preLoaderRoute: typeof CargosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/criterios': {
+      id: '/criterios'
+      path: '/criterios'
+      fullPath: '/criterios'
+      preLoaderRoute: typeof CriteriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/empresas': {
+      id: '/empresas'
+      path: '/empresas'
+      fullPath: '/empresas'
+      preLoaderRoute: typeof EmpresasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historial/': {
+      id: '/historial/'
+      path: '/historial'
+      fullPath: '/historial/'
+      preLoaderRoute: typeof HistorialIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historial/$id': {
+      id: '/historial/$id'
+      path: '/historial/$id'
+      fullPath: '/historial/$id'
+      preLoaderRoute: typeof HistorialIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/homologacion/nueva': {
+      id: '/homologacion/nueva'
+      path: '/homologacion/nueva'
+      fullPath: '/homologacion/nueva'
+      preLoaderRoute: typeof HomologacionNuevaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CargosRoute: CargosRoute,
+  CriteriosRoute: CriteriosRoute,
+  EmpresasRoute: EmpresasRoute,
+  HistorialIdRoute: HistorialIdRoute,
+  HomologacionNuevaRoute: HomologacionNuevaRoute,
+  HistorialIndexRoute: HistorialIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
