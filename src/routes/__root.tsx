@@ -114,13 +114,41 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+const NAV = [
+  { to: "/", label: "Inicio" },
+  { to: "/empresas", label: "Empresas" },
+  { to: "/cargos", label: "Cargos" },
+  { to: "/criterios", label: "Criterios" },
+  { to: "/homologacion/nueva", label: "Nueva homologación" },
+  { to: "/historial", label: "Historial" },
+] as const;
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="border-b">
+          <nav className="mx-auto flex max-w-5xl flex-wrap gap-4 px-4 py-3 text-sm">
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                activeOptions={{ exact: item.to === "/" }}
+                activeProps={{ className: "font-semibold text-foreground" }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
+        <main className="mx-auto max-w-5xl px-4 py-8">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+      </div>
     </QueryClientProvider>
   );
 }
