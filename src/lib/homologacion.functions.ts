@@ -53,3 +53,88 @@ export const createEjecucion = createServerFn({ method: "POST" })
         .single(),
     );
   });
+
+/**
+ * Ejecuta el motor determinístico para un cargo interno:
+ * crea la ejecución, evalúa los cargos de referencia con los criterios
+ * almacenados y guarda los candidatos preseleccionados con su score.
+ */
+export const ejecutarHomologacion = createServerFn({ method: "POST" })
+  .inputValidator((input: { cargo_id: string }) => {
+    if (!input?.cargo_id) throw new Error("Debes seleccionar un cargo interno");
+    return { cargo_id: String(input.cargo_id) };
+  })
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    const { ejecutarMotor } = await import("./motor.server");
+    type CargoRow = {
+      id: string;
+      tipo: string;
+      nombre: string;
+      descripcion: string | null;
+      sueldo: number | null;
+      empresas: { nombre: string; tipo: "P" | "M" | "G" } | null;
+    };
+    const toMotor = (c: CargoRow) => ({
+      id: c.id,
+      nombre: c.nombre,
+      descripcion: c.descripcion,
+      sueldo: c.sueldo === null ? null : Number(c.sueldo),
+      empresa_nombre: c.empresas?.nombre ?? null,
+      empresa_tipo: c.empresas?.tipo ?? null,
+    });
+
+    const db = getDb();
+    const select = "id, tipo, nombre, descripcion, sueldo, empresas(nombre, tipo)";
+
+    const interno = unwrap(
+      await db.from("cargos").select(select).eq("id", data.cargo_id).maybeSingle(),
+    ) as CargoRow | null;
+    if (!interno) throw new Error("El cargo no existe");
+    if (interno.tipo !== "INTERNO") throw new Error("La homologación sólo aplica a cargos internos");
+
+    const referencias = (unwrap(
+      await db.from("cargos").select(select).eq("tipo", "REFERENCIA").order("nombre"),
+    ) ?? []) as CargoRow[];
+
+    const criterios =
+      unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
+      [];
+
+    const ejecucion = unwrap(
+      await db
+        .from("ejecuciones")
+        .insert({ cargo_id: interno.id, estado: "EN_PROCESO" })
+        .select("id")
+        .single(),
+    );
+
+    try {
+      const motor = ejecutarMotor(
+        toMotor(interno),
+        referencias.filter((c) => c.id !== interno.id).map(toMotor),
+        criterios.map((c) => ({ ...c, peso: Number(c.peso) })),
+      );
+
+      await db.from("resultados").delete().eq("ejecucion_id", ejecucion.id);
+
+      if (motor.preseleccionados.length) {
+        const { error } = await db.from("resultados").insert(
+          motor.preseleccionados.map((p) => ({
+            ejecucion_id: ejecucion.id,
+            candidato_id: p.cargo.id,
+            score_deterministico: p.score,
+            score_final: p.score,
+          })),
+        );
+        if (error) throw new Error(error.message);
+      }
+
+      await db.from("ejecuciones").update({ estado: "COMPLETADA" }).eq("id", ejecucion.id);
+
+      return { ejecucion_id: ejecucion.id, cargo: toMotor(interno), ...motor };
+    } catch (e) {
+      await db.from("ejecuciones").update({ estado: "ERROR" }).eq("id", ejecucion.id);
+      throw e instanceof Error ? e : new Error("Error al ejecutar el motor");
+    }
+  });
