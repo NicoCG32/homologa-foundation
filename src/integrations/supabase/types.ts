@@ -52,20 +52,26 @@ export type Database = {
       criterios: {
         Row: {
           activo: boolean
+          campo: Database["public"]["Enums"]["criterio_campo"]
           id: string
           nombre: string
+          obligatorio: boolean
           peso: number
         }
         Insert: {
           activo?: boolean
+          campo?: Database["public"]["Enums"]["criterio_campo"]
           id?: string
           nombre: string
+          obligatorio?: boolean
           peso?: number
         }
         Update: {
           activo?: boolean
+          campo?: Database["public"]["Enums"]["criterio_campo"]
           id?: string
           nombre?: string
+          obligatorio?: boolean
           peso?: number
         }
         Relationships: []
@@ -168,6 +174,7 @@ export type Database = {
     }
     Enums: {
       cargo_tipo: "INTERNO" | "REFERENCIA"
+      criterio_campo: "nombre" | "descripcion" | "sueldo" | "tipo_empresa"
       ejecucion_estado: "PENDIENTE" | "EN_PROCESO" | "COMPLETADA" | "ERROR"
       empresa_tipo: "P" | "M" | "G"
     }
@@ -298,6 +305,7 @@ export const Constants = {
   public: {
     Enums: {
       cargo_tipo: ["INTERNO", "REFERENCIA"],
+      criterio_campo: ["nombre", "descripcion", "sueldo", "tipo_empresa"],
       ejecucion_estado: ["PENDIENTE", "EN_PROCESO", "COMPLETADA", "ERROR"],
       empresa_tipo: ["P", "M", "G"],
     },
