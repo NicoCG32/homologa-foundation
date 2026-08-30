@@ -158,7 +158,15 @@ function CriteriosPage() {
             {data.map((c) => (
               <tr key={c.id}>
                 <td className="border-b py-2">{c.nombre}</td>
+                <td className="border-b py-2">{CAMPOS_CRITERIO[c.campo]}</td>
                 <td className="border-b py-2">{c.peso}</td>
+                <td className="border-b py-2">
+                  <input
+                    type="checkbox"
+                    checked={c.obligatorio}
+                    onChange={() => oblMut.mutate({ id: c.id, obligatorio: !c.obligatorio })}
+                  />
+                </td>
                 <td className="border-b py-2">
                   <input
                     type="checkbox"
