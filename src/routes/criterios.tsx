@@ -45,9 +45,10 @@ function CriteriosPage() {
   const invalidate = () => qc.invalidateQueries();
 
   const createMut = useMutation({
-    mutationFn: () => create({ data: { nombre, peso, activo: true } }),
+    mutationFn: () => create({ data: { nombre, peso, activo: true, campo, obligatorio } }),
     onSuccess: () => {
       setNombre("");
+      setObligatorio(false);
       setError(null);
       invalidate();
     },
@@ -56,6 +57,11 @@ function CriteriosPage() {
 
   const toggleMut = useMutation({
     mutationFn: (v: { id: string; activo: boolean }) => toggle({ data: v }),
+    onSuccess: invalidate,
+  });
+
+  const oblMut = useMutation({
+    mutationFn: (v: { id: string; obligatorio: boolean }) => toggleObl({ data: v }),
     onSuccess: invalidate,
   });
 
