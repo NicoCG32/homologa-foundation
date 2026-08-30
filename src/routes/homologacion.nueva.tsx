@@ -1,19 +1,23 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { listCargos } from "@/lib/cargos.functions";
-import { listCriterios } from "@/lib/criterios.functions";
-import { createEjecucion } from "@/lib/homologacion.functions";
+import { CAMPOS_CRITERIO, listCriterios } from "@/lib/criterios.functions";
+import { ejecutarHomologacion } from "@/lib/homologacion.functions";
+import { formatSueldo } from "@/lib/format";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
     meta: [
       { title: "Nueva homologación — HOMOLOGA" },
-      { name: "description", content: "Crea una ejecución de homologación para un cargo interno." },
+      { name: "description", content: "Ejecuta el motor determinístico para un cargo interno." },
       { property: "og:title", content: "Nueva homologación — HOMOLOGA" },
-      { property: "og:description", content: "Inicia una ejecución de homologación de un cargo interno." },
+      {
+        property: "og:description",
+        content: "Compara un cargo interno con cargos de referencia según los criterios definidos.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -21,11 +25,14 @@ export const Route = createFileRoute("/homologacion/nueva")({
   component: NuevaHomologacion,
 });
 
+function pct(v: number) {
+  return `${(v * 100).toFixed(1)}%`;
+}
+
 function NuevaHomologacion() {
-  const navigate = useNavigate();
   const listC = useServerFn(listCargos);
   const listCr = useServerFn(listCriterios);
-  const create = useServerFn(createEjecucion);
+  const ejecutar = useServerFn(ejecutarHomologacion);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const criterios = useQuery({ queryKey: ["criterios"], queryFn: () => listCr() });
@@ -37,19 +44,19 @@ function NuevaHomologacion() {
   const activos = (criterios.data ?? []).filter((c) => c.activo);
 
   const mut = useMutation({
-    mutationFn: () => create({ data: { cargo_id: cargoId } }),
-    onSuccess: (res) => {
-      if (res) navigate({ to: "/historial/$id", params: { id: res.id } });
-    },
+    mutationFn: () => ejecutar({ data: { cargo_id: cargoId } }),
+    onMutate: () => setError(null),
     onError: (e: Error) => setError(e.message),
   });
 
+  const res = mut.data;
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">Nueva homologación</h1>
       <p className="text-sm text-muted-foreground">
-        Se crea una ejecución en estado pendiente. El cálculo determinístico y semántico se
-        implementará en la siguiente etapa.
+        El motor determinístico compara el cargo interno con los cargos de referencia aplicando los
+        criterios y pesos almacenados. No usa IA ni completa datos faltantes.
       </p>
 
       <form
@@ -81,7 +88,12 @@ function NuevaHomologacion() {
           {criterios.isLoading
             ? "…"
             : activos.length
-              ? activos.map((c) => `${c.nombre} (${c.peso})`).join(", ")
+              ? activos
+                  .map(
+                    (c) =>
+                      `${c.nombre} · ${CAMPOS_CRITERIO[c.campo]} · peso ${c.peso}${c.obligatorio ? " · obligatorio" : ""}`,
+                  )
+                  .join(" | ")
               : "ninguno definido"}
         </div>
 
@@ -90,7 +102,7 @@ function NuevaHomologacion() {
           disabled={mut.isPending || !internos.length}
           className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
         >
-          Crear ejecución
+          {mut.isPending ? "Calculando…" : "Ejecutar motor determinístico"}
         </button>
         {!cargos.isLoading && !internos.length && (
           <p className="text-sm text-muted-foreground">
@@ -99,6 +111,83 @@ function NuevaHomologacion() {
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
+
+      {res && (
+        <div className="space-y-6">
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">1. Cargo analizado</h2>
+            <p className="text-sm">
+              <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"} ·
+              sueldo {formatSueldo(res.cargo.sueldo)}
+            </p>
+            {res.cargo.descripcion && (
+              <p className="mt-1 text-sm text-muted-foreground">{res.cargo.descripcion}</p>
+            )}
+            <p className="mt-2 text-sm">
+              <Link className="underline" to="/historial/$id" params={{ id: res.ejecucion_id }}>
+                Ver ejecución en el historial
+              </Link>
+            </p>
+          </section>
+
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">2. Candidatos encontrados</h2>
+            <p className="text-sm">
+              {res.evaluados} cargos de referencia evaluados
+              {res.pesoTotal <= 0 && " — no hay criterios activos con peso, no se calculó score"}
+            </p>
+          </section>
+
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">3. Candidatos descartados</h2>
+            {!res.descartados.length ? (
+              <p className="text-sm text-muted-foreground">Ninguno.</p>
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {res.descartados.map((d) => (
+                  <li key={d.cargo.id} className="border-b py-1">
+                    <strong>{d.cargo.nombre}</strong> ({d.cargo.empresa_nombre ?? "sin empresa"}) —{" "}
+                    {d.motivo}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">4. Candidatos preseleccionados</h2>
+            {!res.preseleccionados.length ? (
+              <p className="text-sm text-muted-foreground">Ninguno.</p>
+            ) : (
+              <ol className="space-y-3 text-sm">
+                {res.preseleccionados.map((p, i) => (
+                  <li key={p.cargo.id} className="border-b pb-3">
+                    <p>
+                      <strong>
+                        {i + 1}. {p.cargo.nombre}
+                      </strong>{" "}
+                      — {p.cargo.empresa_nombre ?? "sin empresa"} · sueldo{" "}
+                      {formatSueldo(p.cargo.sueldo)} · score {pct(p.score)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Coincidencias:{" "}
+                      {p.coincidencias.length
+                        ? p.coincidencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
+                        : "ninguna"}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Diferencias:{" "}
+                      {p.diferencias.length
+                        ? p.diferencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
+                        : "ninguna"}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
