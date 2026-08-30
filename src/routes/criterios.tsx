@@ -105,6 +105,28 @@ function CriteriosPage() {
             required
           />
         </label>
+        <label className="text-sm">
+          <span className="mb-1 block text-muted-foreground">Campo comparado</span>
+          <select
+            className="rounded-md border bg-background px-3 py-2"
+            value={campo}
+            onChange={(e) => setCampo(e.target.value as CriterioCampo)}
+          >
+            {Object.entries(CAMPOS_CRITERIO).map(([k, label]) => (
+              <option key={k} value={k}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={obligatorio}
+            onChange={(e) => setObligatorio(e.target.checked)}
+          />
+          <span className="text-muted-foreground">Obligatorio</span>
+        </label>
         <button
           type="submit"
           disabled={createMut.isPending}
