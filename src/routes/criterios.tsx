@@ -4,10 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import {
+  CAMPOS_CRITERIO,
   createCriterio,
   deleteCriterio,
   listCriterios,
   toggleCriterio,
+  toggleObligatorio,
+  type CriterioCampo,
 } from "@/lib/criterios.functions";
 
 export const Route = createFileRoute("/criterios")({
