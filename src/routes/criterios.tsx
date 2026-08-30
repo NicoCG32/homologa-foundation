@@ -32,10 +32,13 @@ function CriteriosPage() {
   const list = useServerFn(listCriterios);
   const create = useServerFn(createCriterio);
   const toggle = useServerFn(toggleCriterio);
+  const toggleObl = useServerFn(toggleObligatorio);
   const remove = useServerFn(deleteCriterio);
 
   const [nombre, setNombre] = useState("");
   const [peso, setPeso] = useState("1");
+  const [campo, setCampo] = useState<CriterioCampo>("nombre");
+  const [obligatorio, setObligatorio] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({ queryKey: ["criterios"], queryFn: () => list() });
