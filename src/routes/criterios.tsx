@@ -4,10 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import {
+  CAMPOS_CRITERIO,
   createCriterio,
   deleteCriterio,
   listCriterios,
   toggleCriterio,
+  toggleObligatorio,
+  type CriterioCampo,
 } from "@/lib/criterios.functions";
 
 export const Route = createFileRoute("/criterios")({
@@ -29,19 +32,23 @@ function CriteriosPage() {
   const list = useServerFn(listCriterios);
   const create = useServerFn(createCriterio);
   const toggle = useServerFn(toggleCriterio);
+  const toggleObl = useServerFn(toggleObligatorio);
   const remove = useServerFn(deleteCriterio);
 
   const [nombre, setNombre] = useState("");
   const [peso, setPeso] = useState("1");
+  const [campo, setCampo] = useState<CriterioCampo>("nombre");
+  const [obligatorio, setObligatorio] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({ queryKey: ["criterios"], queryFn: () => list() });
   const invalidate = () => qc.invalidateQueries();
 
   const createMut = useMutation({
-    mutationFn: () => create({ data: { nombre, peso, activo: true } }),
+    mutationFn: () => create({ data: { nombre, peso, activo: true, campo, obligatorio } }),
     onSuccess: () => {
       setNombre("");
+      setObligatorio(false);
       setError(null);
       invalidate();
     },
@@ -50,6 +57,11 @@ function CriteriosPage() {
 
   const toggleMut = useMutation({
     mutationFn: (v: { id: string; activo: boolean }) => toggle({ data: v }),
+    onSuccess: invalidate,
+  });
+
+  const oblMut = useMutation({
+    mutationFn: (v: { id: string; obligatorio: boolean }) => toggleObl({ data: v }),
     onSuccess: invalidate,
   });
 
@@ -93,6 +105,28 @@ function CriteriosPage() {
             required
           />
         </label>
+        <label className="text-sm">
+          <span className="mb-1 block text-muted-foreground">Campo comparado</span>
+          <select
+            className="rounded-md border bg-background px-3 py-2"
+            value={campo}
+            onChange={(e) => setCampo(e.target.value as CriterioCampo)}
+          >
+            {Object.entries(CAMPOS_CRITERIO).map(([k, label]) => (
+              <option key={k} value={k}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={obligatorio}
+            onChange={(e) => setObligatorio(e.target.checked)}
+          />
+          <span className="text-muted-foreground">Obligatorio</span>
+        </label>
         <button
           type="submit"
           disabled={createMut.isPending}
@@ -113,7 +147,9 @@ function CriteriosPage() {
           <thead className="text-left text-muted-foreground">
             <tr>
               <th className="border-b py-2">Nombre</th>
+              <th className="border-b py-2">Campo</th>
               <th className="border-b py-2">Peso</th>
+              <th className="border-b py-2">Obligatorio</th>
               <th className="border-b py-2">Activo</th>
               <th className="border-b py-2" />
             </tr>
@@ -122,7 +158,15 @@ function CriteriosPage() {
             {data.map((c) => (
               <tr key={c.id}>
                 <td className="border-b py-2">{c.nombre}</td>
+                <td className="border-b py-2">{CAMPOS_CRITERIO[c.campo]}</td>
                 <td className="border-b py-2">{c.peso}</td>
+                <td className="border-b py-2">
+                  <input
+                    type="checkbox"
+                    checked={c.obligatorio}
+                    onChange={() => oblMut.mutate({ id: c.id, obligatorio: !c.obligatorio })}
+                  />
+                </td>
                 <td className="border-b py-2">
                   <input
                     type="checkbox"
