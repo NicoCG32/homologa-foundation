@@ -147,7 +147,9 @@ function CriteriosPage() {
           <thead className="text-left text-muted-foreground">
             <tr>
               <th className="border-b py-2">Nombre</th>
+              <th className="border-b py-2">Campo</th>
               <th className="border-b py-2">Peso</th>
+              <th className="border-b py-2">Obligatorio</th>
               <th className="border-b py-2">Activo</th>
               <th className="border-b py-2" />
             </tr>
