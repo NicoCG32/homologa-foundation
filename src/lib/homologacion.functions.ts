@@ -108,6 +108,7 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
         .select("id")
         .single(),
     );
+    if (!ejecucion) throw new Error("No se pudo crear la ejecución");
 
     try {
       const motor = ejecutarMotor(
