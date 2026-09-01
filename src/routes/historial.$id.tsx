@@ -34,6 +34,15 @@ function EjecucionDetalle() {
   const resultados = data.resultados ?? [];
   const cargo = ejecucion.cargos;
   const sueldoInterno = cargo?.sueldo != null ? Number(cargo.sueldo) : null;
+  const analisis = data.analisis;
+  const validada = (analisis?.respuesta_validada ?? null) as {
+    candidato_recomendado_id: string;
+    score_semantico: number;
+    confianza: number;
+    similitudes: string[];
+    diferencias: string[];
+    explicacion_breve: string;
+  } | null;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -48,6 +57,39 @@ function EjecucionDetalle() {
       <div className="rounded-lg border p-4 text-sm">
         Sueldo del cargo interno: <strong>{formatSueldo(cargo?.sueldo)}</strong>
       </div>
+
+      {analisis && (
+        <section className="rounded-lg border p-4 text-sm">
+          <h2 className="mb-2 text-lg font-medium">Análisis semántico</h2>
+          {analisis.estado !== "OK" || !validada ? (
+            <p className="text-destructive">
+              El análisis semántico no pudo ejecutarse: {analisis.error_mensaje ?? "error desconocido"}.
+              Los resultados determinísticos se mantienen sin cambios.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              <p>
+                Candidato recomendado:{" "}
+                <strong>
+                  {resultados.find((r) => r.candidato_id === validada.candidato_recomendado_id)?.cargos
+                    ?.nombre ?? validada.candidato_recomendado_id}
+                </strong>{" "}
+                · score semántico {validada.score_semantico} · confianza {validada.confianza}
+              </p>
+              <p className="text-muted-foreground">{validada.explicacion_breve}</p>
+              <p className="text-muted-foreground">
+                Similitudes: {validada.similitudes.length ? validada.similitudes.join(", ") : "ninguna"}
+              </p>
+              <p className="text-muted-foreground">
+                Diferencias: {validada.diferencias.length ? validada.diferencias.join(", ") : "ninguna"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Modelo {analisis.modelo} · prompt {analisis.prompt_version}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-lg font-medium">Resultados</h2>

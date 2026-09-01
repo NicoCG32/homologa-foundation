@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      analisis_semanticos: {
+        Row: {
+          candidatos_enviados: Json
+          created_at: string
+          ejecucion_id: string
+          error_mensaje: string | null
+          estado: Database["public"]["Enums"]["semantico_estado"]
+          id: string
+          modelo: string
+          prompt_version: string
+          respuesta_cruda: string | null
+          respuesta_validada: Json | null
+          updated_at: string
+        }
+        Insert: {
+          candidatos_enviados?: Json
+          created_at?: string
+          ejecucion_id: string
+          error_mensaje?: string | null
+          estado: Database["public"]["Enums"]["semantico_estado"]
+          id?: string
+          modelo: string
+          prompt_version: string
+          respuesta_cruda?: string | null
+          respuesta_validada?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          candidatos_enviados?: Json
+          created_at?: string
+          ejecucion_id?: string
+          error_mensaje?: string | null
+          estado?: Database["public"]["Enums"]["semantico_estado"]
+          id?: string
+          modelo?: string
+          prompt_version?: string
+          respuesta_cruda?: string | null
+          respuesta_validada?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analisis_semanticos_ejecucion_id_fkey"
+            columns: ["ejecucion_id"]
+            isOneToOne: false
+            referencedRelation: "ejecuciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargos: {
         Row: {
           descripcion: string | null
@@ -177,6 +227,7 @@ export type Database = {
       criterio_campo: "nombre" | "descripcion" | "sueldo" | "tipo_empresa"
       ejecucion_estado: "PENDIENTE" | "EN_PROCESO" | "COMPLETADA" | "ERROR"
       empresa_tipo: "P" | "M" | "G"
+      semantico_estado: "OK" | "ERROR"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -308,6 +359,7 @@ export const Constants = {
       criterio_campo: ["nombre", "descripcion", "sueldo", "tipo_empresa"],
       ejecucion_estado: ["PENDIENTE", "EN_PROCESO", "COMPLETADA", "ERROR"],
       empresa_tipo: ["P", "M", "G"],
+      semantico_estado: ["OK", "ERROR"],
     },
   },
 } as const
