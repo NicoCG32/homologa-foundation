@@ -65,6 +65,7 @@ function NuevaHomologacion() {
   });
 
   const res = mut.data;
+  const semOk = sem.data && sem.data.ok ? sem.data : null;
 
 
   return (
@@ -218,21 +219,21 @@ function NuevaHomologacion() {
               {sem.isPending ? "Analizando…" : "Analizar semánticamente con Gemini"}
             </button>
             {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
-            {sem.data?.ok && (
+            {semOk && (
               <div className="mt-4 space-y-3 text-sm">
                 <p>
                   Candidato recomendado:{" "}
                   <strong>
                     {res.preseleccionados.find(
-                      (p) => p.cargo.id === sem.data.analisis.candidato_recomendado_id,
-                    )?.cargo.nombre ?? sem.data.analisis.candidato_recomendado_id}
+                      (p) => p.cargo.id === semOk.analisis.candidato_recomendado_id,
+                    )?.cargo.nombre ?? semOk.analisis.candidato_recomendado_id}
                   </strong>{" "}
-                  · score semántico {sem.data.analisis.score_semantico} · confianza{" "}
-                  {sem.data.analisis.confianza}
+                  · score semántico {semOk.analisis.score_semantico} · confianza{" "}
+                  {semOk.analisis.confianza}
                 </p>
-                <p className="text-muted-foreground">{sem.data.analisis.explicacion_breve}</p>
+                <p className="text-muted-foreground">{semOk.analisis.explicacion_breve}</p>
                 <ul className="space-y-2">
-                  {sem.data.analisis.scores_por_candidato.map((s) => (
+                  {semOk.analisis.scores_por_candidato.map((s) => (
                     <li key={s.candidato_id} className="border-b pb-2">
                       <p>
                         <strong>
