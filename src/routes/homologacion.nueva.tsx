@@ -186,8 +186,61 @@ function NuevaHomologacion() {
               </ol>
             )}
           </section>
+
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">5. Análisis semántico (Gemini)</h2>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Se envían únicamente los {res.preseleccionados.length} candidatos preseleccionados, sin
+              información salarial. No altera el ranking determinístico.
+            </p>
+            <button
+              type="button"
+              disabled={sem.isPending || !res.preseleccionados.length}
+              onClick={() => sem.mutate(res.ejecucion_id)}
+              className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+            >
+              {sem.isPending ? "Analizando…" : "Analizar semánticamente con Gemini"}
+            </button>
+            {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
+            {sem.data?.ok && (
+              <div className="mt-4 space-y-3 text-sm">
+                <p>
+                  Candidato recomendado:{" "}
+                  <strong>
+                    {res.preseleccionados.find(
+                      (p) => p.cargo.id === sem.data.analisis.candidato_recomendado_id,
+                    )?.cargo.nombre ?? sem.data.analisis.candidato_recomendado_id}
+                  </strong>{" "}
+                  · score semántico {sem.data.analisis.score_semantico} · confianza{" "}
+                  {sem.data.analisis.confianza}
+                </p>
+                <p className="text-muted-foreground">{sem.data.analisis.explicacion_breve}</p>
+                <ul className="space-y-2">
+                  {sem.data.analisis.scores_por_candidato.map((s) => (
+                    <li key={s.candidato_id} className="border-b pb-2">
+                      <p>
+                        <strong>
+                          {res.preseleccionados.find((p) => p.cargo.id === s.candidato_id)?.cargo
+                            .nombre ?? s.candidato_id}
+                        </strong>{" "}
+                        — score semántico {s.score_semantico}
+                      </p>
+                      <p className="text-muted-foreground">
+                        Similitudes: {s.similitudes.length ? s.similitudes.join(", ") : "ninguna"}
+                      </p>
+                      <p className="text-muted-foreground">
+                        Diferencias: {s.diferencias.length ? s.diferencias.join(", ") : "ninguna"}
+                      </p>
+                      <p className="text-muted-foreground">{s.explicacion_breve}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
         </div>
       )}
+
     </div>
   );
 }
