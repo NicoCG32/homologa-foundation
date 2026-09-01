@@ -149,3 +149,110 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       throw e instanceof Error ? e : new Error("Error al ejecutar el motor");
     }
   });
+
+/**
+ * Analiza semánticamente (Gemini Flash) SOLO los candidatos preseleccionados
+ * y persistidos por el motor determinístico para esa ejecución.
+ * Nunca envía descartados, ni la base completa, ni información salarial.
+ * Ante cualquier fallo conserva intactos los resultados determinísticos.
+ */
+export const analizarSemantica = createServerFn({ method: "POST" })
+  .inputValidator((input: { ejecucion_id: string }) => {
+    if (!input?.ejecucion_id) throw new Error("Falta la ejecución");
+    return { ejecucion_id: String(input.ejecucion_id) };
+  })
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    const semantica = await import("./semantica.server");
+    const db = getDb();
+
+    type EmpresaRow = { tipo: "P" | "M" | "G" } | null;
+    type CargoRow = {
+      id: string;
+      nombre: string;
+      descripcion: string | null;
+      empresas: EmpresaRow;
+    };
+
+    const ejecucion = unwrap(
+      await db
+        .from("ejecuciones")
+        .select("id, cargos(id, nombre, descripcion, empresas(tipo))")
+        .eq("id", data.ejecucion_id)
+        .maybeSingle(),
+    ) as { id: string; cargos: CargoRow | null } | null;
+    if (!ejecucion?.cargos) throw new Error("La ejecución no existe");
+
+    const interno = {
+      id: ejecucion.cargos.id,
+      nombre: ejecucion.cargos.nombre,
+      descripcion: ejecucion.cargos.descripcion,
+      tipo_empresa: ejecucion.cargos.empresas?.tipo ?? null,
+    };
+
+    // Fuente única de candidatos: los resultados preseleccionados por el motor.
+    const resultados = (unwrap(
+      await db
+        .from("resultados")
+        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, empresas(tipo))")
+        .eq("ejecucion_id", data.ejecucion_id),
+    ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
+
+    const candidatos = resultados
+      .filter((r) => r.cargos)
+      .map((r) => ({
+        id: r.cargos!.id,
+        nombre: r.cargos!.nombre,
+        descripcion: r.cargos!.descripcion,
+        tipo_empresa: r.cargos!.empresas?.tipo ?? null,
+      }));
+
+    const registrarError = async (mensaje: string) => {
+      await db.from("analisis_semanticos").insert({
+        ejecucion_id: data.ejecucion_id,
+        modelo: semantica.MODELO_SEMANTICO,
+        prompt_version: semantica.PROMPT_VERSION,
+        estado: "ERROR",
+        error_mensaje: mensaje,
+        candidatos_enviados: candidatos.map((c) => c.id),
+      });
+      return { ok: false as const, error: mensaje };
+    };
+
+    if (!candidatos.length) {
+      return registrarError("No hay candidatos preseleccionados para analizar");
+    }
+
+    let resultado: Awaited<ReturnType<typeof semantica.analizarConGemini>>;
+    try {
+      resultado = await semantica.analizarConGemini(interno, candidatos);
+    } catch (e) {
+      return registrarError(
+        e instanceof Error ? e.message : "El análisis semántico no pudo ejecutarse",
+      );
+    }
+
+    const validada = resultado.validada;
+
+    await db.from("analisis_semanticos").insert({
+      ejecucion_id: data.ejecucion_id,
+      modelo: semantica.MODELO_SEMANTICO,
+      prompt_version: semantica.PROMPT_VERSION,
+      estado: "OK",
+      candidatos_enviados: candidatos.map((c) => c.id),
+      respuesta_cruda: resultado.cruda,
+      respuesta_validada: validada,
+    });
+
+    // Solo se escribe score_semantico; score_deterministico y score_final quedan intactos.
+    for (const s of validada.scores_por_candidato) {
+      const fila = resultados.find((r) => r.candidato_id === s.candidato_id);
+      if (!fila) continue;
+      await db
+        .from("resultados")
+        .update({ score_semantico: s.score_semantico })
+        .eq("id", fila.id);
+    }
+
+    return { ok: true as const, analisis: validada, candidatos };
+  });
