@@ -45,11 +45,25 @@ function NuevaHomologacion() {
 
   const mut = useMutation({
     mutationFn: () => ejecutar({ data: { cargo_id: cargoId } }),
-    onMutate: () => setError(null),
+    onMutate: () => {
+      setError(null);
+      setSemError(null);
+      sem.reset();
+    },
     onError: (e: Error) => setError(e.message),
   });
 
+  const sem = useMutation({
+    mutationFn: (ejecucionId: string) => analizar({ data: { ejecucion_id: ejecucionId } }),
+    onMutate: () => setSemError(null),
+    onSuccess: (r) => {
+      if (!r.ok) setSemError(r.error);
+    },
+    onError: (e: Error) => setSemError(e.message),
+  });
+
   const res = mut.data;
+
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
