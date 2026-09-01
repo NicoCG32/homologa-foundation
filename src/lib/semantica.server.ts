@@ -207,7 +207,7 @@ export async function analizarConGemini(interno: CargoSemantico, candidatos: Car
   const { GoogleGenAI } = await import("@google/genai");
   const ai = new GoogleGenAI({ apiKey });
 
-  let respuesta: { text?: string };
+  let respuesta: { text?: string | undefined };
   try {
     respuesta = await ai.models.generateContent({
       model: MODELO_SEMANTICO,
