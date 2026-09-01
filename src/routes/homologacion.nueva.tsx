@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { listCargos } from "@/lib/cargos.functions";
 import { CAMPOS_CRITERIO, listCriterios } from "@/lib/criterios.functions";
-import { ejecutarHomologacion } from "@/lib/homologacion.functions";
+import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
 
 export const Route = createFileRoute("/homologacion/nueva")({
@@ -33,12 +33,14 @@ function NuevaHomologacion() {
   const listC = useServerFn(listCargos);
   const listCr = useServerFn(listCriterios);
   const ejecutar = useServerFn(ejecutarHomologacion);
+  const analizar = useServerFn(analizarSemantica);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const criterios = useQuery({ queryKey: ["criterios"], queryFn: () => listCr() });
 
   const [cargoId, setCargoId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [semError, setSemError] = useState<string | null>(null);
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
   const activos = (criterios.data ?? []).filter((c) => c.activo);
