@@ -25,13 +25,23 @@ export const getEjecucion = createServerFn({ method: "GET" })
       await getDb()
         .from("resultados")
         .select(
-          "id, score_deterministico, score_semantico, score_final, cargos:candidato_id(id, nombre, sueldo, empresas(nombre))",
+          "id, candidato_id, score_deterministico, score_semantico, score_final, cargos:candidato_id(id, nombre, sueldo, empresas(nombre))",
         )
         .eq("ejecucion_id", data.id)
         .order("score_final", { ascending: false, nullsFirst: false }),
     );
-    return { ejecucion, resultados };
+    const analisis = unwrap(
+      await getDb()
+        .from("analisis_semanticos")
+        .select("id, modelo, prompt_version, estado, error_mensaje, respuesta_validada, created_at")
+        .eq("ejecucion_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    );
+    return { ejecucion, resultados, analisis };
   });
+
 
 export const createEjecucion = createServerFn({ method: "POST" })
   .inputValidator((input: { cargo_id: string }) => {
