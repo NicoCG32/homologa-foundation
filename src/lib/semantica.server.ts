@@ -219,7 +219,10 @@ export async function analizarConGemini(interno: CargoSemantico, candidatos: Car
   try {
     respuesta = await ai.models.generateContent({
       model: MODELO_SEMANTICO,
-      contents: JSON.stringify(payload),
+      contents: [
+        "Los scores semánticos deben ser números enteros en escala 0 a 100 (por ejemplo 82), nunca decimales entre 0 y 1. La confianza sí es un decimal entre 0 y 1.",
+        JSON.stringify(payload),
+      ].join("\n\n"),
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
