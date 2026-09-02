@@ -1,0 +1,1 @@
+ALTER TABLE public.cargos ADD COLUMN IF NOT EXISTS atributos_semanticos jsonb NOT NULL DEFAULT '{}'::jsonb;
