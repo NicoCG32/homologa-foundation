@@ -5,7 +5,7 @@
  */
 
 export const PROMPT_VERSION = "semantic-1";
-export const MODELO_SEMANTICO = process.env["GEMINI_MODEL"] ?? "gemini-2.0-flash";
+export const MODELO_SEMANTICO = process.env["GEMINI_MODEL"] ?? "gemini-3.6-flash";
 
 export const CRITERIOS_SEMANTICOS = [
   "propósito",
@@ -38,6 +38,8 @@ Evalúa exclusivamente:
 - complejidad;
 - autonomía;
 - alcance.
+Los scores semánticos se expresan de 0 a 100 y la confianza como un decimal entre 0 y 1.
+Debes incluir en scores_por_candidato exactamente todos los candidatos enviados, usando sus id tal cual.
 Tu función es realizar una comparación semántica y entregar el resultado solicitado en el esquema JSON definido por la aplicación.`;
 
 export type CargoSemantico = {
@@ -70,9 +72,15 @@ const listaTexto = { type: "array", items: { type: "string" } } as const;
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
-    candidato_recomendado_id: { type: "string" },
-    score_semantico: { type: "number" },
-    confianza: { type: "number" },
+    candidato_recomendado_id: {
+      type: "string",
+      description: "id exacto de uno de los candidatos enviados",
+    },
+    score_semantico: {
+      type: "number",
+      description: "número entero entre 0 y 100 del candidato recomendado",
+    },
+    confianza: { type: "number", description: "número decimal entre 0 y 1 (por ejemplo 0.75)" },
     similitudes: listaTexto,
     diferencias: listaTexto,
     explicacion_breve: { type: "string" },
@@ -81,8 +89,8 @@ const RESPONSE_SCHEMA = {
       items: {
         type: "object",
         properties: {
-          candidato_id: { type: "string" },
-          score_semantico: { type: "number" },
+          candidato_id: { type: "string", description: "id exacto del candidato enviado" },
+          score_semantico: { type: "number", description: "número entero entre 0 y 100" },
           similitudes: listaTexto,
           diferencias: listaTexto,
           explicacion_breve: { type: "string" },
@@ -211,7 +219,10 @@ export async function analizarConGemini(interno: CargoSemantico, candidatos: Car
   try {
     respuesta = await ai.models.generateContent({
       model: MODELO_SEMANTICO,
-      contents: JSON.stringify(payload),
+      contents: [
+        "Los scores semánticos deben ser números enteros en escala 0 a 100 (por ejemplo 82), nunca decimales entre 0 y 1. La confianza sí es un decimal entre 0 y 1.",
+        JSON.stringify(payload),
+      ].join("\n\n"),
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
