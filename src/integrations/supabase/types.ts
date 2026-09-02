@@ -66,6 +66,7 @@ export type Database = {
       }
       cargos: {
         Row: {
+          atributos_semanticos: Json
           descripcion: string | null
           empresa_id: string
           id: string
@@ -74,6 +75,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["cargo_tipo"]
         }
         Insert: {
+          atributos_semanticos?: Json
           descripcion?: string | null
           empresa_id: string
           id?: string
@@ -82,6 +84,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["cargo_tipo"]
         }
         Update: {
+          atributos_semanticos?: Json
           descripcion?: string | null
           empresa_id?: string
           id?: string
