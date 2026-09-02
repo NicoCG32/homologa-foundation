@@ -5,7 +5,7 @@
  */
 
 export const PROMPT_VERSION = "semantic-1";
-export const MODELO_SEMANTICO = process.env["GEMINI_MODEL"] ?? "gemini-2.0-flash";
+export const MODELO_SEMANTICO = process.env["GEMINI_MODEL"] ?? "gemini-3.6-flash";
 
 export const CRITERIOS_SEMANTICOS = [
   "propósito",
