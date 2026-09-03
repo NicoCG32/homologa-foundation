@@ -82,6 +82,7 @@ export const createCargo = createServerFn({ method: "POST" })
         nombre,
         descripcion: String(input?.descripcion ?? "").trim() || null,
         sueldo,
+        atributos_semanticos: normalizarAtributosInput(input?.atributos_semanticos),
       };
     },
   )
