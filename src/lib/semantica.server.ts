@@ -216,10 +216,16 @@ export function construirPayload(interno: CargoSemantico, candidatos: CargoSeman
     nombre: c.nombre,
     descripcion: c.descripcion,
     tipo_empresa: c.tipo_empresa,
+    atributos_semanticos: normalizarAtributos(c.atributos_semanticos),
   });
   return {
     criterios_semanticos: CRITERIOS_SEMANTICOS,
-    cargo_interno: { nombre: interno.nombre, descripcion: interno.descripcion, tipo_empresa: interno.tipo_empresa },
+    cargo_interno: {
+      nombre: interno.nombre,
+      descripcion: interno.descripcion,
+      tipo_empresa: interno.tipo_empresa,
+      atributos_semanticos: normalizarAtributos(interno.atributos_semanticos),
+    },
     candidatos_preseleccionados: candidatos.map(limpiar),
   };
 }
