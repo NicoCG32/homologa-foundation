@@ -42,11 +42,35 @@ Los scores semánticos se expresan de 0 a 100 y la confianza como un decimal ent
 Debes incluir en scores_por_candidato exactamente todos los candidatos enviados, usando sus id tal cual.
 Tu función es realizar una comparación semántica y entregar el resultado solicitado en el esquema JSON definido por la aplicación.`;
 
+export const CLAVES_ATRIBUTOS = [
+  "proposito",
+  "funciones",
+  "responsabilidades",
+  "conocimientos",
+  "complejidad",
+  "autonomia",
+  "alcance",
+] as const;
+
+export type ClaveAtributo = (typeof CLAVES_ATRIBUTOS)[number];
+export type AtributosSemanticos = Record<ClaveAtributo, string>;
+
+/** Normaliza siempre las 7 claves; lo faltante viaja como cadena vacía, nunca inventado. */
+export function normalizarAtributos(raw: unknown): AtributosSemanticos {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const out = {} as AtributosSemanticos;
+  for (const k of CLAVES_ATRIBUTOS) {
+    out[k] = typeof o[k] === "string" ? (o[k] as string).trim() : "";
+  }
+  return out;
+}
+
 export type CargoSemantico = {
   id: string;
   nombre: string;
   descripcion: string | null;
   tipo_empresa: "P" | "M" | "G" | null;
+  atributos_semanticos: AtributosSemanticos;
 };
 
 export type ScorePorCandidato = {
