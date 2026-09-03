@@ -2,6 +2,35 @@ import { createServerFn } from "@tanstack/react-start";
 
 export type CargoTipo = "INTERNO" | "REFERENCIA";
 
+/** Atributos que interpreta la capa semántica. No participan del motor determinístico. */
+export const ATRIBUTOS_SEMANTICOS = [
+  { clave: "proposito", etiqueta: "Propósito" },
+  { clave: "funciones", etiqueta: "Funciones" },
+  { clave: "responsabilidades", etiqueta: "Responsabilidades" },
+  { clave: "conocimientos", etiqueta: "Conocimientos" },
+  { clave: "complejidad", etiqueta: "Complejidad" },
+  { clave: "autonomia", etiqueta: "Autonomía" },
+  { clave: "alcance", etiqueta: "Alcance" },
+] as const;
+
+export type ClaveAtributo = (typeof ATRIBUTOS_SEMANTICOS)[number]["clave"];
+export type AtributosSemanticos = Record<ClaveAtributo, string>;
+
+export function atributosVacios(): AtributosSemanticos {
+  return Object.fromEntries(
+    ATRIBUTOS_SEMANTICOS.map((a) => [a.clave, ""]),
+  ) as AtributosSemanticos;
+}
+
+export function normalizarAtributosInput(raw: unknown): AtributosSemanticos {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const out = atributosVacios();
+  for (const a of ATRIBUTOS_SEMANTICOS) {
+    out[a.clave] = typeof o[a.clave] === "string" ? (o[a.clave] as string).trim() : "";
+  }
+  return out;
+}
+
 export type Cargo = {
   id: string;
   empresa_id: string;
@@ -9,6 +38,7 @@ export type Cargo = {
   nombre: string;
   descripcion: string | null;
   sueldo: number | null;
+  atributos_semanticos: AtributosSemanticos | null;
   empresas?: { nombre: string } | null;
 };
 
@@ -17,7 +47,9 @@ export const listCargos = createServerFn({ method: "GET" }).handler(async () => 
   return unwrap(
     await getDb()
       .from("cargos")
-      .select("id, empresa_id, tipo, nombre, descripcion, sueldo, empresas(nombre)")
+      .select(
+        "id, empresa_id, tipo, nombre, descripcion, sueldo, atributos_semanticos, empresas(nombre)",
+      )
       .order("nombre"),
   );
 });
