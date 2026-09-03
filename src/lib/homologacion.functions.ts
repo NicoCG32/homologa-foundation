@@ -171,13 +171,14 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       id: string;
       nombre: string;
       descripcion: string | null;
+      atributos_semanticos: unknown;
       empresas: EmpresaRow;
     };
 
     const ejecucion = unwrap(
       await db
         .from("ejecuciones")
-        .select("id, cargos(id, nombre, descripcion, empresas(tipo))")
+        .select("id, cargos(id, nombre, descripcion, atributos_semanticos, empresas(tipo))")
         .eq("id", data.ejecucion_id)
         .maybeSingle(),
     ) as { id: string; cargos: CargoRow | null } | null;
@@ -188,13 +189,14 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       nombre: ejecucion.cargos.nombre,
       descripcion: ejecucion.cargos.descripcion,
       tipo_empresa: ejecucion.cargos.empresas?.tipo ?? null,
+      atributos_semanticos: semantica.normalizarAtributos(ejecucion.cargos.atributos_semanticos),
     };
 
     // Fuente única de candidatos: los resultados preseleccionados por el motor.
     const resultados = (unwrap(
       await db
         .from("resultados")
-        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, empresas(tipo))")
+        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, atributos_semanticos, empresas(tipo))")
         .eq("ejecucion_id", data.ejecucion_id),
     ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
 
@@ -205,6 +207,7 @@ export const analizarSemantica = createServerFn({ method: "POST" })
         nombre: r.cargos!.nombre,
         descripcion: r.cargos!.descripcion,
         tipo_empresa: r.cargos!.empresas?.tipo ?? null,
+        atributos_semanticos: semantica.normalizarAtributos(r.cargos!.atributos_semanticos),
       }));
 
     const registrarError = async (mensaje: string) => {

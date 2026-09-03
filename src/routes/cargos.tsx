@@ -3,7 +3,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 
-import { createCargo, deleteCargo, listCargos, type CargoTipo } from "@/lib/cargos.functions";
+import {
+  ATRIBUTOS_SEMANTICOS,
+  atributosVacios,
+  createCargo,
+  deleteCargo,
+  listCargos,
+  type AtributosSemanticos,
+  type CargoTipo,
+} from "@/lib/cargos.functions";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { formatSueldo } from "@/lib/format";
 
@@ -21,6 +29,12 @@ export const Route = createFileRoute("/cargos")({
   component: CargosPage,
 });
 
+function contarAtributos(raw: unknown) {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return ATRIBUTOS_SEMANTICOS.filter((a) => typeof o[a.clave] === "string" && o[a.clave] !== "")
+    .length;
+}
+
 function CargosPage() {
   const qc = useQueryClient();
   const listC = useServerFn(listCargos);
@@ -36,6 +50,7 @@ function CargosPage() {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [sueldo, setSueldo] = useState("");
+  const [atributos, setAtributos] = useState<AtributosSemanticos>(atributosVacios);
   const [error, setError] = useState<string | null>(null);
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
@@ -45,11 +60,14 @@ function CargosPage() {
 
   const createMut = useMutation({
     mutationFn: () =>
-      create({ data: { empresa_id: empresaId, tipo, nombre, descripcion, sueldo } }),
+      create({
+        data: { empresa_id: empresaId, tipo, nombre, descripcion, sueldo, atributos_semanticos: atributos },
+      }),
     onSuccess: () => {
       setNombre("");
       setDescripcion("");
       setSueldo("");
+      setAtributos(atributosVacios());
       setError(null);
       invalidate();
     },
@@ -146,6 +164,31 @@ function CargosPage() {
             onChange={(e) => setDescripcion(e.target.value)}
           />
         </label>
+        <details className="rounded-md border p-3 sm:col-span-2">
+          <summary className="cursor-pointer text-sm text-muted-foreground">
+            Atributos semánticos (opcionales)
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {ATRIBUTOS_SEMANTICOS.map((a) => (
+              <label key={a.clave} className="text-sm">
+                <span className="mb-1 block text-muted-foreground">{a.etiqueta}</span>
+                <textarea
+                  className="w-full rounded-md border bg-background px-3 py-2"
+                  rows={2}
+                  value={atributos[a.clave]}
+                  onChange={(e) =>
+                    setAtributos((prev) => ({ ...prev, [a.clave]: e.target.value }))
+                  }
+                />
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Se usan solo en el análisis semántico. Lo que dejes vacío se envía vacío y no se completa
+            automáticamente.
+          </p>
+        </details>
+
         <div className="sm:col-span-2">
           <button
             type="submit"
@@ -206,6 +249,10 @@ function CargosPage() {
                   {c.descripcion && (
                     <div className="text-xs text-muted-foreground">{c.descripcion}</div>
                   )}
+                  <div className="text-xs text-muted-foreground">
+                    Atributos semánticos: {contarAtributos(c.atributos_semanticos)}/
+                    {ATRIBUTOS_SEMANTICOS.length}
+                  </div>
                 </td>
                 <td className="border-b py-2">{c.empresas?.nombre ?? "—"}</td>
                 <td className="border-b py-2">{c.tipo === "INTERNO" ? "Interno" : "Referencia"}</td>
