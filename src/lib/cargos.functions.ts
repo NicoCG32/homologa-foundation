@@ -62,6 +62,7 @@ export const createCargo = createServerFn({ method: "POST" })
       nombre: string;
       descripcion: string;
       sueldo: string | number | null;
+      atributos_semanticos?: Partial<AtributosSemanticos> | null;
     }) => {
       const nombre = String(input?.nombre ?? "").trim();
       if (!nombre) throw new Error("El nombre es obligatorio");
