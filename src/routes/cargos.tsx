@@ -54,6 +54,7 @@ function CargosPage() {
   const [descripcion, setDescripcion] = useState("");
   const [sueldo, setSueldo] = useState("");
   const [atributos, setAtributos] = useState<AtributosSemanticos>(atributosVacios);
+  const [estructurales, setEstructurales] = useState<Estructurales>(estructuralesVacios);
   const [error, setError] = useState<string | null>(null);
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
@@ -64,13 +65,22 @@ function CargosPage() {
   const createMut = useMutation({
     mutationFn: () =>
       create({
-        data: { empresa_id: empresaId, tipo, nombre, descripcion, sueldo, atributos_semanticos: atributos },
+        data: {
+          empresa_id: empresaId,
+          tipo,
+          nombre,
+          descripcion,
+          sueldo,
+          atributos_semanticos: atributos,
+          estructurales,
+        },
       }),
     onSuccess: () => {
       setNombre("");
       setDescripcion("");
       setSueldo("");
       setAtributos(atributosVacios());
+      setEstructurales(estructuralesVacios());
       setError(null);
       invalidate();
     },
