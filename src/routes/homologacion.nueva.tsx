@@ -184,7 +184,6 @@ function NuevaHomologacion() {
                       <strong>
                         {i + 1}. {p.cargo.nombre}
                       </strong>{" "}
-                      — {p.cargo.empresa_nombre ?? "sin empresa"} · sueldo{" "}
                       — {p.cargo.empresa_nombre ?? "sin empresa"} · score {pct(p.score)}
                     </p>
                     <p className="text-muted-foreground">
