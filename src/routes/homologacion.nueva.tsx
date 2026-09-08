@@ -134,8 +134,9 @@ function NuevaHomologacion() {
           <section className="rounded-lg border p-4">
             <h2 className="mb-2 font-medium">1. Cargo analizado</h2>
             <p className="text-sm">
-              <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"} ·
-              sueldo {formatSueldo(res.cargo.sueldo)}
+              <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"}
+              {res.cargo.nombre_area ? ` · área ${res.cargo.nombre_area}` : ""}
+              {res.cargo.nivel_jerarquico ? ` · nivel ${res.cargo.nivel_jerarquico}` : ""}
             </p>
             {res.cargo.descripcion && (
               <p className="mt-1 text-sm text-muted-foreground">{res.cargo.descripcion}</p>
@@ -184,7 +185,7 @@ function NuevaHomologacion() {
                         {i + 1}. {p.cargo.nombre}
                       </strong>{" "}
                       — {p.cargo.empresa_nombre ?? "sin empresa"} · sueldo{" "}
-                      {formatSueldo(p.cargo.sueldo)} · score {pct(p.score)}
+                      — {p.cargo.empresa_nombre ?? "sin empresa"} · score {pct(p.score)}
                     </p>
                     <p className="text-muted-foreground">
                       Coincidencias:{" "}
