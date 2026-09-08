@@ -67,28 +67,52 @@ export type Database = {
       cargos: {
         Row: {
           atributos_semanticos: Json
+          codigo_area: string | null
+          codigo_cargo: string | null
+          codigo_subarea: string | null
           descripcion: string | null
           empresa_id: string
+          experiencia_requerida: string | null
           id: string
+          nivel_jerarquico: string | null
           nombre: string
+          nombre_area: string | null
+          nombre_subarea: string | null
+          requisitos_formacion: string | null
           sueldo: number | null
           tipo: Database["public"]["Enums"]["cargo_tipo"]
         }
         Insert: {
           atributos_semanticos?: Json
+          codigo_area?: string | null
+          codigo_cargo?: string | null
+          codigo_subarea?: string | null
           descripcion?: string | null
           empresa_id: string
+          experiencia_requerida?: string | null
           id?: string
+          nivel_jerarquico?: string | null
           nombre: string
+          nombre_area?: string | null
+          nombre_subarea?: string | null
+          requisitos_formacion?: string | null
           sueldo?: number | null
           tipo: Database["public"]["Enums"]["cargo_tipo"]
         }
         Update: {
           atributos_semanticos?: Json
+          codigo_area?: string | null
+          codigo_cargo?: string | null
+          codigo_subarea?: string | null
           descripcion?: string | null
           empresa_id?: string
+          experiencia_requerida?: string | null
           id?: string
+          nivel_jerarquico?: string | null
           nombre?: string
+          nombre_area?: string | null
+          nombre_subarea?: string | null
+          requisitos_formacion?: string | null
           sueldo?: number | null
           tipo?: Database["public"]["Enums"]["cargo_tipo"]
         }
@@ -227,7 +251,16 @@ export type Database = {
     }
     Enums: {
       cargo_tipo: "INTERNO" | "REFERENCIA"
-      criterio_campo: "nombre" | "descripcion" | "sueldo" | "tipo_empresa"
+      criterio_campo:
+        | "nombre"
+        | "descripcion"
+        | "area"
+        | "subarea"
+        | "codigo_cargo"
+        | "nivel_jerarquico"
+        | "experiencia"
+        | "requisitos"
+        | "tipo_empresa"
       ejecucion_estado: "PENDIENTE" | "EN_PROCESO" | "COMPLETADA" | "ERROR"
       empresa_tipo: "P" | "M" | "G"
       semantico_estado: "OK" | "ERROR"
@@ -359,7 +392,17 @@ export const Constants = {
   public: {
     Enums: {
       cargo_tipo: ["INTERNO", "REFERENCIA"],
-      criterio_campo: ["nombre", "descripcion", "sueldo", "tipo_empresa"],
+      criterio_campo: [
+        "nombre",
+        "descripcion",
+        "area",
+        "subarea",
+        "codigo_cargo",
+        "nivel_jerarquico",
+        "experiencia",
+        "requisitos",
+        "tipo_empresa",
+      ],
       ejecucion_estado: ["PENDIENTE", "EN_PROCESO", "COMPLETADA", "ERROR"],
       empresa_tipo: ["P", "M", "G"],
       semantico_estado: ["OK", "ERROR"],
