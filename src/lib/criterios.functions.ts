@@ -1,11 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
 
-export type CriterioCampo = "nombre" | "descripcion" | "sueldo" | "tipo_empresa";
+export type CriterioCampo =
+  | "nombre"
+  | "descripcion"
+  | "area"
+  | "subarea"
+  | "codigo_cargo"
+  | "nivel_jerarquico"
+  | "experiencia"
+  | "requisitos"
+  | "tipo_empresa";
 
 export const CAMPOS_CRITERIO: Record<CriterioCampo, string> = {
   nombre: "Nombre del cargo",
   descripcion: "Descripción",
-  sueldo: "Sueldo",
+  area: "Área",
+  subarea: "Subárea",
+  codigo_cargo: "Código del cargo",
+  nivel_jerarquico: "Nivel jerárquico",
+  experiencia: "Experiencia requerida",
+  requisitos: "Requisitos / formación",
   tipo_empresa: "Tamaño de empresa",
 };
 
