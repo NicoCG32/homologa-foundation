@@ -82,20 +82,36 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       tipo: string;
       nombre: string;
       descripcion: string | null;
-      sueldo: number | null;
+      codigo_area: string | null;
+      nombre_area: string | null;
+      codigo_subarea: string | null;
+      nombre_subarea: string | null;
+      codigo_cargo: string | null;
+      nivel_jerarquico: string | null;
+      experiencia_requerida: string | null;
+      requisitos_formacion: string | null;
       empresas: { nombre: string; tipo: "P" | "M" | "G" } | null;
     };
+    // El sueldo no se recupera aquí: no participa del motor determinístico.
     const toMotor = (c: CargoRow) => ({
       id: c.id,
       nombre: c.nombre,
       descripcion: c.descripcion,
-      sueldo: c.sueldo === null ? null : Number(c.sueldo),
+      codigo_area: c.codigo_area,
+      nombre_area: c.nombre_area,
+      codigo_subarea: c.codigo_subarea,
+      nombre_subarea: c.nombre_subarea,
+      codigo_cargo: c.codigo_cargo,
+      nivel_jerarquico: c.nivel_jerarquico,
+      experiencia_requerida: c.experiencia_requerida,
+      requisitos_formacion: c.requisitos_formacion,
       empresa_nombre: c.empresas?.nombre ?? null,
       empresa_tipo: c.empresas?.tipo ?? null,
     });
 
     const db = getDb();
-    const select = "id, tipo, nombre, descripcion, sueldo, empresas(nombre, tipo)";
+    const select =
+      "id, tipo, nombre, descripcion, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, nivel_jerarquico, experiencia_requerida, requisitos_formacion, empresas(nombre, tipo)";
 
     const interno = unwrap(
       await db.from("cargos").select(select).eq("id", data.cargo_id).maybeSingle(),
