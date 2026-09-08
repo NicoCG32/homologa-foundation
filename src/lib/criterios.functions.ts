@@ -56,7 +56,7 @@ export const createCriterio = createServerFn({ method: "POST" })
       const peso = Number(input?.peso);
       if (!Number.isFinite(peso) || peso < 0) throw new Error("Peso inválido");
       const campo = input?.campo;
-      if (!["nombre", "descripcion", "sueldo", "tipo_empresa"].includes(campo)) {
+      if (!Object.prototype.hasOwnProperty.call(CAMPOS_CRITERIO, campo)) {
         throw new Error("Campo comparado inválido");
       }
       return {
