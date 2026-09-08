@@ -88,6 +88,7 @@ export const createCargo = createServerFn({ method: "POST" })
       descripcion: string;
       sueldo: string | number | null;
       atributos_semanticos?: Partial<AtributosSemanticos> | null;
+      estructurales?: Partial<Estructurales> | null;
     }) => {
       const nombre = String(input?.nombre ?? "").trim();
       if (!nombre) throw new Error("El nombre es obligatorio");
@@ -108,6 +109,7 @@ export const createCargo = createServerFn({ method: "POST" })
         descripcion: String(input?.descripcion ?? "").trim() || null,
         sueldo,
         atributos_semanticos: normalizarAtributosInput(input?.atributos_semanticos),
+        ...normalizarEstructurales(input?.estructurales),
       };
     },
   )
