@@ -1,9 +1,19 @@
 /**
  * Motor determinístico de homologación.
  * Cálculo puro: mismas entradas → mismas salidas. Sin IA, sin datos inventados.
+ * El sueldo NO participa: la homologación evalúa contenido y estructura del cargo.
  */
 
-export type CriterioCampo = "nombre" | "descripcion" | "sueldo" | "tipo_empresa";
+export type CriterioCampo =
+  | "nombre"
+  | "descripcion"
+  | "area"
+  | "subarea"
+  | "codigo_cargo"
+  | "nivel_jerarquico"
+  | "experiencia"
+  | "requisitos"
+  | "tipo_empresa";
 
 export type CriterioMotor = {
   id: string;
@@ -18,7 +28,14 @@ export type CargoMotor = {
   id: string;
   nombre: string;
   descripcion: string | null;
-  sueldo: number | null;
+  codigo_area: string | null;
+  nombre_area: string | null;
+  codigo_subarea: string | null;
+  nombre_subarea: string | null;
+  codigo_cargo: string | null;
+  nivel_jerarquico: string | null;
+  experiencia_requerida: string | null;
+  requisitos_formacion: string | null;
   empresa_nombre: string | null;
   empresa_tipo: "P" | "M" | "G" | null;
 };
@@ -60,7 +77,16 @@ function normalizar(texto: string) {
     .filter((w) => w.length > 2);
 }
 
-function similitudTexto(a: string, b: string) {
+function clave(texto: string) {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function similitudTexto(a: string | null, b: string | null) {
+  if (!a || !b) return null;
   const pa = normalizar(a);
   const pb = new Set(normalizar(b));
   if (!pa.length || !pb.size) return null;
@@ -68,12 +94,21 @@ function similitudTexto(a: string, b: string) {
   return comunes.length / pa.length;
 }
 
-function similitudSueldo(a: number, b: number) {
-  const base = Math.max(Math.abs(a), Math.abs(b));
-  if (base === 0) return 1;
-  const dif = Math.abs(a - b) / base;
-  if (dif >= 0.5) return 0;
-  return 1 - dif / 0.5;
+function igualdadCodigo(a: string | null, b: string | null) {
+  if (!a?.trim() || !b?.trim()) return null;
+  return clave(a) === clave(b) ? 1 : 0;
+}
+
+/** Códigos si ambos los tienen; si no, comparación textual del nombre. */
+function comparaCategoria(
+  codA: string | null,
+  codB: string | null,
+  nomA: string | null,
+  nomB: string | null,
+) {
+  const porCodigo = igualdadCodigo(codA, codB);
+  if (porCodigo !== null) return porCodigo;
+  return similitudTexto(nomA, nomB);
 }
 
 const ORDEN_EMPRESA: Record<string, number> = { P: 0, M: 1, G: 2 };
@@ -84,29 +119,60 @@ function evaluarCriterio(
   interno: CargoMotor,
   candidato: CargoMotor,
 ): number | null {
-  if (campo === "nombre") return similitudTexto(interno.nombre, candidato.nombre);
-  if (campo === "descripcion") {
-    if (!interno.descripcion || !candidato.descripcion) return null;
-    return similitudTexto(interno.descripcion, candidato.descripcion);
+  switch (campo) {
+    case "nombre":
+      return similitudTexto(interno.nombre, candidato.nombre);
+    case "descripcion":
+      return similitudTexto(interno.descripcion, candidato.descripcion);
+    case "area":
+      return comparaCategoria(
+        interno.codigo_area,
+        candidato.codigo_area,
+        interno.nombre_area,
+        candidato.nombre_area,
+      );
+    case "subarea":
+      return comparaCategoria(
+        interno.codigo_subarea,
+        candidato.codigo_subarea,
+        interno.nombre_subarea,
+        candidato.nombre_subarea,
+      );
+    case "codigo_cargo":
+      return igualdadCodigo(interno.codigo_cargo, candidato.codigo_cargo);
+    case "nivel_jerarquico": {
+      const exacto = igualdadCodigo(interno.nivel_jerarquico, candidato.nivel_jerarquico);
+      if (exacto === 1) return 1;
+      if (exacto === null) return null;
+      return similitudTexto(interno.nivel_jerarquico, candidato.nivel_jerarquico) ?? 0;
+    }
+    case "experiencia":
+      return similitudTexto(interno.experiencia_requerida, candidato.experiencia_requerida);
+    case "requisitos":
+      return similitudTexto(interno.requisitos_formacion, candidato.requisitos_formacion);
+    case "tipo_empresa": {
+      if (!interno.empresa_tipo || !candidato.empresa_tipo) return null;
+      const d = Math.abs(
+        (ORDEN_EMPRESA[interno.empresa_tipo] ?? 0) - (ORDEN_EMPRESA[candidato.empresa_tipo] ?? 0),
+      );
+      if (d === 0) return 1;
+      if (d === 1) return 0.5;
+      return 0;
+    }
+    default:
+      return null;
   }
-  if (campo === "sueldo") {
-    if (interno.sueldo === null || candidato.sueldo === null) return null;
-    return similitudSueldo(Number(interno.sueldo), Number(candidato.sueldo));
-  }
-  // tipo_empresa
-  if (!interno.empresa_tipo || !candidato.empresa_tipo) return null;
-  const d = Math.abs(
-    (ORDEN_EMPRESA[interno.empresa_tipo] ?? 0) - (ORDEN_EMPRESA[candidato.empresa_tipo] ?? 0),
-  );
-  if (d === 0) return 1;
-  if (d === 1) return 0.5;
-  return 0;
 }
 
 const ETIQUETA_CAMPO: Record<CriterioCampo, string> = {
   nombre: "nombre del cargo",
   descripcion: "descripción",
-  sueldo: "sueldo",
+  area: "área",
+  subarea: "subárea",
+  codigo_cargo: "código del cargo",
+  nivel_jerarquico: "nivel jerárquico",
+  experiencia: "experiencia requerida",
+  requisitos: "requisitos / formación",
   tipo_empresa: "tamaño de empresa",
 };
 
@@ -135,6 +201,7 @@ export function ejecutarMotor(
     for (const cr of activos) {
       const puntaje = evaluarCriterio(cr.campo, interno, cand);
       const peso = Number(cr.peso);
+      const etiqueta = ETIQUETA_CAMPO[cr.campo] ?? cr.campo;
 
       if (puntaje === null) {
         diferencias.push({
@@ -142,10 +209,10 @@ export function ejecutarMotor(
           campo: cr.campo,
           peso,
           puntaje: 0,
-          detalle: `Dato faltante en ${ETIQUETA_CAMPO[cr.campo]}`,
+          detalle: `Dato faltante en ${etiqueta}`,
         });
         if (cr.obligatorio && !motivo) {
-          motivo = `Criterio obligatorio «${cr.nombre}»: dato faltante en ${ETIQUETA_CAMPO[cr.campo]}`;
+          motivo = `Criterio obligatorio «${cr.nombre}»: dato faltante en ${etiqueta}`;
         }
         continue;
       }
@@ -155,7 +222,7 @@ export function ejecutarMotor(
         campo: cr.campo,
         peso,
         puntaje,
-        detalle: `${ETIQUETA_CAMPO[cr.campo]}: ${(puntaje * 100).toFixed(0)}%`,
+        detalle: `${etiqueta}: ${(puntaje * 100).toFixed(0)}%`,
       };
 
       if (puntaje > 0) {
@@ -164,7 +231,7 @@ export function ejecutarMotor(
       } else {
         diferencias.push(item);
         if (cr.obligatorio && !motivo) {
-          motivo = `Criterio obligatorio «${cr.nombre}»: sin coincidencia en ${ETIQUETA_CAMPO[cr.campo]}`;
+          motivo = `Criterio obligatorio «${cr.nombre}»: sin coincidencia en ${etiqueta}`;
         }
       }
     }
