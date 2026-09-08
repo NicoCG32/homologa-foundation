@@ -5,12 +5,15 @@ import { useMemo, useState } from "react";
 
 import {
   ATRIBUTOS_SEMANTICOS,
+  CAMPOS_ESTRUCTURALES,
   atributosVacios,
   createCargo,
   deleteCargo,
+  estructuralesVacios,
   listCargos,
   type AtributosSemanticos,
   type CargoTipo,
+  type Estructurales,
 } from "@/lib/cargos.functions";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { formatSueldo } from "@/lib/format";
