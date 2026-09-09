@@ -278,6 +278,13 @@ function CargosPage() {
                   {c.descripcion && (
                     <div className="text-xs text-muted-foreground">{c.descripcion}</div>
                   )}
+                  {CAMPOS_ESTRUCTURALES.some((k) => c[k.clave]) && (
+                    <div className="text-xs text-muted-foreground">
+                      {CAMPOS_ESTRUCTURALES.filter((k) => c[k.clave])
+                        .map((k) => `${k.etiqueta}: ${c[k.clave]}`)
+                        .join(" · ")}
+                    </div>
+                  )}
                   <div className="text-xs text-muted-foreground">
                     Atributos semánticos: {contarAtributos(c.atributos_semanticos)}/
                     {ATRIBUTOS_SEMANTICOS.length}
