@@ -158,7 +158,9 @@ function CargosPage() {
           />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-muted-foreground">Sueldo</span>
+          <span className="mb-1 block text-muted-foreground">
+            Sueldo (informativo, no se usa para homologar)
+          </span>
           <input
             type="number"
             min="0"
@@ -168,6 +170,20 @@ function CargosPage() {
             onChange={(e) => setSueldo(e.target.value)}
           />
         </label>
+        <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+          {CAMPOS_ESTRUCTURALES.map((c) => (
+            <label key={c.clave} className="text-sm">
+              <span className="mb-1 block text-muted-foreground">{c.etiqueta}</span>
+              <input
+                className="w-full rounded-md border bg-background px-3 py-2"
+                value={estructurales[c.clave]}
+                onChange={(e) =>
+                  setEstructurales((prev) => ({ ...prev, [c.clave]: e.target.value }))
+                }
+              />
+            </label>
+          ))}
+        </div>
         <label className="text-sm sm:col-span-2">
           <span className="mb-1 block text-muted-foreground">Descripción</span>
           <textarea
@@ -261,6 +277,13 @@ function CargosPage() {
                   {c.nombre}
                   {c.descripcion && (
                     <div className="text-xs text-muted-foreground">{c.descripcion}</div>
+                  )}
+                  {CAMPOS_ESTRUCTURALES.some((k) => c[k.clave]) && (
+                    <div className="text-xs text-muted-foreground">
+                      {CAMPOS_ESTRUCTURALES.filter((k) => c[k.clave])
+                        .map((k) => `${k.etiqueta}: ${c[k.clave]}`)
+                        .join(" · ")}
+                    </div>
                   )}
                   <div className="text-xs text-muted-foreground">
                     Atributos semánticos: {contarAtributos(c.atributos_semanticos)}/
