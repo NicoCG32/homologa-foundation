@@ -4,13 +4,16 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Building2, ClipboardList, History, Home, Settings2, Sparkles } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import logoAsset from "../assets/espejo-homologa-logo.jpg.asset.json";
 
 function NotFoundComponent() {
   return (
@@ -77,11 +80,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Espejo: Homologa" },
+      { name: "description", content: "Encuentra cargos equivalentes con un proceso claro y guiado." },
+      { name: "author", content: "Espejo: Homologa" },
+      { property: "og:title", content: "Espejo: Homologa" },
+      { property: "og:description", content: "Encuentra cargos equivalentes con un proceso claro y guiado." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
@@ -91,7 +94,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600&family=Urbanist:wght@600;700;800&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -102,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <HeadContent />
       </head>
@@ -115,39 +124,71 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 const NAV = [
-  { to: "/", label: "Inicio" },
-  { to: "/empresas", label: "Empresas" },
-  { to: "/cargos", label: "Cargos" },
-  { to: "/criterios", label: "Criterios" },
-  { to: "/homologacion/nueva", label: "Nueva homologación" },
-  { to: "/historial", label: "Historial" },
+  { to: "/", label: "Inicio", icon: Home, group: "principal" },
+  { to: "/homologacion/nueva", label: "Seleccionar cargo", icon: Sparkles, group: "principal" },
+  { to: "/historial", label: "Historial", icon: History, group: "principal" },
+  { to: "/cargos", label: "Cargos", icon: ClipboardList, group: "gestión" },
+  { to: "/empresas", label: "Empresas", icon: Building2, group: "gestión" },
+  { to: "/criterios", label: "Criterios", icon: Settings2, group: "gestión" },
 ] as const;
+
+const JOURNEY = ["Cargo", "Revisión", "Candidatos", "Análisis IA", "Decisión"];
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isProcess = pathname.startsWith("/homologacion") || pathname.startsWith("/historial/");
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="border-b">
-          <nav className="mx-auto flex max-w-5xl flex-wrap gap-4 px-4 py-3 text-sm">
-            {NAV.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                activeOptions={{ exact: item.to === "/" }}
-                activeProps={{ className: "font-semibold text-foreground" }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
+      <div className="app-frame">
+        <aside className="app-sidebar">
+          <Link to="/" className="brand-lockup" aria-label="Espejo: Homologa — Inicio">
+            <img src={logoAsset.url} alt="Logo oficial de Espejo: Homologa" />
+            <span><strong>Espejo:</strong> Homologa</span>
+          </Link>
+          <nav className="sidebar-nav" aria-label="Navegación principal">
+            <p>Principal</p>
+            {NAV.filter((item) => item.group === "principal").map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.to} to={item.to} activeOptions={{ exact: item.to === "/" }} activeProps={{ className: "active" }}>
+                  <Icon aria-hidden="true" /> <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            <p>Gestión</p>
+            {NAV.filter((item) => item.group === "gestión").map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.to} to={item.to} activeProps={{ className: "active" }}>
+                  <Icon aria-hidden="true" /> <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
-        </header>
-        <main className="mx-auto max-w-5xl px-4 py-8">
+          <div className="sidebar-note">
+            <span>Decisión asistida</span>
+            <p>La recomendación orienta. La decisión final siempre es tuya.</p>
+          </div>
+        </aside>
+        <div className="app-workspace">
+          <header className="workspace-header">
+            <Link to="/" className="mobile-brand">Espejo: <strong>Homologa</strong></Link>
+            {isProcess ? (
+              <ol className="journey" aria-label="Etapas de la homologación">
+                {JOURNEY.map((step, index) => <li key={step} className={index === 0 ? "current" : ""}><span>{index + 1}</span>{step}</li>)}
+              </ol>
+            ) : (
+              <p>Inteligencia para encontrar equivalencias entre cargos</p>
+            )}
+            <div className="user-mark" aria-label="Perfil">PG</div>
+          </header>
+          <main className="workspace-content">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
-        </main>
+          </main>
+        </div>
       </div>
     </QueryClientProvider>
   );

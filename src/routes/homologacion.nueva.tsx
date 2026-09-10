@@ -6,17 +6,18 @@ import { useState } from "react";
 import { listCargos } from "@/lib/cargos.functions";
 import { CAMPOS_CRITERIO, listCriterios } from "@/lib/criterios.functions";
 import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
-import { formatSueldo } from "@/lib/format";
+import { ArrowRight, Bot, CheckCircle2, Search, ShieldCheck, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
     meta: [
-      { title: "Nueva homologación — HOMOLOGA" },
-      { name: "description", content: "Ejecuta el motor determinístico para un cargo interno." },
-      { property: "og:title", content: "Nueva homologación — HOMOLOGA" },
+      { title: "Seleccionar cargo — Espejo: Homologa" },
+      { name: "description", content: "Selecciona un cargo interno y encuentra sus equivalentes." },
+      { property: "og:title", content: "Seleccionar cargo — Espejo: Homologa" },
       {
         property: "og:description",
-        content: "Compara un cargo interno con cargos de referencia según los criterios definidos.",
+        content: "Encuentra cargos equivalentes mediante una revisión clara y asistida.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -69,24 +70,23 @@ function NuevaHomologacion() {
 
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-semibold">Nueva homologación</h1>
-      <p className="text-sm text-muted-foreground">
-        El motor determinístico compara el cargo interno con los cargos de referencia aplicando los
-        criterios y pesos almacenados. No usa IA ni completa datos faltantes.
-      </p>
+    <div className="process-page">
+      <div className="page-heading">
+        <p className="eyebrow">Nueva homologación</p>
+        <h1>¿Qué cargo quieres homologar?</h1>
+        <p>Selecciona un cargo interno. Revisaremos su información antes de buscar equivalencias.</p>
+      </div>
 
       <form
-        className="space-y-4 rounded-lg border p-4"
+        className="selection-panel"
         onSubmit={(e) => {
           e.preventDefault();
           mut.mutate();
         }}
       >
         <label className="block text-sm">
-          <span className="mb-1 block text-muted-foreground">Cargo interno</span>
-          <select
-            className="w-full rounded-md border bg-background px-3 py-2"
+          <span>Cargo interno</span>
+          <div className="select-with-icon"><Search aria-hidden="true" /><select
             value={cargoId}
             onChange={(e) => setCargoId(e.target.value)}
             required
@@ -97,11 +97,10 @@ function NuevaHomologacion() {
                 {c.nombre} — {c.empresas?.nombre ?? "sin empresa"}
               </option>
             ))}
-          </select>
+          </select></div>
         </label>
 
-        <div className="text-sm">
-          <span className="text-muted-foreground">Criterios activos: </span>
+        <details className="criteria-summary"><summary>Ver información usada en la comparación</summary><div>
           {criterios.isLoading
             ? "…"
             : activos.length
@@ -111,16 +110,16 @@ function NuevaHomologacion() {
                       `${c.nombre} · ${CAMPOS_CRITERIO[c.campo]} · peso ${c.peso}${c.obligatorio ? " · obligatorio" : ""}`,
                   )
                   .join(" | ")
-              : "ninguno definido"}
-        </div>
+              : "ninguna definida"}
+        </div></details>
 
-        <button
+        <Button
           type="submit"
           disabled={mut.isPending || !internos.length}
-          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+          size="lg"
         >
-          {mut.isPending ? "Calculando…" : "Ejecutar motor determinístico"}
-        </button>
+          {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
+        </Button>
         {!cargos.isLoading && !internos.length && (
           <p className="text-sm text-muted-foreground">
             Necesitas al menos un cargo de tipo interno.
@@ -132,7 +131,7 @@ function NuevaHomologacion() {
       {res && (
         <div className="space-y-6">
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">1. Cargo analizado</h2>
+            <h2 className="mb-2 font-medium"><ShieldCheck /> Cargo revisado</h2>
             <p className="text-sm">
               <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"}
               {res.cargo.nombre_area ? ` · área ${res.cargo.nombre_area}` : ""}
@@ -149,15 +148,15 @@ function NuevaHomologacion() {
           </section>
 
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">2. Candidatos encontrados</h2>
+            <h2 className="mb-2 font-medium"><Users /> Candidatos encontrados</h2>
             <p className="text-sm">
-              {res.evaluados} cargos de referencia evaluados
-              {res.pesoTotal <= 0 && " — no hay criterios activos con peso, no se calculó score"}
+              {res.evaluados} cargos de referencia revisados
+              {res.pesoTotal <= 0 && " — no hay criterios activos para comparar"}
             </p>
           </section>
 
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">3. Candidatos descartados</h2>
+            <h2 className="mb-2 font-medium">Candidatos no compatibles</h2>
             {!res.descartados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
@@ -173,7 +172,7 @@ function NuevaHomologacion() {
           </section>
 
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">4. Candidatos preseleccionados</h2>
+            <h2 className="mb-2 font-medium"><CheckCircle2 /> Candidatos preseleccionados</h2>
             {!res.preseleccionados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
@@ -184,7 +183,7 @@ function NuevaHomologacion() {
                       <strong>
                         {i + 1}. {p.cargo.nombre}
                       </strong>{" "}
-                      — {p.cargo.empresa_nombre ?? "sin empresa"} · score {pct(p.score)}
+                       — {p.cargo.empresa_nombre ?? "sin empresa"} · coincidencia {pct(p.score)}
                     </p>
                     <p className="text-muted-foreground">
                       Coincidencias:{" "}
@@ -205,19 +204,18 @@ function NuevaHomologacion() {
           </section>
 
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">5. Análisis semántico (Gemini)</h2>
+            <h2 className="mb-2 font-medium"><Bot /> Análisis IA</h2>
             <p className="mb-3 text-sm text-muted-foreground">
-              Se envían únicamente los {res.preseleccionados.length} candidatos preseleccionados, sin
-              información salarial. No altera el ranking determinístico.
+              La IA revisará únicamente los {res.preseleccionados.length} candidatos preseleccionados y comparará el contenido de cada cargo.
             </p>
-            <button
+            <Button
               type="button"
               disabled={sem.isPending || !res.preseleccionados.length}
               onClick={() => sem.mutate(res.ejecucion_id)}
-              className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+              variant="outline"
             >
-              {sem.isPending ? "Analizando…" : "Analizar semánticamente con Gemini"}
-            </button>
+              {sem.isPending ? "Analizando…" : "Continuar con análisis IA"}
+            </Button>
             {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
             {semOk && (
               <div className="mt-4 space-y-3 text-sm">
