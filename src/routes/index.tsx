@@ -1,18 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
+import logoAsset from "@/assets/espejo-homologa-logo.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "HOMOLOGA — Homologación de cargos" },
+      { title: "Inicio — Espejo: Homologa" },
       {
         name: "description",
         content:
-          "Base para homologar cargos internos con cargos de referencia: empresas, cargos, criterios y ejecuciones.",
+          "Selecciona un cargo y encuentra sus equivalentes con Espejo: Homologa.",
       },
-      { property: "og:title", content: "HOMOLOGA — Homologación de cargos" },
+      { property: "og:title", content: "Espejo: Homologa" },
       {
         property: "og:description",
-        content: "Gestiona empresas, cargos, criterios y ejecuciones de homologación.",
+        content: "Selecciona un cargo y encuentra sus equivalentes con un proceso claro y guiado.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -21,55 +23,27 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const pasos = [
-  "Cargo interno",
-  "Motor determinístico",
-  "Candidatos preseleccionados",
-  "Análisis semántico",
-  "Resultado",
-  "Decisión profesional",
-  "Comparación salarial",
-];
-
 function Index() {
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <header>
-        <h1 className="text-3xl font-semibold">HOMOLOGA</h1>
-        <p className="mt-2 text-muted-foreground">
-          Base mínima para el flujo de homologación de cargos. El motor determinístico y el análisis
-          semántico se implementarán en una etapa posterior.
-        </p>
-      </header>
-
-      <section className="rounded-lg border p-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground">Flujo</h2>
-        <ol className="mt-3 space-y-1 text-sm">
-          {pasos.map((paso, i) => (
-            <li key={paso}>
-              <span className="text-muted-foreground">{i + 1}.</span> {paso}
-            </li>
-          ))}
-        </ol>
+    <div className="home-page">
+      <section className="home-intro">
+        <div>
+          <p className="eyebrow">Bienvenido a Espejo: Homologa</p>
+          <h1>¿Qué cargo quieres homologar?</h1>
+          <p>Selecciona un cargo para encontrar equivalencias y tomar una decisión con información clara.</p>
+          <Link to="/homologacion/nueva" className="primary-action">
+            <Search aria-hidden="true" /> Seleccionar cargo <ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
+        <div className="home-logo-wrap" aria-hidden="true">
+          <img src={logoAsset.url} alt="" />
+        </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
-        {[
-          { to: "/empresas", title: "Empresas", desc: "Registra empresas y su tamaño." },
-          { to: "/cargos", title: "Cargos", desc: "Cargos internos y de referencia con sueldo." },
-          { to: "/criterios", title: "Criterios", desc: "Criterios y pesos de comparación." },
-          {
-            to: "/homologacion/nueva",
-            title: "Nueva homologación",
-            desc: "Crea una ejecución para un cargo interno.",
-          },
-          { to: "/historial", title: "Historial", desc: "Ejecuciones y sus resultados." },
-        ].map((c) => (
-          <Link key={c.to} to={c.to} className="rounded-lg border p-4 hover:bg-accent">
-            <div className="font-medium">{c.title}</div>
-            <div className="text-sm text-muted-foreground">{c.desc}</div>
-          </Link>
-        ))}
+      <section className="quick-grid" aria-label="Accesos rápidos">
+        <Link to="/cargos"><BriefcaseBusiness /><span><strong>Cargos</strong><small>Revisa y administra los cargos disponibles.</small></span><ArrowRight /></Link>
+        <Link to="/historial"><History /><span><strong>Historial</strong><small>Consulta homologaciones y resultados anteriores.</small></span><ArrowRight /></Link>
+        <Link to="/empresas"><Building2 /><span><strong>Empresas</strong><small>Mantén actualizada la información de empresas.</small></span><ArrowRight /></Link>
       </section>
     </div>
   );
