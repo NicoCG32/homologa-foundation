@@ -14,9 +14,9 @@ import { TIPOS_EMPRESA } from "@/lib/format";
 export const Route = createFileRoute("/empresas")({
   head: () => ({
     meta: [
-      { title: "Empresas — HOMOLOGA" },
+      { title: "Empresas — Espejo: Homologa" },
       { name: "description", content: "Registro de empresas y su tamaño (pequeña, mediana, grande)." },
-      { property: "og:title", content: "Empresas — HOMOLOGA" },
+      { property: "og:title", content: "Empresas — Espejo: Homologa" },
       { property: "og:description", content: "Registro de empresas para la homologación de cargos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
