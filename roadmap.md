@@ -1,3 +1,3 @@
 # Roadmap
 
-- [ ] Verificar y reforzar la experiencia responsive en celular
+- [x] Verificar y reforzar la experiencia responsive en celular
