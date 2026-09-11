@@ -8,9 +8,9 @@ import { formatFecha, formatSueldo } from "@/lib/format";
 export const Route = createFileRoute("/historial/$id")({
   head: () => ({
     meta: [
-      { title: "Detalle de ejecución — HOMOLOGA" },
+      { title: "Detalle de homologación — Espejo: Homologa" },
       { name: "description", content: "Resultados de una ejecución de homologación y comparación salarial." },
-      { property: "og:title", content: "Detalle de ejecución — HOMOLOGA" },
+      { property: "og:title", content: "Detalle de homologación — Espejo: Homologa" },
       { property: "og:description", content: "Resultados y comparación salarial de una homologación." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

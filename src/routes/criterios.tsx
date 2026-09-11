@@ -16,9 +16,9 @@ import {
 export const Route = createFileRoute("/criterios")({
   head: () => ({
     meta: [
-      { title: "Criterios — HOMOLOGA" },
+      { title: "Criterios — Espejo: Homologa" },
       { name: "description", content: "Criterios de comparación y sus pesos, definidos en la base de datos." },
-      { property: "og:title", content: "Criterios — HOMOLOGA" },
+      { property: "og:title", content: "Criterios — Espejo: Homologa" },
       { property: "og:description", content: "Administra los criterios y pesos usados en la homologación." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

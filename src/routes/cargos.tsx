@@ -21,9 +21,9 @@ import { formatSueldo } from "@/lib/format";
 export const Route = createFileRoute("/cargos")({
   head: () => ({
     meta: [
-      { title: "Cargos — HOMOLOGA" },
+      { title: "Cargos — Espejo: Homologa" },
       { name: "description", content: "Cargos internos y de referencia con su empresa, descripción y sueldo." },
-      { property: "og:title", content: "Cargos — HOMOLOGA" },
+      { property: "og:title", content: "Cargos — Espejo: Homologa" },
       { property: "og:description", content: "Administra cargos internos y de referencia por empresa." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
