@@ -133,6 +133,7 @@ type FilaImport = {
   codigo_subarea: string; nombre_subarea: string; codigo_nivel_jerarquico: string;
   nivel_jerarquico: string; descripcion: string; experiencia_requerida: string;
   requisitos_formacion: string; empresa_nombre?: string; empresa_tipo?: EmpresaTipo | null;
+  sueldo?: number | null; proposito?: string; funciones?: string; responsabilidades?: string;
 };
 type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null };
 type EmpresaTipo = "P" | "M" | "G";
