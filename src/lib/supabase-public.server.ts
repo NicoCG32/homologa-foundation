@@ -2,11 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 /**
- * Cliente de solo-datos usado por las server functions.
- * Las políticas actuales son abiertas (etapa MVP sin autenticación).
+ * Cliente de datos usado exclusivamente por las server functions.
+ * Las tablas ya no son accesibles desde el navegador: solo el servidor
+ * puede leer o escribir, usando la credencial privilegiada.
  */
 export function getDb() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+  const key = process.env["SUPABASE_SERVICE_ROLE_KEY"]!;
   return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
     global: {
