@@ -64,11 +64,56 @@ export type Database = {
           },
         ]
       }
+      bandas_salariales: {
+        Row: {
+          cargo_id: string
+          created_at: string
+          id: string
+          p25: number | null
+          p50: number | null
+          p75: number | null
+          promedio: number | null
+          tipo_empresa: Database["public"]["Enums"]["empresa_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          cargo_id: string
+          created_at?: string
+          id?: string
+          p25?: number | null
+          p50?: number | null
+          p75?: number | null
+          promedio?: number | null
+          tipo_empresa: Database["public"]["Enums"]["empresa_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          cargo_id?: string
+          created_at?: string
+          id?: string
+          p25?: number | null
+          p50?: number | null
+          p75?: number | null
+          promedio?: number | null
+          tipo_empresa?: Database["public"]["Enums"]["empresa_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bandas_salariales_cargo_id_fkey"
+            columns: ["cargo_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cargos: {
         Row: {
           atributos_semanticos: Json
           codigo_area: string | null
           codigo_cargo: string | null
+          codigo_nivel_jerarquico: string | null
           codigo_subarea: string | null
           descripcion: string | null
           empresa_id: string
@@ -86,6 +131,7 @@ export type Database = {
           atributos_semanticos?: Json
           codigo_area?: string | null
           codigo_cargo?: string | null
+          codigo_nivel_jerarquico?: string | null
           codigo_subarea?: string | null
           descripcion?: string | null
           empresa_id: string
@@ -103,6 +149,7 @@ export type Database = {
           atributos_semanticos?: Json
           codigo_area?: string | null
           codigo_cargo?: string | null
+          codigo_nivel_jerarquico?: string | null
           codigo_subarea?: string | null
           descripcion?: string | null
           empresa_id?: string
@@ -156,18 +203,21 @@ export type Database = {
       ejecuciones: {
         Row: {
           cargo_id: string
+          criterios_usados: Json
           estado: Database["public"]["Enums"]["ejecucion_estado"]
           fecha: string
           id: string
         }
         Insert: {
           cargo_id: string
+          criterios_usados?: Json
           estado?: Database["public"]["Enums"]["ejecucion_estado"]
           fecha?: string
           id?: string
         }
         Update: {
           cargo_id?: string
+          criterios_usados?: Json
           estado?: Database["public"]["Enums"]["ejecucion_estado"]
           fecha?: string
           id?: string
