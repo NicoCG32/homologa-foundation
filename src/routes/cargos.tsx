@@ -240,9 +240,67 @@ function CargosPage() {
           {modoCarga === "REFERENCIA" && <label className="file-picker"><Upload aria-hidden="true" /><span><strong>Encuesta Piloto Remuneraciones</strong><small>{archivoBandas || "XLSX"}</small></span><input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => cargarBandas(e.target.files?.[0])} /></label>}
         </div>
         <details className="criteria-summary"><summary>Ver formato esperado</summary><div>ID Cargo, Nombre del Cargo, Código y Nombre de Área, Código y Nombre de Subárea, Código y Nombre del Nivel Jerárquico y Descripción. Para cargos propios también se aceptan Experiencia Requerida y Requisitos Formación. Las remuneraciones se cruzan por ID Cargo.</div></details>
-        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!empresaId || !cargosCarga.length || importMut.isPending || (modoCarga === "REFERENCIA" && !bandasCarga.length)} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
-        {(cargosCarga.length > 0 || erroresCarga.length > 0) && <div className="import-preview"><strong>Vista previa</strong><p>{cargosCarga.length} cargos válidos{modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length} observaciones</p>{erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}</div>}
-        {importMut.data && <p className="text-sm">Carga lista: {importMut.data.creados} nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
+        {(cargosCarga.length > 0 || erroresCarga.length > 0) && (
+          <div className="import-preview">
+            <strong>Vista previa</strong>
+            <p>
+              {cargosCarga.length} cargos · {empresasNuevas} empresas nuevas
+              {modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length} observaciones
+            </p>
+            {erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}
+            {faltaEmpresa && <p className="text-destructive">Hay filas sin empresa: agrégala en la planilla o elige una empresa de destino.</p>}
+          </div>
+        )}
+
+        {cargosCarga.length > 0 && (
+          <div className="import-review">
+            <input className="import-search" placeholder="Buscar cargo, código o empresa…" value={busqueda} onChange={(e) => { setBusqueda(e.target.value); setVisibles(12); }} />
+            <div className="import-cards">
+              {tarjetasFiltradas.slice(0, visibles).map((t, i) => (
+                <article key={`${t.cargo.codigo_cargo}-${i}`} className={`import-card${t.sinEmpresa ? " is-problema" : ""}`}>
+                  <header>
+                    <div>
+                      <strong>{t.cargo.nombre}</strong>
+                      <small>{t.cargo.codigo_cargo}</small>
+                    </div>
+                    <span className={`empresa-tag${t.nueva ? " is-nueva" : ""}`}>
+                      {t.sinEmpresa ? "Sin empresa" : `${t.nombreEmpresa}${t.tipoEmpresa ? ` · ${t.tipoEmpresa}` : ""}${t.nueva ? " · nueva" : ""}`}
+                    </span>
+                  </header>
+                  <dl>
+                    <div><dt>Área</dt><dd>{[t.cargo.codigo_area, t.cargo.nombre_area].filter(Boolean).join(" · ") || "—"}</dd></div>
+                    <div><dt>Subárea</dt><dd>{[t.cargo.codigo_subarea, t.cargo.nombre_subarea].filter(Boolean).join(" · ") || "—"}</dd></div>
+                    <div><dt>Nivel</dt><dd>{[t.cargo.codigo_nivel_jerarquico, t.cargo.nivel_jerarquico].filter(Boolean).join(" · ") || "—"}</dd></div>
+                    <div><dt>Experiencia</dt><dd>{t.cargo.experiencia_requerida || "—"}</dd></div>
+                    <div><dt>Formación</dt><dd>{t.cargo.requisitos_formacion || "—"}</dd></div>
+                  </dl>
+                  {t.cargo.descripcion && <p className="import-card-desc">{t.cargo.descripcion}</p>}
+                  {t.bandas.length > 0 && (
+                    <ul className="import-card-bandas">
+                      {t.bandas.map((b) => (
+                        <li key={b.tipo_empresa}>
+                          <span>{b.tipo_empresa}</span> P25 {b.p25 ?? "—"} · P50 {b.p50 ?? "—"} · P75 {b.p75 ?? "—"} · Prom. {b.promedio ?? "—"}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+              ))}
+            </div>
+            {tarjetasFiltradas.length > visibles && (
+              <Button type="button" variant="outline" onClick={() => setVisibles((v) => v + 12)}>
+                Ver más ({tarjetasFiltradas.length - visibles} restantes)
+              </Button>
+            )}
+            <label className="import-confirm">
+              <input type="checkbox" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} />
+              <span>Revisé la vista previa y los datos están correctos</span>
+            </label>
+          </div>
+        )}
+
+        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
+        {importMut.data && <p className="text-sm">Carga lista: {importMut.data.empresas} empresas nuevas, {importMut.data.creados} cargos nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
       </section>
 
       <form
