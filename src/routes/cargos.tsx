@@ -20,14 +20,18 @@ import {
 import {
   EMPRESA_CATALOGO,
   EMPRESA_CATALOGO_TIPO,
+  aplicarDiccionario,
   descargarPlantilla,
   leerBandas,
   leerCargos,
+  leerDiccionario,
   normalizarNombreEmpresa,
   type BandaImport,
+  type EntradaDiccionario,
   type ImportCargo,
 } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
+import { importarDiccionario, listDiccionario } from "@/lib/diccionario.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
