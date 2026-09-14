@@ -42,6 +42,98 @@ export const listCriterios = createServerFn({ method: "GET" }).handler(async () 
   );
 });
 
+/**
+ * Garantiza que exista exactamente un criterio por columna comparable.
+ * Los pesos se reparten como porcentaje, por eso no se crean criterios sueltos.
+ */
+export const asegurarCriterios = createServerFn({ method: "POST" }).handler(async () => {
+  const { getDb, unwrap } = await import("./supabase-public.server");
+  const db = getDb();
+  const existentes =
+    unwrap(await db.from("criterios").select("id, campo, peso, activo")) ?? [];
+  const campos = Object.keys(CAMPOS_CRITERIO) as CriterioCampo[];
+  const faltantes = campos.filter((c) => !existentes.some((e) => e.campo === c));
+  if (faltantes.length) {
+    const { error } = await db.from("criterios").insert(
+      faltantes.map((campo) => ({
+        campo,
+        nombre: CAMPOS_CRITERIO[campo],
+        peso: 0,
+        activo: false,
+        obligatorio: false,
+      })),
+    );
+    if (error) throw new Error(error.message);
+  }
+  return { creados: faltantes.length };
+});
+
+/** Guarda de una sola vez la ponderación (en %) de todas las columnas. */
+export const guardarPesos = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: { pesos: { id: string; peso: number; obligatorio?: boolean }[] }) => {
+      const pesos = (Array.isArray(input?.pesos) ? input.pesos : []).map((p) => {
+        const peso = Number(p?.peso);
+        if (!Number.isFinite(peso) || peso < 0) throw new Error("Ponderación inválida");
+        return { id: String(p.id), peso, obligatorio: Boolean(p?.obligatorio) };
+      });
+      if (!pesos.length) throw new Error("No hay ponderaciones que guardar");
+      return { pesos };
+    },
+  )
+  .handler(async ({ data }) => {
+    const { getDb } = await import("./supabase-public.server");
+    const db = getDb();
+    for (const p of data.pesos) {
+      const { error } = await db
+        .from("criterios")
+        .update({ peso: p.peso, activo: p.peso > 0, obligatorio: p.obligatorio })
+        .eq("id", p.id);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export type PresetPesos = { id: string; nombre: string; pesos: Record<string, number> };
+
+export const listPresets = createServerFn({ method: "GET" }).handler(async () => {
+  const { getDb, unwrap } = await import("./supabase-public.server");
+  return (
+    unwrap(await getDb().from("presets_pesos").select("id, nombre, pesos").order("nombre")) ?? []
+  );
+});
+
+/** Guarda (o reemplaza) una configuración de pesos con nombre, clavada por columna. */
+export const savePreset = createServerFn({ method: "POST" })
+  .inputValidator((input: { nombre: string; pesos: Record<string, number> }) => {
+    const nombre = String(input?.nombre ?? "").trim();
+    if (!nombre) throw new Error("Ponle un nombre a la configuración");
+    const pesos: Record<string, number> = {};
+    for (const [campo, valor] of Object.entries(input?.pesos ?? {})) {
+      if (!Object.prototype.hasOwnProperty.call(CAMPOS_CRITERIO, campo)) continue;
+      const n = Number(valor);
+      pesos[campo] = Number.isFinite(n) && n > 0 ? n : 0;
+    }
+    return { nombre, pesos };
+  })
+  .handler(async ({ data }) => {
+    const { getDb } = await import("./supabase-public.server");
+    const { error } = await getDb()
+      .from("presets_pesos")
+      .upsert({ nombre: data.nombre, pesos: data.pesos }, { onConflict: "nombre" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deletePreset = createServerFn({ method: "POST" })
+  .inputValidator((input: { id: string }) => ({ id: String(input.id) }))
+  .handler(async ({ data }) => {
+    const { getDb } = await import("./supabase-public.server");
+    const { error } = await getDb().from("presets_pesos").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const createCriterio = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
