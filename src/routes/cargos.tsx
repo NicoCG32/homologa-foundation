@@ -345,8 +345,14 @@ function CargosPage() {
                     <div><dt>Nivel</dt><dd>{[t.cargo.codigo_nivel_jerarquico, t.cargo.nivel_jerarquico].filter(Boolean).join(" · ") || "—"}</dd></div>
                     <div><dt>Experiencia</dt><dd>{t.cargo.experiencia_requerida || "—"}</dd></div>
                     <div><dt>Formación</dt><dd>{t.cargo.requisitos_formacion || "—"}</dd></div>
+                    {t.cargo.sueldo !== null && <div><dt>Remuneración</dt><dd>{t.cargo.sueldo}</dd></div>}
                   </dl>
                   {t.cargo.descripcion && <p className="import-card-desc">{t.cargo.descripcion}</p>}
+                  {t.avisos.length > 0 && (
+                    <ul className="import-card-avisos">
+                      {t.avisos.map((a) => <li key={a}>{a}</li>)}
+                    </ul>
+                  )}
                   {t.bandas.length > 0 && (
                     <ul className="import-card-bandas">
                       {t.bandas.map((b) => (
