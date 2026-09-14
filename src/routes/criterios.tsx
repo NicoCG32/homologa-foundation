@@ -38,7 +38,7 @@ function CriteriosPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["criterios"],
     queryFn: async () => {
-      await asegurar({ data: {} });
+      await asegurar();
       return list();
     },
   });
