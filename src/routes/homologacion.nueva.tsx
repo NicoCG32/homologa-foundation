@@ -99,7 +99,7 @@ function NuevaHomologacion() {
             <option value="">Selecciona…</option>
             {internos.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nombre} — {c.empresas?.nombre ?? "sin empresa"}
+                {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}{c.nombre} — Interno · {c.empresas?.nombre ?? "sin empresa"}
               </option>
             ))}
           </select></div>
