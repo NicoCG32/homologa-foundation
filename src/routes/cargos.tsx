@@ -17,7 +17,16 @@ import {
   type CargoTipo,
   type Estructurales,
 } from "@/lib/cargos.functions";
-import { descargarPlantilla, leerBandas, leerCargos, type BandaImport, type ImportCargo } from "@/lib/cargos-import";
+import {
+  EMPRESA_CATALOGO,
+  EMPRESA_CATALOGO_TIPO,
+  descargarPlantilla,
+  leerBandas,
+  leerCargos,
+  normalizarNombreEmpresa,
+  type BandaImport,
+  type ImportCargo,
+} from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -54,6 +63,9 @@ function CargosPage() {
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
 
   const [empresaId, setEmpresaId] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [visibles, setVisibles] = useState(12);
+  const [revisado, setRevisado] = useState(false);
   const [tipo, setTipo] = useState<CargoTipo>("INTERNO");
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -105,8 +117,17 @@ function CargosPage() {
   });
 
   const importMut = useMutation({
-    mutationFn: () => importar({ data: { empresa_id: empresaId, tipo: modoCarga, cargos: cargosCarga, bandas: modoCarga === "REFERENCIA" ? bandasCarga : [] } }),
-    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setError(null); invalidate(); },
+    mutationFn: () =>
+      importar({
+        data: {
+          empresa_id: modoCarga === "INTERNO" && empresaId ? empresaId : null,
+          empresa_defecto: modoCarga === "REFERENCIA" ? { nombre: EMPRESA_CATALOGO, tipo: EMPRESA_CATALOGO_TIPO } : null,
+          tipo: modoCarga,
+          cargos: cargosCarga,
+          bandas: modoCarga === "REFERENCIA" ? bandasCarga : [],
+        },
+      }),
+    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setRevisado(false); setBusqueda(""); setVisibles(12); setError(null); invalidate(); },
     onError: (e: Error) => setError(e.message),
   });
 
@@ -131,6 +152,53 @@ function CargosPage() {
     try { setBandasCarga(leerBandas(await filasArchivo(file))); setArchivoBandas(file.name); setError(null); }
     catch (e) { setError(e instanceof Error ? e.message : "No se pudo leer el archivo de remuneraciones"); }
   }
+
+  const empresaDestino = (empresas.data ?? []).find((e) => e.id === empresaId) ?? null;
+
+  const tarjetas = useMemo(() => {
+    const conocidas = new Map((empresas.data ?? []).map((e) => [normalizarNombreEmpresa(e.nombre), e]));
+    const bandasPorCodigo = new Map<string, BandaImport[]>();
+    for (const b of bandasCarga) {
+      const lista = bandasPorCodigo.get(b.codigo_cargo) ?? [];
+      lista.push(b);
+      bandasPorCodigo.set(b.codigo_cargo, lista);
+    }
+    return cargosCarga.map((c) => {
+      const nombreEmpresa =
+        c.empresa_nombre ||
+        (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO : empresaDestino?.nombre ?? "");
+      const existente = nombreEmpresa ? conocidas.get(normalizarNombreEmpresa(nombreEmpresa)) : undefined;
+      const tipoEmpresa = existente?.tipo ?? c.empresa_tipo ?? (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO_TIPO : null);
+      return {
+        cargo: c,
+        nombreEmpresa,
+        nueva: Boolean(nombreEmpresa) && !existente,
+        tipoEmpresa,
+        sinEmpresa: !nombreEmpresa,
+        bandas: modoCarga === "REFERENCIA" ? bandasPorCodigo.get(c.codigo_cargo) ?? [] : [],
+      };
+    });
+  }, [cargosCarga, bandasCarga, empresas.data, empresaDestino, modoCarga]);
+
+  const tarjetasFiltradas = useMemo(() => {
+    const q = normalizarNombreEmpresa(busqueda);
+    if (!q) return tarjetas;
+    return tarjetas.filter((t) =>
+      normalizarNombreEmpresa(`${t.cargo.nombre} ${t.cargo.codigo_cargo} ${t.nombreEmpresa} ${t.cargo.nombre_area}`).includes(q),
+    );
+  }, [tarjetas, busqueda]);
+
+  const empresasNuevas = useMemo(
+    () => new Set(tarjetas.filter((t) => t.nueva).map((t) => normalizarNombreEmpresa(t.nombreEmpresa))).size,
+    [tarjetas],
+  );
+  const faltaEmpresa = tarjetas.some((t) => t.sinEmpresa);
+  const puedeGuardar =
+    !!cargosCarga.length &&
+    !faltaEmpresa &&
+    revisado &&
+    !importMut.isPending &&
+    (modoCarga === "INTERNO" || bandasCarga.length > 0);
 
   const filtrados = useMemo(
     () =>
@@ -162,15 +230,77 @@ function CargosPage() {
           <Button type="button" variant={modoCarga === "INTERNO" ? "default" : "outline"} onClick={() => { setModoCarga("INTERNO"); setBandasCarga([]); }}>Cargos de empresa</Button>
           <Button type="button" variant={modoCarga === "REFERENCIA" ? "default" : "outline"} onClick={() => setModoCarga("REFERENCIA")}>Catálogo de encuesta</Button>
         </div>
-        <label className="text-sm"><span className="mb-1 block text-muted-foreground">Empresa de destino</span><select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}><option value="">Selecciona…</option>{(empresas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}</select></label>
+        {modoCarga === "INTERNO" ? (
+          <label className="text-sm"><span className="mb-1 block text-muted-foreground">Empresa de destino (opcional si la planilla trae la columna Empresa)</span><select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}><option value="">Detectar desde la planilla</option>{(empresas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}</select></label>
+        ) : (
+          <p className="text-sm text-muted-foreground">El catálogo se guarda en la empresa de referencia «{EMPRESA_CATALOGO}», que se crea automáticamente si no existe.</p>
+        )}
         <div className="import-files">
           <label className="file-picker"><Upload aria-hidden="true" /><span><strong>{modoCarga === "INTERNO" ? "Planilla de cargos" : "Encuesta Piloto"}</strong><small>{archivoCargos || "CSV o XLSX"}</small></span><input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => cargarEstructura(e.target.files?.[0])} /></label>
           {modoCarga === "REFERENCIA" && <label className="file-picker"><Upload aria-hidden="true" /><span><strong>Encuesta Piloto Remuneraciones</strong><small>{archivoBandas || "XLSX"}</small></span><input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => cargarBandas(e.target.files?.[0])} /></label>}
         </div>
         <details className="criteria-summary"><summary>Ver formato esperado</summary><div>ID Cargo, Nombre del Cargo, Código y Nombre de Área, Código y Nombre de Subárea, Código y Nombre del Nivel Jerárquico y Descripción. Para cargos propios también se aceptan Experiencia Requerida y Requisitos Formación. Las remuneraciones se cruzan por ID Cargo.</div></details>
-        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!empresaId || !cargosCarga.length || importMut.isPending || (modoCarga === "REFERENCIA" && !bandasCarga.length)} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
-        {(cargosCarga.length > 0 || erroresCarga.length > 0) && <div className="import-preview"><strong>Vista previa</strong><p>{cargosCarga.length} cargos válidos{modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length} observaciones</p>{erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}</div>}
-        {importMut.data && <p className="text-sm">Carga lista: {importMut.data.creados} nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
+        {(cargosCarga.length > 0 || erroresCarga.length > 0) && (
+          <div className="import-preview">
+            <strong>Vista previa</strong>
+            <p>
+              {cargosCarga.length} cargos · {empresasNuevas} empresas nuevas
+              {modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length} observaciones
+            </p>
+            {erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}
+            {faltaEmpresa && <p className="text-destructive">Hay filas sin empresa: agrégala en la planilla o elige una empresa de destino.</p>}
+          </div>
+        )}
+
+        {cargosCarga.length > 0 && (
+          <div className="import-review">
+            <input className="import-search" placeholder="Buscar cargo, código o empresa…" value={busqueda} onChange={(e) => { setBusqueda(e.target.value); setVisibles(12); }} />
+            <div className="import-cards">
+              {tarjetasFiltradas.slice(0, visibles).map((t, i) => (
+                <article key={`${t.cargo.codigo_cargo}-${i}`} className={`import-card${t.sinEmpresa ? " is-problema" : ""}`}>
+                  <header>
+                    <div>
+                      <strong>{t.cargo.nombre}</strong>
+                      <small>{t.cargo.codigo_cargo}</small>
+                    </div>
+                    <span className={`empresa-tag${t.nueva ? " is-nueva" : ""}`}>
+                      {t.sinEmpresa ? "Sin empresa" : `${t.nombreEmpresa}${t.tipoEmpresa ? ` · ${t.tipoEmpresa}` : ""}${t.nueva ? " · nueva" : ""}`}
+                    </span>
+                  </header>
+                  <dl>
+                    <div><dt>Área</dt><dd>{[t.cargo.codigo_area, t.cargo.nombre_area].filter(Boolean).join(" · ") || "—"}</dd></div>
+                    <div><dt>Subárea</dt><dd>{[t.cargo.codigo_subarea, t.cargo.nombre_subarea].filter(Boolean).join(" · ") || "—"}</dd></div>
+                    <div><dt>Nivel</dt><dd>{[t.cargo.codigo_nivel_jerarquico, t.cargo.nivel_jerarquico].filter(Boolean).join(" · ") || "—"}</dd></div>
+                    <div><dt>Experiencia</dt><dd>{t.cargo.experiencia_requerida || "—"}</dd></div>
+                    <div><dt>Formación</dt><dd>{t.cargo.requisitos_formacion || "—"}</dd></div>
+                  </dl>
+                  {t.cargo.descripcion && <p className="import-card-desc">{t.cargo.descripcion}</p>}
+                  {t.bandas.length > 0 && (
+                    <ul className="import-card-bandas">
+                      {t.bandas.map((b) => (
+                        <li key={b.tipo_empresa}>
+                          <span>{b.tipo_empresa}</span> P25 {b.p25 ?? "—"} · P50 {b.p50 ?? "—"} · P75 {b.p75 ?? "—"} · Prom. {b.promedio ?? "—"}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+              ))}
+            </div>
+            {tarjetasFiltradas.length > visibles && (
+              <Button type="button" variant="outline" onClick={() => setVisibles((v) => v + 12)}>
+                Ver más ({tarjetasFiltradas.length - visibles} restantes)
+              </Button>
+            )}
+            <label className="import-confirm">
+              <input type="checkbox" checked={revisado} onChange={(e) => setRevisado(e.target.checked)} />
+              <span>Revisé la vista previa y los datos están correctos</span>
+            </label>
+          </div>
+        )}
+
+        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
+        {importMut.data && <p className="text-sm">Carga lista: {importMut.data.empresas} empresas nuevas, {importMut.data.creados} cargos nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
       </section>
 
       <form

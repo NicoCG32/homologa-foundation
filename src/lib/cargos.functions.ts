@@ -132,41 +132,72 @@ type FilaImport = {
   codigo_cargo: string; nombre: string; codigo_area: string; nombre_area: string;
   codigo_subarea: string; nombre_subarea: string; codigo_nivel_jerarquico: string;
   nivel_jerarquico: string; descripcion: string; experiencia_requerida: string;
-  requisitos_formacion: string;
+  requisitos_formacion: string; empresa_nombre?: string; empresa_tipo?: EmpresaTipo | null;
 };
 type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null };
 type EmpresaTipo = "P" | "M" | "G";
 
+function claveEmpresa(v: string) {
+  return v.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+}
+
 export const importarCargos = createServerFn({ method: "POST" })
-  .inputValidator((input: { empresa_id: string; tipo: CargoTipo; cargos: FilaImport[]; bandas?: BandaImport[] }) => {
-    if (!input?.empresa_id) throw new Error("Selecciona una empresa");
+  .inputValidator((input: { empresa_id?: string | null; empresa_defecto?: { nombre: string; tipo: EmpresaTipo } | null; tipo: CargoTipo; cargos: FilaImport[]; bandas?: BandaImport[] }) => {
     if (!Array.isArray(input.cargos) || !input.cargos.length || input.cargos.length > 2000) throw new Error("El archivo no contiene cargos válidos");
+    const empresaDefecto = input.empresa_defecto?.nombre?.trim()
+      ? { nombre: input.empresa_defecto.nombre.trim(), tipo: (["P", "M", "G"] as const).includes(input.empresa_defecto.tipo) ? input.empresa_defecto.tipo : ("G" as EmpresaTipo) }
+      : null;
+    const empresaId = input.empresa_id ? String(input.empresa_id) : null;
     const cargos = input.cargos.map((fila, i) => {
       const codigo_cargo = String(fila.codigo_cargo ?? "").trim();
       const nombre = String(fila.nombre ?? "").trim();
       if (!codigo_cargo || !nombre) throw new Error(`Fila ${i + 1}: ID y nombre son obligatorios`);
+      const empresa_nombre = String(fila.empresa_nombre ?? "").trim();
+      const empresa_tipo = (["P", "M", "G"] as const).includes(fila.empresa_tipo as EmpresaTipo) ? (fila.empresa_tipo as EmpresaTipo) : null;
+      if (!empresa_nombre && !empresaId && !empresaDefecto) throw new Error(`Fila ${i + 1}: falta la empresa`);
       const limpio = (v: unknown) => String(v ?? "").trim() || null;
-      return { empresa_id: String(input.empresa_id), tipo: input.tipo, codigo_cargo, nombre, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributosVacios() };
+      return { empresa_nombre, empresa_tipo, datos: { tipo: input.tipo, codigo_cargo, nombre, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributosVacios() } };
     });
-    return { empresa_id: String(input.empresa_id), cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
+    return { empresa_id: empresaId, empresa_defecto: empresaDefecto, cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
   })
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
     const db = getDb();
     let creados = 0;
     let actualizados = 0;
+    let empresasCreadas = 0;
+
+    const existentes = unwrap(await db.from("empresas").select("id, nombre, tipo")) ?? [];
+    const porNombre = new Map<string, string>();
+    for (const e of existentes) porNombre.set(claveEmpresa(e.nombre), e.id);
+
+    async function resolverEmpresa(nombre: string, tipo: EmpresaTipo | null) {
+      const k = claveEmpresa(nombre);
+      const encontrada = porNombre.get(k);
+      if (encontrada) return encontrada;
+      const creada = unwrap(await db.from("empresas").insert({ nombre: nombre.trim(), tipo: tipo ?? "G" }).select("id").single());
+      if (!creada) throw new Error(`No se pudo crear la empresa ${nombre}`);
+      porNombre.set(k, creada.id);
+      empresasCreadas += 1;
+      return creada.id;
+    }
+
     const ids = new Map<string, string>();
     for (const fila of data.cargos) {
-      const existente = unwrap(await db.from("cargos").select("id").eq("empresa_id", data.empresa_id).eq("codigo_cargo", fila.codigo_cargo).maybeSingle());
+      const empresa_id = fila.empresa_nombre
+        ? await resolverEmpresa(fila.empresa_nombre, fila.empresa_tipo)
+        : data.empresa_id ?? (await resolverEmpresa(data.empresa_defecto!.nombre, data.empresa_defecto!.tipo));
+      const valores = { ...fila.datos, empresa_id };
+      const existente = unwrap(await db.from("cargos").select("id").eq("empresa_id", empresa_id).eq("codigo_cargo", valores.codigo_cargo).maybeSingle());
       if (existente) {
-        const { error } = await db.from("cargos").update(fila).eq("id", existente.id);
+        const { error } = await db.from("cargos").update(valores).eq("id", existente.id);
         if (error) throw new Error(error.message);
-        ids.set(fila.codigo_cargo, existente.id);
+        ids.set(valores.codigo_cargo, existente.id);
         actualizados += 1;
       } else {
-        const creado = unwrap(await db.from("cargos").insert(fila).select("id").single());
-        if (!creado) throw new Error(`No se pudo crear el cargo ${fila.nombre}`);
-        ids.set(fila.codigo_cargo, creado.id);
+        const creado = unwrap(await db.from("cargos").insert(valores).select("id").single());
+        if (!creado) throw new Error(`No se pudo crear el cargo ${valores.nombre}`);
+        ids.set(valores.codigo_cargo, creado.id);
         creados += 1;
       }
     }
@@ -177,5 +208,5 @@ export const importarCargos = createServerFn({ method: "POST" })
       const { error } = await db.from("bandas_salariales").upsert(valores, { onConflict: "cargo_id,tipo_empresa" });
       if (error) throw new Error(error.message);
     }
-    return { creados, actualizados, bandas: data.bandas.length };
+    return { creados, actualizados, empresas: empresasCreadas, bandas: data.bandas.length };
   });

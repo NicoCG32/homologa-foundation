@@ -1,6 +1,13 @@
+export type EmpresaTipo = "P" | "M" | "G";
+
+export const EMPRESA_CATALOGO = "Encuesta Piloto";
+export const EMPRESA_CATALOGO_TIPO: EmpresaTipo = "G";
+
 export type ImportCargo = {
   codigo_cargo: string;
   nombre: string;
+  empresa_nombre: string;
+  empresa_tipo: EmpresaTipo | null;
   codigo_area: string;
   nombre_area: string;
   codigo_subarea: string;
@@ -54,6 +61,19 @@ function valor(row: Celda[], indices: Map<string, number>, ...nombres: string[])
   return "";
 }
 
+export function normalizarNombreEmpresa(v: string) {
+  return clave(v);
+}
+
+export function leerTipoEmpresa(v: Celda): EmpresaTipo | null {
+  const k = clave(v);
+  if (!k) return null;
+  if (k === "p" || k.startsWith("pequen")) return "P";
+  if (k === "m" || k.startsWith("median")) return "M";
+  if (k === "g" || k.startsWith("grande")) return "G";
+  return null;
+}
+
 export function leerCargos(rows: Celda[][]) {
   const headerIndex = buscarEncabezado(rows);
   if (headerIndex < 0) throw new Error("No se encontró la columna ID Cargo");
@@ -71,9 +91,16 @@ export function leerCargos(rows: Celda[][]) {
       errores.push(`Fila ${headerIndex + index + 2}: ID Cargo y Nombre del Cargo son obligatorios`);
       return;
     }
+    const empresaNombre = texto(valor(row, indices, "Empresa", "Nombre Empresa", "Razón Social"));
+    const empresaTipo = leerTipoEmpresa(valor(row, indices, "Tamaño", "Tamaño Empresa", "Tipo Empresa", "Tipo"));
+    if (empresaNombre && !empresaTipo) {
+      errores.push(`Fila ${headerIndex + index + 2}: la empresa "${empresaNombre}" no indica tamaño (P, M o G)`);
+    }
     cargos.push({
       codigo_cargo: codigo,
       nombre,
+      empresa_nombre: empresaNombre,
+      empresa_tipo: empresaTipo,
       codigo_area: texto(valor(row, indices, "Código Área")),
       nombre_area: texto(valor(row, indices, "Nombre Área")),
       codigo_subarea: texto(valor(row, indices, "Código Subárea")),
@@ -121,7 +148,7 @@ export function leerBandas(rows: Celda[][]) {
 }
 
 export function descargarPlantilla() {
-  const contenido = "ID Cargo,Nombre del Cargo,Código Área,Nombre Área,Código Subárea,Nombre Subárea,Código Nivel Jerárquico,Nivel Jerárquico,DESCRIPCIÓN,Experiencia Requerida,Requisitos Formación\n";
+  const contenido = "ID Cargo,Nombre del Cargo,Empresa,Tamaño,Código Área,Nombre Área,Código Subárea,Nombre Subárea,Código Nivel Jerárquico,Nivel Jerárquico,DESCRIPCIÓN,Experiencia Requerida,Requisitos Formación\n";
   const url = URL.createObjectURL(new Blob([contenido], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;

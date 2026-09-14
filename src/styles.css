@@ -195,3 +195,22 @@
 @media (max-width: 620px) { .import-files { grid-template-columns: 1fr; }.score-table { overflow-x: auto; }.score-row { min-width: 620px; }.weights-table label { grid-template-columns: minmax(0,1fr) 76px; }.weights-table input { width: 76px; } }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+
+.import-review { display: grid; gap: 14px; }
+.import-search { width: 100%; padding: 9px 12px; border: 1px solid var(--input); border-radius: 8px; background: var(--background); font-size: 13px; }
+.import-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.import-card { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); font-size: 12px; }
+.import-card.is-problema { border-color: var(--destructive); }
+.import-card header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.import-card header strong { display: block; font-size: 13px; }
+.import-card header small { color: var(--muted-foreground); }
+.empresa-tag { padding: 4px 8px; border-radius: 999px; background: var(--muted); color: var(--muted-foreground); font-size: 10px; white-space: nowrap; }
+.empresa-tag.is-nueva { background: var(--primary); color: var(--primary-foreground); }
+.import-card dl { display: grid; gap: 5px; }
+.import-card dl > div { display: grid; grid-template-columns: 90px 1fr; gap: 8px; }
+.import-card dt { color: var(--muted-foreground); }
+.import-card-desc { color: var(--muted-foreground); }
+.import-card-bandas { display: grid; gap: 3px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 11px; }
+.import-card-bandas span { font-weight: 700; }
+.import-confirm { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+@media (max-width: 620px) { .import-cards { grid-template-columns: 1fr; } .import-card header { flex-direction: column; } }
