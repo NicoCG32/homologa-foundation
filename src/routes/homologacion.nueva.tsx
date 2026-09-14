@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 
 import { listCargos } from "@/lib/cargos.functions";
-import { CAMPOS_CRITERIO, listCriterios } from "@/lib/criterios.functions";
+import { listCriterios } from "@/lib/criterios.functions";
+import { PesosEditor, pesosIniciales } from "@/components/pesos-editor";
 import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
 import { ArrowRight, Bot, CheckCircle2, Search, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
