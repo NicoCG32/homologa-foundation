@@ -1,6 +1,13 @@
+export type EmpresaTipo = "P" | "M" | "G";
+
+export const EMPRESA_CATALOGO = "Encuesta Piloto";
+export const EMPRESA_CATALOGO_TIPO: EmpresaTipo = "G";
+
 export type ImportCargo = {
   codigo_cargo: string;
   nombre: string;
+  empresa_nombre: string;
+  empresa_tipo: EmpresaTipo | null;
   codigo_area: string;
   nombre_area: string;
   codigo_subarea: string;
