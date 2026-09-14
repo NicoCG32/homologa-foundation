@@ -165,6 +165,7 @@ export const importarCargos = createServerFn({ method: "POST" })
         actualizados += 1;
       } else {
         const creado = unwrap(await db.from("cargos").insert(fila).select("id").single());
+        if (!creado) throw new Error(`No se pudo crear el cargo ${fila.nombre}`);
         ids.set(fila.codigo_cargo, creado.id);
         creados += 1;
       }

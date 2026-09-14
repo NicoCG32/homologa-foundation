@@ -115,7 +115,9 @@ function CargosPage() {
     const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
     const first = wb.SheetNames[0];
     if (!first) throw new Error("El archivo no contiene hojas");
-    return XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[first], { header: 1, raw: true, defval: "" }) as (string | number | boolean | null)[][];
+    const sheet = wb.Sheets[first];
+    if (!sheet) throw new Error("No se pudo leer la primera hoja");
+    return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: "" }) as (string | number | boolean | null)[][];
   }
 
   async function cargarEstructura(file: File | undefined) {

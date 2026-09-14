@@ -43,7 +43,7 @@ function numero(v: Celda) {
 }
 
 function buscarEncabezado(rows: Celda[][]) {
-  return rows.findIndex((row) => row.some((v) => clave(v) === "idcargo"));
+  return rows.findIndex((row) => row?.some((v) => clave(v) === "idcargo"));
 }
 
 function valor(row: Celda[], indices: Map<string, number>, ...nombres: string[]) {
@@ -57,7 +57,9 @@ function valor(row: Celda[], indices: Map<string, number>, ...nombres: string[])
 export function leerCargos(rows: Celda[][]) {
   const headerIndex = buscarEncabezado(rows);
   if (headerIndex < 0) throw new Error("No se encontró la columna ID Cargo");
-  const indices = new Map(rows[headerIndex].map((v, i) => [clave(v), i]));
+  const header = rows[headerIndex];
+  if (!header) throw new Error("El archivo no contiene encabezados");
+  const indices = new Map(header.map((v, i) => [clave(v), i]));
   const cargos: ImportCargo[] = [];
   const errores: string[] = [];
 
@@ -91,6 +93,7 @@ export function leerBandas(rows: Celda[][]) {
   if (headerIndex < 1) throw new Error("No se encontró la estructura de remuneraciones");
   const header = rows[headerIndex];
   const group = rows[headerIndex - 1];
+  if (!header || !group) throw new Error("No se encontró la estructura de remuneraciones");
   const idIndex = header.findIndex((v) => clave(v) === "idcargo");
   const columnas: { i: number; tipo: "P" | "M" | "G"; campo: "p25" | "p50" | "p75" | "promedio" }[] = [];
   let tipo: "P" | "M" | "G" | null = null;
@@ -111,7 +114,7 @@ export function leerBandas(rows: Celda[][]) {
       const cols = columnas.filter((c) => c.tipo === t);
       const datos = Object.fromEntries(cols.map((c) => [c.campo, numero(row[c.i])])) as Record<string, number | null>;
       if (Object.values(datos).every((v) => v === null)) continue;
-      bandas.push({ codigo_cargo: codigo, tipo_empresa: t, p25: datos.p25 ?? null, p50: datos.p50 ?? null, p75: datos.p75 ?? null, promedio: datos.promedio ?? null });
+      bandas.push({ codigo_cargo: codigo, tipo_empresa: t, p25: datos["p25"] ?? null, p50: datos["p50"] ?? null, p75: datos["p75"] ?? null, promedio: datos["promedio"] ?? null });
     }
   });
   return bandas;
