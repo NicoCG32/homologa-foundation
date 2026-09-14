@@ -62,9 +62,12 @@ function CargosPage() {
   const create = useServerFn(createCargo);
   const remove = useServerFn(deleteCargo);
   const importar = useServerFn(importarCargos);
+  const listD = useServerFn(listDiccionario);
+  const importarDicc = useServerFn(importarDiccionario);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
+  const diccionario = useQuery({ queryKey: ["diccionario"], queryFn: () => listD() });
 
   const [empresaId, setEmpresaId] = useState("");
   const [busqueda, setBusqueda] = useState("");
@@ -83,6 +86,8 @@ function CargosPage() {
   const [erroresCarga, setErroresCarga] = useState<string[]>([]);
   const [archivoCargos, setArchivoCargos] = useState("");
   const [archivoBandas, setArchivoBandas] = useState("");
+  const [diccionarioArchivo, setDiccionarioArchivo] = useState<EntradaDiccionario[]>([]);
+  const [resultadoDicc, setResultadoDicc] = useState<string | null>(null);
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
