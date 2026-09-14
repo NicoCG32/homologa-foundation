@@ -230,7 +230,11 @@ function CargosPage() {
           <Button type="button" variant={modoCarga === "INTERNO" ? "default" : "outline"} onClick={() => { setModoCarga("INTERNO"); setBandasCarga([]); }}>Cargos de empresa</Button>
           <Button type="button" variant={modoCarga === "REFERENCIA" ? "default" : "outline"} onClick={() => setModoCarga("REFERENCIA")}>Catálogo de encuesta</Button>
         </div>
-        <label className="text-sm"><span className="mb-1 block text-muted-foreground">Empresa de destino</span><select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}><option value="">Selecciona…</option>{(empresas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}</select></label>
+        {modoCarga === "INTERNO" ? (
+          <label className="text-sm"><span className="mb-1 block text-muted-foreground">Empresa de destino (opcional si la planilla trae la columna Empresa)</span><select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}><option value="">Detectar desde la planilla</option>{(empresas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}</select></label>
+        ) : (
+          <p className="text-sm text-muted-foreground">El catálogo se guarda en la empresa de referencia «{EMPRESA_CATALOGO}», que se crea automáticamente si no existe.</p>
+        )}
         <div className="import-files">
           <label className="file-picker"><Upload aria-hidden="true" /><span><strong>{modoCarga === "INTERNO" ? "Planilla de cargos" : "Encuesta Piloto"}</strong><small>{archivoCargos || "CSV o XLSX"}</small></span><input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => cargarEstructura(e.target.files?.[0])} /></label>
           {modoCarga === "REFERENCIA" && <label className="file-picker"><Upload aria-hidden="true" /><span><strong>Encuesta Piloto Remuneraciones</strong><small>{archivoBandas || "XLSX"}</small></span><input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => cargarBandas(e.target.files?.[0])} /></label>}
