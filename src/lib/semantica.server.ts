@@ -15,6 +15,8 @@ export const CRITERIOS_SEMANTICOS = [
   "complejidad",
   "autonomía",
   "alcance",
+  "experiencia requerida",
+  "requisitos y formación",
 ] as const;
 
 export const SYSTEM_INSTRUCTION = `Eres un evaluador semántico de cargos.
@@ -40,6 +42,8 @@ Evalúa exclusivamente:
 - complejidad;
 - autonomía;
 - alcance.
+- experiencia requerida;
+- requisitos y formación.
 Los scores semánticos se expresan de 0 a 100 y la confianza como un decimal entre 0 y 1.
 Debes incluir en scores_por_candidato exactamente todos los candidatos enviados, usando sus id tal cual.
 Tu función es realizar una comparación semántica y entregar el resultado solicitado en el esquema JSON definido por la aplicación.`;
@@ -73,6 +77,8 @@ export type CargoSemantico = {
   descripcion: string | null;
   tipo_empresa: "P" | "M" | "G" | null;
   atributos_semanticos: AtributosSemanticos;
+  experiencia_requerida: string;
+  requisitos_formacion: string;
 };
 
 export type ScorePorCandidato = {
@@ -219,6 +225,8 @@ export function construirPayload(interno: CargoSemantico, candidatos: CargoSeman
     descripcion: c.descripcion,
     tipo_empresa: c.tipo_empresa,
     atributos_semanticos: normalizarAtributos(c.atributos_semanticos),
+    experiencia_requerida: c.experiencia_requerida || "",
+    requisitos_formacion: c.requisitos_formacion || "",
   });
   return {
     criterios_semanticos: CRITERIOS_SEMANTICOS,
@@ -227,6 +235,8 @@ export function construirPayload(interno: CargoSemantico, candidatos: CargoSeman
       descripcion: interno.descripcion,
       tipo_empresa: interno.tipo_empresa,
       atributos_semanticos: normalizarAtributos(interno.atributos_semanticos),
+      experiencia_requerida: interno.experiencia_requerida || "",
+      requisitos_formacion: interno.requisitos_formacion || "",
     },
     candidatos_preseleccionados: candidatos.map(limpiar),
   };

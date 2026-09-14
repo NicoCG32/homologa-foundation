@@ -68,11 +68,12 @@ export type Cargo = {
   descripcion: string | null;
   sueldo: number | null;
   atributos_semanticos: AtributosSemanticos | null;
+  codigo_nivel_jerarquico: string | null;
   empresas?: { nombre: string } | null;
 } & Record<ClaveEstructural, string | null>;
 
 const SELECT_CARGO =
-  "id, empresa_id, tipo, nombre, descripcion, sueldo, atributos_semanticos, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, nivel_jerarquico, experiencia_requerida, requisitos_formacion, empresas(nombre)";
+  "id, empresa_id, tipo, nombre, descripcion, sueldo, atributos_semanticos, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, codigo_nivel_jerarquico, nivel_jerarquico, experiencia_requerida, requisitos_formacion, empresas(nombre)";
 
 export const listCargos = createServerFn({ method: "GET" }).handler(async () => {
   const { getDb, unwrap } = await import("./supabase-public.server");
@@ -125,4 +126,55 @@ export const deleteCargo = createServerFn({ method: "POST" })
     const { error } = await getDb().from("cargos").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+type FilaImport = {
+  codigo_cargo: string; nombre: string; codigo_area: string; nombre_area: string;
+  codigo_subarea: string; nombre_subarea: string; codigo_nivel_jerarquico: string;
+  nivel_jerarquico: string; descripcion: string; experiencia_requerida: string;
+  requisitos_formacion: string;
+};
+type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null };
+type EmpresaTipo = "P" | "M" | "G";
+
+export const importarCargos = createServerFn({ method: "POST" })
+  .inputValidator((input: { empresa_id: string; tipo: CargoTipo; cargos: FilaImport[]; bandas?: BandaImport[] }) => {
+    if (!input?.empresa_id) throw new Error("Selecciona una empresa");
+    if (!Array.isArray(input.cargos) || !input.cargos.length || input.cargos.length > 2000) throw new Error("El archivo no contiene cargos válidos");
+    const cargos = input.cargos.map((fila, i) => {
+      const codigo_cargo = String(fila.codigo_cargo ?? "").trim();
+      const nombre = String(fila.nombre ?? "").trim();
+      if (!codigo_cargo || !nombre) throw new Error(`Fila ${i + 1}: ID y nombre son obligatorios`);
+      const limpio = (v: unknown) => String(v ?? "").trim() || null;
+      return { empresa_id: String(input.empresa_id), tipo: input.tipo, codigo_cargo, nombre, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributosVacios() };
+    });
+    return { empresa_id: String(input.empresa_id), cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
+  })
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    const db = getDb();
+    let creados = 0;
+    let actualizados = 0;
+    const ids = new Map<string, string>();
+    for (const fila of data.cargos) {
+      const existente = unwrap(await db.from("cargos").select("id").eq("empresa_id", data.empresa_id).eq("codigo_cargo", fila.codigo_cargo).maybeSingle());
+      if (existente) {
+        const { error } = await db.from("cargos").update(fila).eq("id", existente.id);
+        if (error) throw new Error(error.message);
+        ids.set(fila.codigo_cargo, existente.id);
+        actualizados += 1;
+      } else {
+        const creado = unwrap(await db.from("cargos").insert(fila).select("id").single());
+        ids.set(fila.codigo_cargo, creado.id);
+        creados += 1;
+      }
+    }
+    for (const banda of data.bandas) {
+      const cargo_id = ids.get(String(banda.codigo_cargo));
+      if (!cargo_id) continue;
+      const valores = { cargo_id, tipo_empresa: banda.tipo_empresa, p25: banda.p25, p50: banda.p50, p75: banda.p75, promedio: banda.promedio };
+      const { error } = await db.from("bandas_salariales").upsert(valores, { onConflict: "cargo_id,tipo_empresa" });
+      if (error) throw new Error(error.message);
+    }
+    return { creados, actualizados, bandas: data.bandas.length };
   });
