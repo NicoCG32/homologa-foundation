@@ -552,6 +552,7 @@ function CargosPage() {
             {filtrados.map((c) => (
               <tr key={c.id}>
                 <td className="border-b py-2">
+                  {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
                   {c.nombre}
                   {c.descripcion && (
                     <div className="text-xs text-muted-foreground">{c.descripcion}</div>
