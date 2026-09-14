@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { FileSpreadsheet, Upload } from "lucide-react";
 
 import {
   ATRIBUTOS_SEMANTICOS,
@@ -9,14 +10,17 @@ import {
   atributosVacios,
   createCargo,
   deleteCargo,
+  importarCargos,
   estructuralesVacios,
   listCargos,
   type AtributosSemanticos,
   type CargoTipo,
   type Estructurales,
 } from "@/lib/cargos.functions";
+import { descargarPlantilla, leerBandas, leerCargos, type BandaImport, type ImportCargo } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { formatSueldo } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/cargos")({
   head: () => ({
@@ -44,6 +48,7 @@ function CargosPage() {
   const listE = useServerFn(listEmpresas);
   const create = useServerFn(createCargo);
   const remove = useServerFn(deleteCargo);
+  const importar = useServerFn(importarCargos);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
@@ -56,6 +61,12 @@ function CargosPage() {
   const [atributos, setAtributos] = useState<AtributosSemanticos>(atributosVacios);
   const [estructurales, setEstructurales] = useState<Estructurales>(estructuralesVacios);
   const [error, setError] = useState<string | null>(null);
+  const [modoCarga, setModoCarga] = useState<"INTERNO" | "REFERENCIA">("INTERNO");
+  const [cargosCarga, setCargosCarga] = useState<ImportCargo[]>([]);
+  const [bandasCarga, setBandasCarga] = useState<BandaImport[]>([]);
+  const [erroresCarga, setErroresCarga] = useState<string[]>([]);
+  const [archivoCargos, setArchivoCargos] = useState("");
+  const [archivoBandas, setArchivoBandas] = useState("");
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
@@ -93,6 +104,34 @@ function CargosPage() {
     onError: (e: Error) => setError(e.message),
   });
 
+  const importMut = useMutation({
+    mutationFn: () => importar({ data: { empresa_id: empresaId, tipo: modoCarga, cargos: cargosCarga, bandas: modoCarga === "REFERENCIA" ? bandasCarga : [] } }),
+    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setError(null); invalidate(); },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  async function filasArchivo(file: File) {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+    const first = wb.SheetNames[0];
+    if (!first) throw new Error("El archivo no contiene hojas");
+    const sheet = wb.Sheets[first];
+    if (!sheet) throw new Error("No se pudo leer la primera hoja");
+    return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: "" }) as (string | number | boolean | null)[][];
+  }
+
+  async function cargarEstructura(file: File | undefined) {
+    if (!file) return;
+    try { const r = leerCargos(await filasArchivo(file)); setCargosCarga(r.cargos); setErroresCarga(r.errores); setArchivoCargos(file.name); setError(null); }
+    catch (e) { setError(e instanceof Error ? e.message : "No se pudo leer el archivo"); }
+  }
+
+  async function cargarBandas(file: File | undefined) {
+    if (!file) return;
+    try { setBandasCarga(leerBandas(await filasArchivo(file))); setArchivoBandas(file.name); setError(null); }
+    catch (e) { setError(e instanceof Error ? e.message : "No se pudo leer el archivo de remuneraciones"); }
+  }
+
   const filtrados = useMemo(
     () =>
       (cargos.data ?? []).filter(
@@ -113,6 +152,26 @@ function CargosPage() {
           Primero registra una empresa para poder crear cargos.
         </p>
       )}
+
+      <section className="import-panel">
+        <div className="import-heading">
+          <div><p className="eyebrow">Carga masiva</p><h2>Cargar datos</h2><p>Usa una planilla para cargos propios o las dos planillas de la encuesta para el catálogo.</p></div>
+          <FileSpreadsheet aria-hidden="true" />
+        </div>
+        <div className="import-mode" role="group" aria-label="Tipo de carga">
+          <Button type="button" variant={modoCarga === "INTERNO" ? "default" : "outline"} onClick={() => { setModoCarga("INTERNO"); setBandasCarga([]); }}>Cargos de empresa</Button>
+          <Button type="button" variant={modoCarga === "REFERENCIA" ? "default" : "outline"} onClick={() => setModoCarga("REFERENCIA")}>Catálogo de encuesta</Button>
+        </div>
+        <label className="text-sm"><span className="mb-1 block text-muted-foreground">Empresa de destino</span><select value={empresaId} onChange={(e) => setEmpresaId(e.target.value)}><option value="">Selecciona…</option>{(empresas.data ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}</select></label>
+        <div className="import-files">
+          <label className="file-picker"><Upload aria-hidden="true" /><span><strong>{modoCarga === "INTERNO" ? "Planilla de cargos" : "Encuesta Piloto"}</strong><small>{archivoCargos || "CSV o XLSX"}</small></span><input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => cargarEstructura(e.target.files?.[0])} /></label>
+          {modoCarga === "REFERENCIA" && <label className="file-picker"><Upload aria-hidden="true" /><span><strong>Encuesta Piloto Remuneraciones</strong><small>{archivoBandas || "XLSX"}</small></span><input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => cargarBandas(e.target.files?.[0])} /></label>}
+        </div>
+        <details className="criteria-summary"><summary>Ver formato esperado</summary><div>ID Cargo, Nombre del Cargo, Código y Nombre de Área, Código y Nombre de Subárea, Código y Nombre del Nivel Jerárquico y Descripción. Para cargos propios también se aceptan Experiencia Requerida y Requisitos Formación. Las remuneraciones se cruzan por ID Cargo.</div></details>
+        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!empresaId || !cargosCarga.length || importMut.isPending || (modoCarga === "REFERENCIA" && !bandasCarga.length)} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
+        {(cargosCarga.length > 0 || erroresCarga.length > 0) && <div className="import-preview"><strong>Vista previa</strong><p>{cargosCarga.length} cargos válidos{modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length} observaciones</p>{erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}</div>}
+        {importMut.data && <p className="text-sm">Carga lista: {importMut.data.creados} nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
+      </section>
 
       <form
         className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
@@ -219,13 +278,12 @@ function CargosPage() {
         </details>
 
         <div className="sm:col-span-2">
-          <button
+          <Button
             type="submit"
             disabled={createMut.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
           >
             Agregar cargo
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -294,12 +352,14 @@ function CargosPage() {
                 <td className="border-b py-2">{c.tipo === "INTERNO" ? "Interno" : "Referencia"}</td>
                 <td className="border-b py-2">{formatSueldo(c.sueldo)}</td>
                 <td className="border-b py-2 text-right">
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
                     className="text-destructive hover:underline"
                     onClick={() => deleteMut.mutate(c.id)}
                   >
                     Eliminar
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))}

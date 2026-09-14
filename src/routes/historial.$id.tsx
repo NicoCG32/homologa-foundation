@@ -5,6 +5,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { getEjecucion } from "@/lib/homologacion.functions";
 import { formatFecha, formatSueldo } from "@/lib/format";
 
+function pct(v: number | null | undefined) {
+  return v == null ? "—" : `${(Number(v) * 100).toFixed(1)}%`;
+}
+
 export const Route = createFileRoute("/historial/$id")({
   head: () => ({
     meta: [
@@ -102,9 +106,9 @@ function EjecucionDetalle() {
             <thead className="text-left text-muted-foreground">
               <tr>
                 <th className="border-b py-2">Candidato</th>
-                <th className="border-b py-2">Determinístico</th>
-                <th className="border-b py-2">Semántico</th>
-                <th className="border-b py-2">Final</th>
+                <th className="border-b py-2">Score motor</th>
+                <th className="border-b py-2">Score Gemini</th>
+                <th className="border-b py-2">Score final</th>
                 <th className="border-b py-2">Sueldo</th>
                 <th className="border-b py-2">Diferencia</th>
               </tr>
@@ -121,10 +125,17 @@ function EjecucionDetalle() {
                         {r.cargos?.empresas?.nombre ?? ""}
                       </div>
                     </td>
-                    <td className="border-b py-2">{r.score_deterministico ?? "—"}</td>
-                    <td className="border-b py-2">{r.score_semantico ?? "—"}</td>
-                    <td className="border-b py-2">{r.score_final ?? "—"}</td>
-                    <td className="border-b py-2">{formatSueldo(r.cargos?.sueldo)}</td>
+                    <td className="border-b py-2">{pct(r.score_deterministico)}</td>
+                    <td className="border-b py-2">{r.score_semantico == null ? "Pendiente" : `${r.score_semantico}%`}</td>
+                    <td className="border-b py-2">{pct(r.score_final)}</td>
+                    <td className="border-b py-2">
+                      {formatSueldo(r.cargos?.sueldo)}
+                      {(data.bandas ?? []).filter((b) => b.cargo_id === r.candidato_id).map((b) => (
+                        <div key={b.tipo_empresa} className="text-xs text-muted-foreground">
+                          {b.tipo_empresa}: P25 {formatSueldo(b.p25)} · P50 {formatSueldo(b.p50)} · P75 {formatSueldo(b.p75)} · PP {formatSueldo(b.promedio)}
+                        </div>
+                      ))}
+                    </td>
                     <td className="border-b py-2">
                       {diff === null ? "—" : `${diff > 0 ? "+" : ""}${formatSueldo(diff)}`}
                     </td>

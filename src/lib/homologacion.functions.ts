@@ -17,7 +17,7 @@ export const getEjecucion = createServerFn({ method: "GET" })
     const ejecucion = unwrap(
       await getDb()
         .from("ejecuciones")
-        .select("id, fecha, estado, cargos(id, nombre, descripcion, sueldo, empresas(nombre))")
+        .select("id, fecha, estado, criterios_usados, cargos(id, nombre, descripcion, sueldo, empresas(nombre))")
         .eq("id", data.id)
         .maybeSingle(),
     );
@@ -39,7 +39,16 @@ export const getEjecucion = createServerFn({ method: "GET" })
         .limit(1)
         .maybeSingle(),
     );
-    return { ejecucion, resultados, analisis };
+    const candidatoIds = (resultados ?? []).map((r) => r.candidato_id);
+    const bandas = candidatoIds.length
+      ? unwrap(
+          await getDb()
+            .from("bandas_salariales")
+            .select("cargo_id, tipo_empresa, p25, p50, p75, promedio")
+            .in("cargo_id", candidatoIds),
+        )
+      : [];
+    return { ejecucion, resultados, analisis, bandas };
   });
 
 
@@ -70,9 +79,11 @@ export const createEjecucion = createServerFn({ method: "POST" })
  * almacenados y guarda los candidatos preseleccionados con su score.
  */
 export const ejecutarHomologacion = createServerFn({ method: "POST" })
-  .inputValidator((input: { cargo_id: string }) => {
+  .inputValidator((input: { cargo_id: string; pesos: { id: string; peso: number }[] }) => {
     if (!input?.cargo_id) throw new Error("Debes seleccionar un cargo interno");
-    return { cargo_id: String(input.cargo_id) };
+    const pesos = Array.isArray(input.pesos) ? input.pesos.map((p) => ({ id: String(p.id), peso: Number(p.peso) })) : [];
+    if (pesos.some((p) => !Number.isFinite(p.peso) || p.peso < 0) || !pesos.some((p) => p.peso > 0)) throw new Error("Define al menos un peso mayor que cero");
+    return { cargo_id: String(input.cargo_id), pesos };
   })
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
@@ -123,14 +134,16 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       await db.from("cargos").select(select).eq("tipo", "REFERENCIA").order("nombre"),
     ) ?? []) as CargoRow[];
 
-    const criterios =
+    const criteriosBase =
       unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
       [];
+    const pesos = new Map(data.pesos.map((p) => [p.id, p.peso]));
+    const criterios = criteriosBase.map((c) => ({ ...c, peso: pesos.has(c.id) ? Number(pesos.get(c.id)) : Number(c.peso) }));
 
     const ejecucion = unwrap(
       await db
         .from("ejecuciones")
-        .insert({ cargo_id: interno.id, estado: "EN_PROCESO" })
+        .insert({ cargo_id: interno.id, estado: "EN_PROCESO", criterios_usados: criterios })
         .select("id")
         .single(),
     );
@@ -188,13 +201,15 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       nombre: string;
       descripcion: string | null;
       atributos_semanticos: unknown;
+      experiencia_requerida: string | null;
+      requisitos_formacion: string | null;
       empresas: EmpresaRow;
     };
 
     const ejecucion = unwrap(
       await db
         .from("ejecuciones")
-        .select("id, cargos(id, nombre, descripcion, atributos_semanticos, empresas(tipo))")
+        .select("id, cargos(id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion, empresas(tipo))")
         .eq("id", data.ejecucion_id)
         .maybeSingle(),
     ) as { id: string; cargos: CargoRow | null } | null;
@@ -206,13 +221,15 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       descripcion: ejecucion.cargos.descripcion,
       tipo_empresa: ejecucion.cargos.empresas?.tipo ?? null,
       atributos_semanticos: semantica.normalizarAtributos(ejecucion.cargos.atributos_semanticos),
+      experiencia_requerida: ejecucion.cargos.experiencia_requerida ?? "",
+      requisitos_formacion: ejecucion.cargos.requisitos_formacion ?? "",
     };
 
     // Fuente única de candidatos: los resultados preseleccionados por el motor.
     const resultados = (unwrap(
       await db
         .from("resultados")
-        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, atributos_semanticos, empresas(tipo))")
+        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion, empresas(tipo))")
         .eq("ejecucion_id", data.ejecucion_id),
     ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
 
@@ -224,6 +241,8 @@ export const analizarSemantica = createServerFn({ method: "POST" })
         descripcion: r.cargos!.descripcion,
         tipo_empresa: r.cargos!.empresas?.tipo ?? null,
         atributos_semanticos: semantica.normalizarAtributos(r.cargos!.atributos_semanticos),
+        experiencia_requerida: r.cargos!.experiencia_requerida ?? "",
+        requisitos_formacion: r.cargos!.requisitos_formacion ?? "",
       }));
 
     const registrarError = async (mensaje: string) => {

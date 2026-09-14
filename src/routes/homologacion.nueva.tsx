@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { listCargos } from "@/lib/cargos.functions";
 import { CAMPOS_CRITERIO, listCriterios } from "@/lib/criterios.functions";
@@ -42,12 +42,17 @@ function NuevaHomologacion() {
   const [cargoId, setCargoId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [semError, setSemError] = useState<string | null>(null);
+  const [pesos, setPesos] = useState<Record<string, number>>({});
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
   const activos = (criterios.data ?? []).filter((c) => c.activo);
+  useEffect(() => {
+    if (!activos.length) return;
+    setPesos((prev) => Object.keys(prev).length ? prev : Object.fromEntries(activos.map((c) => [c.id, Number(c.peso)])));
+  }, [criterios.data]);
 
   const mut = useMutation({
-    mutationFn: () => ejecutar({ data: { cargo_id: cargoId } }),
+    mutationFn: () => ejecutar({ data: { cargo_id: cargoId, pesos: activos.map((c) => ({ id: c.id, peso: Number(pesos[c.id] ?? c.peso) })) } }),
     onMutate: () => {
       setError(null);
       setSemError(null);
@@ -100,16 +105,11 @@ function NuevaHomologacion() {
           </select></div>
         </label>
 
-        <details className="criteria-summary"><summary>Ver información usada en la comparación</summary><div>
+        <details className="criteria-summary" open><summary>Ajustar pesos de esta homologación</summary><div>
           {criterios.isLoading
             ? "…"
             : activos.length
-              ? activos
-                  .map(
-                    (c) =>
-                      `${c.nombre} · ${CAMPOS_CRITERIO[c.campo]} · peso ${c.peso}${c.obligatorio ? " · obligatorio" : ""}`,
-                  )
-                  .join(" | ")
+              ? <div className="weights-table">{activos.map((c) => <label key={c.id}><span><strong>{c.nombre}</strong><small>{CAMPOS_CRITERIO[c.campo]}{c.obligatorio ? " · obligatorio" : ""}</small></span><input aria-label={`Peso de ${c.nombre}`} type="number" min="0" step="0.1" value={pesos[c.id] ?? Number(c.peso)} onChange={(e) => setPesos((p) => ({ ...p, [c.id]: Number(e.target.value) }))} /></label>)}</div>
               : "ninguna definida"}
         </div></details>
 
@@ -176,15 +176,15 @@ function NuevaHomologacion() {
             {!res.preseleccionados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
-              <ol className="space-y-3 text-sm">
+              <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score Gemini</span><span>Score final</span></div>
                 {res.preseleccionados.map((p, i) => (
-                  <li key={p.cargo.id} className="border-b pb-3">
-                    <p>
+                  <div key={p.cargo.id} className="score-row">
+                    <div>
                       <strong>
                         {i + 1}. {p.cargo.nombre}
-                      </strong>{" "}
-                       — {p.cargo.empresa_nombre ?? "sin empresa"} · coincidencia {pct(p.score)}
-                    </p>
+                      </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
+                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{pct(p.score)}</span>
+                    <div className="score-detail">
                     <p className="text-muted-foreground">
                       Coincidencias:{" "}
                       {p.coincidencias.length
@@ -197,9 +197,10 @@ function NuevaHomologacion() {
                         ? p.diferencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
                         : "ninguna"}
                     </p>
-                  </li>
+                    </div>
+                  </div>
                 ))}
-              </ol>
+              </div>
             )}
           </section>
 
