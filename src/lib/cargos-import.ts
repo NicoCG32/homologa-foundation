@@ -91,9 +91,16 @@ export function leerCargos(rows: Celda[][]) {
       errores.push(`Fila ${headerIndex + index + 2}: ID Cargo y Nombre del Cargo son obligatorios`);
       return;
     }
+    const empresaNombre = texto(valor(row, indices, "Empresa", "Nombre Empresa", "Razón Social"));
+    const empresaTipo = leerTipoEmpresa(valor(row, indices, "Tamaño", "Tamaño Empresa", "Tipo Empresa", "Tipo"));
+    if (empresaNombre && !empresaTipo) {
+      errores.push(`Fila ${headerIndex + index + 2}: la empresa "${empresaNombre}" no indica tamaño (P, M o G)`);
+    }
     cargos.push({
       codigo_cargo: codigo,
       nombre,
+      empresa_nombre: empresaNombre,
+      empresa_tipo: empresaTipo,
       codigo_area: texto(valor(row, indices, "Código Área")),
       nombre_area: texto(valor(row, indices, "Nombre Área")),
       codigo_subarea: texto(valor(row, indices, "Código Subárea")),
