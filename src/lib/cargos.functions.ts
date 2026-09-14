@@ -162,7 +162,7 @@ export const importarCargos = createServerFn({ method: "POST" })
       const atributos = { ...atributosVacios(), proposito: String(fila.proposito ?? "").trim(), funciones: String(fila.funciones ?? "").trim(), responsabilidades: String(fila.responsabilidades ?? "").trim() };
       return { empresa_nombre, empresa_tipo, datos: { tipo: input.tipo, codigo_cargo, nombre, sueldo, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributos } };
     });
-    return { empresa_id: empresaId, empresa_defecto: empresaDefecto, cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
+    return { empresa_id: empresaId, empresa_defecto: empresaDefecto, tipo: input.tipo, cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
   })
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
@@ -217,7 +217,7 @@ export const importarCargos = createServerFn({ method: "POST" })
       }
     }
     for (const banda of data.bandas) {
-      const cargo_id = ids.get(String(banda.codigo_cargo));
+      const cargo_id = ids.get(`${data.tipo}|${String(banda.codigo_cargo)}`);
       if (!cargo_id) continue;
       const valores = { cargo_id, tipo_empresa: banda.tipo_empresa, p25: banda.p25, p50: banda.p50, p75: banda.p75, promedio: banda.promedio };
       const { error } = await db.from("bandas_salariales").upsert(valores, { onConflict: "cargo_id,tipo_empresa" });
