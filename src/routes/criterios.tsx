@@ -1,25 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
-  CAMPOS_CRITERIO,
-  createCriterio,
-  deleteCriterio,
+  asegurarCriterios,
+  guardarPesos,
   listCriterios,
-  toggleCriterio,
-  toggleObligatorio,
-  type CriterioCampo,
 } from "@/lib/criterios.functions";
+import { PesosEditor, pesosIniciales, type MapaPesos } from "@/components/pesos-editor";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/criterios")({
   head: () => ({
     meta: [
       { title: "Criterios — Espejo: Homologa" },
-      { name: "description", content: "Criterios de comparación y sus pesos, definidos en la base de datos." },
+      { name: "description", content: "Ponderación por columna comparada y configuraciones guardadas." },
       { property: "og:title", content: "Criterios — Espejo: Homologa" },
-      { property: "og:description", content: "Administra los criterios y pesos usados en la homologación." },
+      { property: "og:description", content: "Ajusta con deslizadores cuánto pesa cada columna en la comparación." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -30,163 +28,81 @@ export const Route = createFileRoute("/criterios")({
 function CriteriosPage() {
   const qc = useQueryClient();
   const list = useServerFn(listCriterios);
-  const create = useServerFn(createCriterio);
-  const toggle = useServerFn(toggleCriterio);
-  const toggleObl = useServerFn(toggleObligatorio);
-  const remove = useServerFn(deleteCriterio);
+  const asegurar = useServerFn(asegurarCriterios);
+  const guardar = useServerFn(guardarPesos);
 
-  const [nombre, setNombre] = useState("");
-  const [peso, setPeso] = useState("1");
-  const [campo, setCampo] = useState<CriterioCampo>("nombre");
-  const [obligatorio, setObligatorio] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [pesos, setPesos] = useState<MapaPesos>({});
+  const [obligatorios, setObligatorios] = useState<Record<string, boolean>>({});
+  const [aviso, setAviso] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({ queryKey: ["criterios"], queryFn: () => list() });
-  const invalidate = () => qc.invalidateQueries();
-
-  const createMut = useMutation({
-    mutationFn: () => create({ data: { nombre, peso, activo: true, campo, obligatorio } }),
-    onSuccess: () => {
-      setNombre("");
-      setObligatorio(false);
-      setError(null);
-      invalidate();
+  const { data, isLoading } = useQuery({
+    queryKey: ["criterios"],
+    queryFn: async () => {
+      await asegurar();
+      return list();
     },
-    onError: (e: Error) => setError(e.message),
   });
 
-  const toggleMut = useMutation({
-    mutationFn: (v: { id: string; activo: boolean }) => toggle({ data: v }),
-    onSuccess: invalidate,
-  });
+  const criterios = data ?? [];
 
-  const oblMut = useMutation({
-    mutationFn: (v: { id: string; obligatorio: boolean }) => toggleObl({ data: v }),
-    onSuccess: invalidate,
-  });
+  useEffect(() => {
+    if (!criterios.length) return;
+    setPesos((prev) => (Object.keys(prev).length ? prev : pesosIniciales(criterios)));
+    setObligatorios((prev) =>
+      Object.keys(prev).length
+        ? prev
+        : Object.fromEntries(criterios.map((c) => [c.id, c.obligatorio])),
+    );
+  }, [data]);
 
-  const deleteMut = useMutation({
-    mutationFn: (id: string) => remove({ data: { id } }),
-    onSuccess: invalidate,
+  const guardarMut = useMutation({
+    mutationFn: () =>
+      guardar({
+        data: {
+          pesos: criterios.map((c) => ({
+            id: c.id,
+            peso: pesos[c.id] ?? 0,
+            obligatorio: obligatorios[c.id] ?? c.obligatorio,
+          })),
+        },
+      }),
+    onSuccess: () => {
+      setAviso("Ponderación guardada.");
+      qc.invalidateQueries({ queryKey: ["criterios"] });
+    },
+    onError: (e: Error) => setAviso(e.message),
   });
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">Criterios</h1>
       <p className="text-sm text-muted-foreground">
-        Los criterios y pesos se guardan en la base de datos; el motor los leerá desde aquí.
+        Cada columna comparada tiene una ponderación en porcentaje. Al mover un deslizador, el resto
+        se reajusta para que el total siga siendo 100%. Una columna en 0% no se compara.
       </p>
-
-      <form
-        className="flex flex-wrap items-end gap-3 rounded-lg border p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          createMut.mutate();
-        }}
-      >
-        <label className="flex-1 text-sm">
-          <span className="mb-1 block text-muted-foreground">Nombre</span>
-          <input
-            className="w-full rounded-md border bg-background px-3 py-2"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-          />
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-muted-foreground">Peso</span>
-          <input
-            type="number"
-            step="0.001"
-            min="0"
-            className="w-28 rounded-md border bg-background px-3 py-2"
-            value={peso}
-            onChange={(e) => setPeso(e.target.value)}
-            required
-          />
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-muted-foreground">Campo comparado</span>
-          <select
-            className="rounded-md border bg-background px-3 py-2"
-            value={campo}
-            onChange={(e) => setCampo(e.target.value as CriterioCampo)}
-          >
-            {Object.entries(CAMPOS_CRITERIO).map(([k, label]) => (
-              <option key={k} value={k}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 py-2 text-sm">
-          <input
-            type="checkbox"
-            checked={obligatorio}
-            onChange={(e) => setObligatorio(e.target.checked)}
-          />
-          <span className="text-muted-foreground">Obligatorio</span>
-        </label>
-        <button
-          type="submit"
-          disabled={createMut.isPending}
-          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
-        >
-          Agregar
-        </button>
-      </form>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
-      ) : !data?.length ? (
-        <p className="text-sm text-muted-foreground">Aún no hay criterios definidos.</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead className="text-left text-muted-foreground">
-            <tr>
-              <th className="border-b py-2">Nombre</th>
-              <th className="border-b py-2">Campo</th>
-              <th className="border-b py-2">Peso</th>
-              <th className="border-b py-2">Obligatorio</th>
-              <th className="border-b py-2">Activo</th>
-              <th className="border-b py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((c) => (
-              <tr key={c.id}>
-                <td className="border-b py-2">{c.nombre}</td>
-                <td className="border-b py-2">{CAMPOS_CRITERIO[c.campo]}</td>
-                <td className="border-b py-2">{c.peso}</td>
-                <td className="border-b py-2">
-                  <input
-                    type="checkbox"
-                    checked={c.obligatorio}
-                    onChange={() => oblMut.mutate({ id: c.id, obligatorio: !c.obligatorio })}
-                  />
-                </td>
-                <td className="border-b py-2">
-                  <input
-                    type="checkbox"
-                    checked={c.activo}
-                    onChange={() => toggleMut.mutate({ id: c.id, activo: !c.activo })}
-                  />
-                </td>
-                <td className="border-b py-2 text-right">
-                  <button
-                    className="text-destructive hover:underline"
-                    onClick={() => deleteMut.mutate(c.id)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="rounded-lg border p-4">
+          <PesosEditor
+            criterios={criterios}
+            pesos={pesos}
+            onChange={setPesos}
+            obligatorios={obligatorios}
+            onToggleObligatorio={(id, valor) =>
+              setObligatorios((p) => ({ ...p, [id]: valor }))
+            }
+          />
+          <div className="mt-4">
+            <Button type="button" disabled={guardarMut.isPending} onClick={() => guardarMut.mutate()}>
+              {guardarMut.isPending ? "Guardando…" : "Guardar ponderación"}
+            </Button>
+          </div>
+        </div>
       )}
+
+      {aviso && <p className="text-sm text-muted-foreground">{aviso}</p>}
     </div>
   );
 }

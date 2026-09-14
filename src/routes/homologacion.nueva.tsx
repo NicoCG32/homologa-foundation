@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 
 import { listCargos } from "@/lib/cargos.functions";
-import { CAMPOS_CRITERIO, listCriterios } from "@/lib/criterios.functions";
+import { listCriterios } from "@/lib/criterios.functions";
+import { PesosEditor, pesosIniciales } from "@/components/pesos-editor";
 import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
 import { ArrowRight, Bot, CheckCircle2, Search, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,14 +46,14 @@ function NuevaHomologacion() {
   const [pesos, setPesos] = useState<Record<string, number>>({});
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
-  const activos = (criterios.data ?? []).filter((c) => c.activo);
+  const activos = criterios.data ?? [];
   useEffect(() => {
     if (!activos.length) return;
-    setPesos((prev) => Object.keys(prev).length ? prev : Object.fromEntries(activos.map((c) => [c.id, Number(c.peso)])));
+    setPesos((prev) => (Object.keys(prev).length ? prev : pesosIniciales(activos)));
   }, [criterios.data]);
 
   const mut = useMutation({
-    mutationFn: () => ejecutar({ data: { cargo_id: cargoId, pesos: activos.map((c) => ({ id: c.id, peso: Number(pesos[c.id] ?? c.peso) })) } }),
+    mutationFn: () => ejecutar({ data: { cargo_id: cargoId, pesos: activos.map((c) => ({ id: c.id, peso: Number(pesos[c.id] ?? 0) })) } }),
     onMutate: () => {
       setError(null);
       setSemError(null);
@@ -105,11 +106,11 @@ function NuevaHomologacion() {
           </select></div>
         </label>
 
-        <details className="criteria-summary" open><summary>Ajustar pesos de esta homologación</summary><div>
+        <details className="criteria-summary" open><summary>Ajustar ponderación de esta homologación</summary><div>
           {criterios.isLoading
             ? "…"
             : activos.length
-              ? <div className="weights-table">{activos.map((c) => <label key={c.id}><span><strong>{c.nombre}</strong><small>{CAMPOS_CRITERIO[c.campo]}{c.obligatorio ? " · obligatorio" : ""}</small></span><input aria-label={`Peso de ${c.nombre}`} type="number" min="0" step="0.1" value={pesos[c.id] ?? Number(c.peso)} onChange={(e) => setPesos((p) => ({ ...p, [c.id]: Number(e.target.value) }))} /></label>)}</div>
+              ? <PesosEditor criterios={activos} pesos={pesos} onChange={setPesos} />
               : "ninguna definida"}
         </div></details>
 
