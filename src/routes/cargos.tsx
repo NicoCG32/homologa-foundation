@@ -128,6 +128,17 @@ function CargosPage() {
     onError: (e: Error) => setError(e.message),
   });
 
+  const limpiarMut = useMutation({
+    mutationFn: () => limpiar({ data: { confirmacion: confirmacionLimpieza } }),
+    onSuccess: () => {
+      setConfirmacionLimpieza("");
+      setMostrarLimpieza(false);
+      setError(null);
+      invalidate();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
   const resueltos = useMemo(
     () => aplicarDiccionario(cargosCarga, diccionario.data ?? []),
     [cargosCarga, diccionario.data],
