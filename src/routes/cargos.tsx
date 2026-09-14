@@ -238,11 +238,14 @@ function CargosPage() {
         nueva: Boolean(nombreEmpresa) && !existente,
         tipoEmpresa,
         sinEmpresa: !nombreEmpresa,
+        actualiza: yaCargados.has(
+          `${normalizarNombreEmpresa(nombreEmpresa)}|${modoCarga}|${c.codigo_cargo}`,
+        ),
         avisos: avisosPorCargo.get(c.codigo_cargo) ?? [],
         bandas: modoCarga === "REFERENCIA" ? bandasPorCodigo.get(c.codigo_cargo) ?? [] : [],
       };
     });
-  }, [resueltos, bandasCarga, empresas.data, empresaDestino, modoCarga]);
+  }, [resueltos, bandasCarga, empresas.data, empresaDestino, modoCarga, cargos.data]);
 
   const tarjetasFiltradas = useMemo(() => {
     const q = normalizarNombreEmpresa(busqueda);
