@@ -280,6 +280,30 @@ export type Database = {
         }
         Relationships: []
       }
+      presets_pesos: {
+        Row: {
+          created_at: string
+          id: string
+          nombre: string
+          pesos: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nombre: string
+          pesos?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nombre?: string
+          pesos?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       resultados: {
         Row: {
           candidato_id: string
