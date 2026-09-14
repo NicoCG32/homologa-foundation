@@ -108,8 +108,17 @@ function CargosPage() {
   });
 
   const importMut = useMutation({
-    mutationFn: () => importar({ data: { empresa_id: empresaId, tipo: modoCarga, cargos: cargosCarga, bandas: modoCarga === "REFERENCIA" ? bandasCarga : [] } }),
-    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setError(null); invalidate(); },
+    mutationFn: () =>
+      importar({
+        data: {
+          empresa_id: modoCarga === "INTERNO" && empresaId ? empresaId : null,
+          empresa_defecto: modoCarga === "REFERENCIA" ? { nombre: EMPRESA_CATALOGO, tipo: EMPRESA_CATALOGO_TIPO } : null,
+          tipo: modoCarga,
+          cargos: cargosCarga,
+          bandas: modoCarga === "REFERENCIA" ? bandasCarga : [],
+        },
+      }),
+    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setRevisado(false); setBusqueda(""); setVisibles(12); setError(null); invalidate(); },
     onError: (e: Error) => setError(e.message),
   });
 
