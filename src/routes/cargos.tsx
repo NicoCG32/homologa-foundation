@@ -214,6 +214,12 @@ function CargosPage() {
       lista.push(b);
       bandasPorCodigo.set(b.codigo_cargo, lista);
     }
+    // Identidad de un cargo: tipo + código + empresa.
+    const yaCargados = new Set(
+      (cargos.data ?? [])
+        .filter((c) => c.codigo_cargo)
+        .map((c) => `${normalizarNombreEmpresa(c.empresas?.nombre ?? "")}|${c.tipo}|${c.codigo_cargo}`),
+    );
     const avisosPorCargo = new Map<string, string[]>();
     for (const a of resueltos.avisos) {
       const lista = avisosPorCargo.get(a.cargo) ?? [];
