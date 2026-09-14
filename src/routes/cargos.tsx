@@ -20,14 +20,18 @@ import {
 import {
   EMPRESA_CATALOGO,
   EMPRESA_CATALOGO_TIPO,
+  aplicarDiccionario,
   descargarPlantilla,
   leerBandas,
   leerCargos,
+  leerDiccionario,
   normalizarNombreEmpresa,
   type BandaImport,
+  type EntradaDiccionario,
   type ImportCargo,
 } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
+import { importarDiccionario, listDiccionario } from "@/lib/diccionario.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
@@ -58,9 +62,12 @@ function CargosPage() {
   const create = useServerFn(createCargo);
   const remove = useServerFn(deleteCargo);
   const importar = useServerFn(importarCargos);
+  const listD = useServerFn(listDiccionario);
+  const importarDicc = useServerFn(importarDiccionario);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
+  const diccionario = useQuery({ queryKey: ["diccionario"], queryFn: () => listD() });
 
   const [empresaId, setEmpresaId] = useState("");
   const [busqueda, setBusqueda] = useState("");
@@ -79,6 +86,8 @@ function CargosPage() {
   const [erroresCarga, setErroresCarga] = useState<string[]>([]);
   const [archivoCargos, setArchivoCargos] = useState("");
   const [archivoBandas, setArchivoBandas] = useState("");
+  const [diccionarioArchivo, setDiccionarioArchivo] = useState<EntradaDiccionario[]>([]);
+  const [resultadoDicc, setResultadoDicc] = useState<string | null>(null);
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
@@ -116,6 +125,11 @@ function CargosPage() {
     onError: (e: Error) => setError(e.message),
   });
 
+  const resueltos = useMemo(
+    () => aplicarDiccionario(cargosCarga, diccionario.data ?? []),
+    [cargosCarga, diccionario.data],
+  );
+
   const importMut = useMutation({
     mutationFn: () =>
       importar({
@@ -123,28 +137,65 @@ function CargosPage() {
           empresa_id: modoCarga === "INTERNO" && empresaId ? empresaId : null,
           empresa_defecto: modoCarga === "REFERENCIA" ? { nombre: EMPRESA_CATALOGO, tipo: EMPRESA_CATALOGO_TIPO } : null,
           tipo: modoCarga,
-          cargos: cargosCarga,
+          cargos: resueltos.cargos,
           bandas: modoCarga === "REFERENCIA" ? bandasCarga : [],
         },
       }),
-    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setRevisado(false); setBusqueda(""); setVisibles(12); setError(null); invalidate(); },
+    onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setDiccionarioArchivo([]); setRevisado(false); setBusqueda(""); setVisibles(12); setError(null); invalidate(); },
     onError: (e: Error) => setError(e.message),
   });
 
-  async function filasArchivo(file: File) {
+  const diccMut = useMutation({
+    mutationFn: () => importarDicc({ data: { entradas: diccionarioArchivo } }),
+    onSuccess: (r) => {
+      setResultadoDicc(
+        `${r.agregadas} entradas agregadas al diccionario${r.conflictos.length ? `. Revisa: ${r.conflictos.join("; ")}` : "."}`,
+      );
+      qc.invalidateQueries({ queryKey: ["diccionario"] });
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  async function hojasArchivo(file: File) {
     const XLSX = await import("xlsx");
     const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
-    const first = wb.SheetNames[0];
-    if (!first) throw new Error("El archivo no contiene hojas");
-    const sheet = wb.Sheets[first];
-    if (!sheet) throw new Error("No se pudo leer la primera hoja");
-    return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: "" }) as (string | number | boolean | null)[][];
+    const out = new Map<string, (string | number | boolean | null)[][]>();
+    for (const nombreHoja of wb.SheetNames) {
+      const sheet = wb.Sheets[nombreHoja];
+      if (!sheet) continue;
+      out.set(
+        nombreHoja,
+        XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, defval: "" }) as (string | number | boolean | null)[][],
+      );
+    }
+    if (!out.size) throw new Error("El archivo no contiene hojas");
+    return out;
+  }
+
+  async function filasArchivo(file: File) {
+    const hojas = await hojasArchivo(file);
+    const primera = hojas.values().next().value;
+    if (!primera) throw new Error("No se pudo leer la primera hoja");
+    return primera;
   }
 
   async function cargarEstructura(file: File | undefined) {
     if (!file) return;
-    try { const r = leerCargos(await filasArchivo(file)); setCargosCarga(r.cargos); setErroresCarga(r.errores); setArchivoCargos(file.name); setError(null); }
-    catch (e) { setError(e instanceof Error ? e.message : "No se pudo leer el archivo"); }
+    try {
+      const hojas = await hojasArchivo(file);
+      const nombreDatos = [...hojas.keys()].find((n) => n.toLowerCase() !== "diccionario");
+      const filas = nombreDatos ? hojas.get(nombreDatos) ?? [] : [];
+      const r = leerCargos(filas);
+      setCargosCarga(r.cargos);
+      setErroresCarga(r.errores);
+      setArchivoCargos(file.name);
+      const hojaDicc = [...hojas.keys()].find((n) => n.toLowerCase() === "diccionario");
+      setDiccionarioArchivo(hojaDicc ? leerDiccionario(hojas.get(hojaDicc) ?? []) : []);
+      setResultadoDicc(null);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo leer el archivo");
+    }
   }
 
   async function cargarBandas(file: File | undefined) {
@@ -163,22 +214,29 @@ function CargosPage() {
       lista.push(b);
       bandasPorCodigo.set(b.codigo_cargo, lista);
     }
-    return cargosCarga.map((c) => {
+    const avisosPorCargo = new Map<string, string[]>();
+    for (const a of resueltos.avisos) {
+      const lista = avisosPorCargo.get(a.cargo) ?? [];
+      lista.push(a.mensaje);
+      avisosPorCargo.set(a.cargo, lista);
+    }
+    return resueltos.cargos.map((c) => {
       const nombreEmpresa =
         c.empresa_nombre ||
         (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO : empresaDestino?.nombre ?? "");
       const existente = nombreEmpresa ? conocidas.get(normalizarNombreEmpresa(nombreEmpresa)) : undefined;
-      const tipoEmpresa = existente?.tipo ?? c.empresa_tipo ?? (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO_TIPO : null);
+      const tipoEmpresa = existente?.tamano ?? c.empresa_tipo ?? (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO_TIPO : null);
       return {
         cargo: c,
         nombreEmpresa,
         nueva: Boolean(nombreEmpresa) && !existente,
         tipoEmpresa,
         sinEmpresa: !nombreEmpresa,
+        avisos: avisosPorCargo.get(c.codigo_cargo) ?? [],
         bandas: modoCarga === "REFERENCIA" ? bandasPorCodigo.get(c.codigo_cargo) ?? [] : [],
       };
     });
-  }, [cargosCarga, bandasCarga, empresas.data, empresaDestino, modoCarga]);
+  }, [resueltos, bandasCarga, empresas.data, empresaDestino, modoCarga]);
 
   const tarjetasFiltradas = useMemo(() => {
     const q = normalizarNombreEmpresa(busqueda);

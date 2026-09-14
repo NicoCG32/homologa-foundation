@@ -2,11 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
 
 import {
   createEmpresa,
   deleteEmpresa,
   listEmpresas,
+  setEmpresaTamano,
   type EmpresaTipo,
 } from "@/lib/empresas.functions";
 import { TIPOS_EMPRESA } from "@/lib/format";
@@ -25,12 +27,11 @@ export const Route = createFileRoute("/empresas")({
   component: EmpresasPage,
 });
 
-
-
 function EmpresasPage() {
   const qc = useQueryClient();
   const list = useServerFn(listEmpresas);
   const create = useServerFn(createEmpresa);
+  const setTamano = useServerFn(setEmpresaTamano);
   const remove = useServerFn(deleteEmpresa);
 
   const [nombre, setNombre] = useState("");
@@ -51,15 +52,33 @@ function EmpresasPage() {
     onError: (e: Error) => setError(e.message),
   });
 
+  const tamanoMut = useMutation({
+    mutationFn: (v: { id: string; tamano: EmpresaTipo | "" }) => setTamano({ data: v }),
+    onSuccess: invalidate,
+    onError: (e: Error) => setError(e.message),
+  });
+
   const deleteMut = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: invalidate,
     onError: (e: Error) => setError(e.message),
   });
 
+  const sinTamano = (data ?? []).filter((e) => !e.tamano).length;
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">Empresas</h1>
+
+      {sinTamano > 0 && (
+        <p className="flex items-start gap-2 rounded-md border border-amber-400/60 bg-amber-50 p-3 text-sm text-amber-900">
+          <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Hay {sinTamano} empresa(s) sin tamaño definido. Mientras no lo indiques, quedan fuera de
+            las comparaciones que dependen del tamaño (bandas por pequeña, mediana o grande).
+          </span>
+        </p>
+      )}
 
       <form
         className="flex flex-wrap items-end gap-3 rounded-lg border p-4"
@@ -78,7 +97,7 @@ function EmpresasPage() {
           />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-muted-foreground">Tipo</span>
+          <span className="mb-1 block text-muted-foreground">Tamaño</span>
           <select
             className="rounded-md border bg-background px-3 py-2"
             value={tipo}
@@ -111,15 +130,40 @@ function EmpresasPage() {
           <thead className="text-left text-muted-foreground">
             <tr>
               <th className="border-b py-2">Nombre</th>
-              <th className="border-b py-2">Tipo</th>
+              <th className="border-b py-2">Tamaño</th>
               <th className="border-b py-2" />
             </tr>
           </thead>
           <tbody>
             {data.map((e) => (
               <tr key={e.id}>
-                <td className="border-b py-2">{e.nombre}</td>
-                <td className="border-b py-2">{TIPOS_EMPRESA[e.tipo]}</td>
+                <td className="border-b py-2">
+                  <span className="inline-flex items-center gap-2">
+                    {!e.tamano && (
+                      <AlertTriangle
+                        aria-label="Falta definir el tamaño"
+                        className="size-4 text-amber-600"
+                      />
+                    )}
+                    {e.nombre}
+                  </span>
+                </td>
+                <td className="border-b py-2">
+                  <select
+                    className="rounded-md border bg-background px-2 py-1"
+                    value={e.tamano ?? ""}
+                    onChange={(ev) =>
+                      tamanoMut.mutate({ id: e.id, tamano: ev.target.value as EmpresaTipo | "" })
+                    }
+                  >
+                    <option value="">Definir tamaño…</option>
+                    {Object.entries(TIPOS_EMPRESA).map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </td>
                 <td className="border-b py-2 text-right">
                   <button
                     className="text-destructive hover:underline"

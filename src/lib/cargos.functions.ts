@@ -133,6 +133,7 @@ type FilaImport = {
   codigo_subarea: string; nombre_subarea: string; codigo_nivel_jerarquico: string;
   nivel_jerarquico: string; descripcion: string; experiencia_requerida: string;
   requisitos_formacion: string; empresa_nombre?: string; empresa_tipo?: EmpresaTipo | null;
+  sueldo?: number | null; proposito?: string; funciones?: string; responsabilidades?: string;
 };
 type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null };
 type EmpresaTipo = "P" | "M" | "G";
@@ -156,7 +157,10 @@ export const importarCargos = createServerFn({ method: "POST" })
       const empresa_tipo = (["P", "M", "G"] as const).includes(fila.empresa_tipo as EmpresaTipo) ? (fila.empresa_tipo as EmpresaTipo) : null;
       if (!empresa_nombre && !empresaId && !empresaDefecto) throw new Error(`Fila ${i + 1}: falta la empresa`);
       const limpio = (v: unknown) => String(v ?? "").trim() || null;
-      return { empresa_nombre, empresa_tipo, datos: { tipo: input.tipo, codigo_cargo, nombre, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributosVacios() } };
+      const sueldoRaw = fila.sueldo;
+      const sueldo = typeof sueldoRaw === "number" && Number.isFinite(sueldoRaw) && sueldoRaw >= 0 ? sueldoRaw : null;
+      const atributos = { ...atributosVacios(), proposito: String(fila.proposito ?? "").trim(), funciones: String(fila.funciones ?? "").trim(), responsabilidades: String(fila.responsabilidades ?? "").trim() };
+      return { empresa_nombre, empresa_tipo, datos: { tipo: input.tipo, codigo_cargo, nombre, sueldo, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributos } };
     });
     return { empresa_id: empresaId, empresa_defecto: empresaDefecto, cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
   })
@@ -175,7 +179,7 @@ export const importarCargos = createServerFn({ method: "POST" })
       const k = claveEmpresa(nombre);
       const encontrada = porNombre.get(k);
       if (encontrada) return encontrada;
-      const creada = unwrap(await db.from("empresas").insert({ nombre: nombre.trim(), tipo: tipo ?? "G" }).select("id").single());
+      const creada = unwrap(await db.from("empresas").insert({ nombre: nombre.trim(), tipo: tipo ?? "G", tamano: tipo }).select("id").single());
       if (!creada) throw new Error(`No se pudo crear la empresa ${nombre}`);
       porNombre.set(k, creada.id);
       empresasCreadas += 1;

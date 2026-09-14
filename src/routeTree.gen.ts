@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CargosRouteImport } from './routes/cargos'
 import { Route as CriteriosRouteImport } from './routes/criterios'
+import { Route as DiccionarioRouteImport } from './routes/diccionario'
 import { Route as EmpresasRouteImport } from './routes/empresas'
 import { Route as HistorialIndexRouteImport } from './routes/historial.index'
 import { Route as HistorialIdRouteImport } from './routes/historial.$id'
@@ -30,6 +31,11 @@ const CargosRoute = CargosRouteImport.update({
 const CriteriosRoute = CriteriosRouteImport.update({
   id: '/criterios',
   path: '/criterios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiccionarioRoute = DiccionarioRouteImport.update({
+  id: '/diccionario',
+  path: '/diccionario',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmpresasRoute = EmpresasRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cargos': typeof CargosRoute
   '/criterios': typeof CriteriosRoute
+  '/diccionario': typeof DiccionarioRoute
   '/empresas': typeof EmpresasRoute
   '/historial/$id': typeof HistorialIdRoute
   '/homologacion/nueva': typeof HomologacionNuevaRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cargos': typeof CargosRoute
   '/criterios': typeof CriteriosRoute
+  '/diccionario': typeof DiccionarioRoute
   '/empresas': typeof EmpresasRoute
   '/historial/$id': typeof HistorialIdRoute
   '/homologacion/nueva': typeof HomologacionNuevaRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/cargos': typeof CargosRoute
   '/criterios': typeof CriteriosRoute
+  '/diccionario': typeof DiccionarioRoute
   '/empresas': typeof EmpresasRoute
   '/historial/$id': typeof HistorialIdRoute
   '/homologacion/nueva': typeof HomologacionNuevaRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cargos'
     | '/criterios'
+    | '/diccionario'
     | '/empresas'
     | '/historial/$id'
     | '/homologacion/nueva'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cargos'
     | '/criterios'
+    | '/diccionario'
     | '/empresas'
     | '/historial/$id'
     | '/homologacion/nueva'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cargos'
     | '/criterios'
+    | '/diccionario'
     | '/empresas'
     | '/historial/$id'
     | '/homologacion/nueva'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CargosRoute: typeof CargosRoute
   CriteriosRoute: typeof CriteriosRoute
+  DiccionarioRoute: typeof DiccionarioRoute
   EmpresasRoute: typeof EmpresasRoute
   HistorialIdRoute: typeof HistorialIdRoute
   HomologacionNuevaRoute: typeof HomologacionNuevaRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/criterios'
       fullPath: '/criterios'
       preLoaderRoute: typeof CriteriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diccionario': {
+      id: '/diccionario'
+      path: '/diccionario'
+      fullPath: '/diccionario'
+      preLoaderRoute: typeof DiccionarioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/empresas': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CargosRoute: CargosRoute,
   CriteriosRoute: CriteriosRoute,
+  DiccionarioRoute: DiccionarioRoute,
   EmpresasRoute: EmpresasRoute,
   HistorialIdRoute: HistorialIdRoute,
   HomologacionNuevaRoute: HomologacionNuevaRoute,
