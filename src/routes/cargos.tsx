@@ -54,6 +54,9 @@ function CargosPage() {
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
 
   const [empresaId, setEmpresaId] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [visibles, setVisibles] = useState(12);
+  const [revisado, setRevisado] = useState(false);
   const [tipo, setTipo] = useState<CargoTipo>("INTERNO");
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
