@@ -89,6 +89,8 @@ function CargosPage() {
   const [archivoBandas, setArchivoBandas] = useState("");
   const [diccionarioArchivo, setDiccionarioArchivo] = useState<EntradaDiccionario[]>([]);
   const [resultadoDicc, setResultadoDicc] = useState<string | null>(null);
+  const [mostrarLimpieza, setMostrarLimpieza] = useState(false);
+  const [confirmacionLimpieza, setConfirmacionLimpieza] = useState("");
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
