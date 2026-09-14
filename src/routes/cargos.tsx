@@ -297,15 +297,29 @@ function CargosPage() {
           <label className="file-picker"><Upload aria-hidden="true" /><span><strong>{modoCarga === "INTERNO" ? "Planilla de cargos" : "Encuesta Piloto"}</strong><small>{archivoCargos || "CSV o XLSX"}</small></span><input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => cargarEstructura(e.target.files?.[0])} /></label>
           {modoCarga === "REFERENCIA" && <label className="file-picker"><Upload aria-hidden="true" /><span><strong>Encuesta Piloto Remuneraciones</strong><small>{archivoBandas || "XLSX"}</small></span><input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => cargarBandas(e.target.files?.[0])} /></label>}
         </div>
-        <details className="criteria-summary"><summary>Ver formato esperado</summary><div>ID Cargo, Nombre del Cargo, Código y Nombre de Área, Código y Nombre de Subárea, Código y Nombre del Nivel Jerárquico y Descripción. Para cargos propios también se aceptan Experiencia Requerida y Requisitos Formación. Las remuneraciones se cruzan por ID Cargo.</div></details>
+        <details className="criteria-summary"><summary>Ver formato esperado</summary><div>Se acepta «ID Cargo» o «Código del cargo» junto al nombre del cargo, los códigos de Área, Subárea y Nivel Jerárquico (se traducen con el Diccionario), la descripción u Objetivo del cargo, Funciones principales, Responsabilidades, Requisitos de formación, Experiencia requerida y la remuneración bruta mensual (solo informativa). Las remuneraciones de la encuesta se cruzan por ID Cargo.</div></details>
+        {diccionarioArchivo.length > 0 && (
+          <div className="import-preview">
+            <strong>El archivo trae una hoja Diccionario</strong>
+            <p>{diccionarioArchivo.length} entradas. Puedes sumarlas a tu diccionario sin reemplazar las actuales.</p>
+            <Button type="button" variant="outline" disabled={diccMut.isPending} onClick={() => diccMut.mutate()}>
+              {diccMut.isPending ? "Agregando…" : "Agregar al diccionario"}
+            </Button>
+            {resultadoDicc && <p>{resultadoDicc}</p>}
+          </div>
+        )}
         {(cargosCarga.length > 0 || erroresCarga.length > 0) && (
           <div className="import-preview">
             <strong>Vista previa</strong>
             <p>
               {cargosCarga.length} cargos · {empresasNuevas} empresas nuevas
-              {modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length} observaciones
+              {modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length + resueltos.avisos.length} observaciones
             </p>
             {erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}
+            {resueltos.avisos.slice(0, 4).map((a, i) => (
+              <p key={`${a.cargo}-${i}`} className="text-amber-700">El cargo {a.cargo} {a.mensaje}.</p>
+            ))}
+            {resueltos.avisos.length > 4 && <p className="text-amber-700">…y {resueltos.avisos.length - 4} avisos más en las tarjetas.</p>}
             {faltaEmpresa && <p className="text-destructive">Hay filas sin empresa: agrégala en la planilla o elige una empresa de destino.</p>}
           </div>
         )}
@@ -331,8 +345,14 @@ function CargosPage() {
                     <div><dt>Nivel</dt><dd>{[t.cargo.codigo_nivel_jerarquico, t.cargo.nivel_jerarquico].filter(Boolean).join(" · ") || "—"}</dd></div>
                     <div><dt>Experiencia</dt><dd>{t.cargo.experiencia_requerida || "—"}</dd></div>
                     <div><dt>Formación</dt><dd>{t.cargo.requisitos_formacion || "—"}</dd></div>
+                    {t.cargo.sueldo !== null && <div><dt>Remuneración</dt><dd>{t.cargo.sueldo}</dd></div>}
                   </dl>
                   {t.cargo.descripcion && <p className="import-card-desc">{t.cargo.descripcion}</p>}
+                  {t.avisos.length > 0 && (
+                    <ul className="import-card-avisos">
+                      {t.avisos.map((a) => <li key={a}>{a}</li>)}
+                    </ul>
+                  )}
                   {t.bandas.length > 0 && (
                     <ul className="import-card-bandas">
                       {t.bandas.map((b) => (

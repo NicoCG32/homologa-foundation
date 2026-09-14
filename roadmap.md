@@ -5,4 +5,6 @@
 - [x] Permitir ajustar pesos por cada homologación
 - [x] Enviar formación y experiencia al análisis semántico
 - [x] Mostrar score del motor, score de Gemini y score final
-- [x] Revisar cambios sin ejecutar pruebas
+- [x] Pestaña Diccionario editable (áreas, subáreas, niveles) precargada
+- [x] Leer las tres planillas sin crear datos manuales
+- [x] Tamaño de empresa opcional con aviso en Empresas

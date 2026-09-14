@@ -214,3 +214,15 @@
 .import-card-bandas span { font-weight: 700; }
 .import-confirm { display: flex; align-items: center; gap: 9px; font-size: 12px; }
 @media (max-width: 620px) { .import-cards { grid-template-columns: 1fr; } .import-card header { flex-direction: column; } }
+
+.import-card-avisos {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: oklch(0.52 0.13 70);
+}
+
+.import-card-avisos li::before {
+  content: "⚠ ";
+}
