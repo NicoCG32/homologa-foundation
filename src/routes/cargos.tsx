@@ -214,6 +214,12 @@ function CargosPage() {
       lista.push(b);
       bandasPorCodigo.set(b.codigo_cargo, lista);
     }
+    // Identidad de un cargo: tipo + código + empresa.
+    const yaCargados = new Set(
+      (cargos.data ?? [])
+        .filter((c) => c.codigo_cargo)
+        .map((c) => `${normalizarNombreEmpresa(c.empresas?.nombre ?? "")}|${c.tipo}|${c.codigo_cargo}`),
+    );
     const avisosPorCargo = new Map<string, string[]>();
     for (const a of resueltos.avisos) {
       const lista = avisosPorCargo.get(a.cargo) ?? [];
@@ -232,11 +238,14 @@ function CargosPage() {
         nueva: Boolean(nombreEmpresa) && !existente,
         tipoEmpresa,
         sinEmpresa: !nombreEmpresa,
+        actualiza: yaCargados.has(
+          `${normalizarNombreEmpresa(nombreEmpresa)}|${modoCarga}|${c.codigo_cargo}`,
+        ),
         avisos: avisosPorCargo.get(c.codigo_cargo) ?? [],
         bandas: modoCarga === "REFERENCIA" ? bandasPorCodigo.get(c.codigo_cargo) ?? [] : [],
       };
     });
-  }, [resueltos, bandasCarga, empresas.data, empresaDestino, modoCarga]);
+  }, [resueltos, bandasCarga, empresas.data, empresaDestino, modoCarga, cargos.data]);
 
   const tarjetasFiltradas = useMemo(() => {
     const q = normalizarNombreEmpresa(busqueda);
@@ -333,7 +342,10 @@ function CargosPage() {
                   <header>
                     <div>
                       <strong>{t.cargo.nombre}</strong>
-                      <small>{t.cargo.codigo_cargo}</small>
+                      <small>
+                        {t.cargo.codigo_cargo} · {modoCarga === "INTERNO" ? "Interno" : "Referencia"} ·{" "}
+                        {t.actualiza ? "actualiza un cargo existente" : "cargo nuevo"}
+                      </small>
                     </div>
                     <span className={`empresa-tag${t.nueva ? " is-nueva" : ""}`}>
                       {t.sinEmpresa ? "Sin empresa" : `${t.nombreEmpresa}${t.tipoEmpresa ? ` · ${t.tipoEmpresa}` : ""}${t.nueva ? " · nueva" : ""}`}
@@ -540,6 +552,7 @@ function CargosPage() {
             {filtrados.map((c) => (
               <tr key={c.id}>
                 <td className="border-b py-2">
+                  {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
                   {c.nombre}
                   {c.descripcion && (
                     <div className="text-xs text-muted-foreground">{c.descripcion}</div>

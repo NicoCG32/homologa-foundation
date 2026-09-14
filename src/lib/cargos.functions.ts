@@ -162,7 +162,7 @@ export const importarCargos = createServerFn({ method: "POST" })
       const atributos = { ...atributosVacios(), proposito: String(fila.proposito ?? "").trim(), funciones: String(fila.funciones ?? "").trim(), responsabilidades: String(fila.responsabilidades ?? "").trim() };
       return { empresa_nombre, empresa_tipo, datos: { tipo: input.tipo, codigo_cargo, nombre, sueldo, codigo_area: limpio(fila.codigo_area), nombre_area: limpio(fila.nombre_area), codigo_subarea: limpio(fila.codigo_subarea), nombre_subarea: limpio(fila.nombre_subarea), codigo_nivel_jerarquico: limpio(fila.codigo_nivel_jerarquico), nivel_jerarquico: limpio(fila.nivel_jerarquico), descripcion: limpio(fila.descripcion), experiencia_requerida: limpio(fila.experiencia_requerida), requisitos_formacion: limpio(fila.requisitos_formacion), atributos_semanticos: atributos } };
     });
-    return { empresa_id: empresaId, empresa_defecto: empresaDefecto, cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
+    return { empresa_id: empresaId, empresa_defecto: empresaDefecto, tipo: input.tipo, cargos, bandas: Array.isArray(input.bandas) ? input.bandas : [] };
   })
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
@@ -192,21 +192,32 @@ export const importarCargos = createServerFn({ method: "POST" })
         ? await resolverEmpresa(fila.empresa_nombre, fila.empresa_tipo)
         : data.empresa_id ?? (await resolverEmpresa(data.empresa_defecto!.nombre, data.empresa_defecto!.tipo));
       const valores = { ...fila.datos, empresa_id };
-      const existente = unwrap(await db.from("cargos").select("id").eq("empresa_id", empresa_id).eq("codigo_cargo", valores.codigo_cargo).maybeSingle());
+      // La identidad de un cargo es tipo + código + empresa: el mismo código puede
+      // existir como interno y como referencia sin ser el mismo registro.
+      const existente = unwrap(
+        await db
+          .from("cargos")
+          .select("id")
+          .eq("empresa_id", empresa_id)
+          .eq("tipo", valores.tipo)
+          .eq("codigo_cargo", valores.codigo_cargo)
+          .maybeSingle(),
+      );
+      const claveCargo = `${valores.tipo}|${valores.codigo_cargo}`;
       if (existente) {
         const { error } = await db.from("cargos").update(valores).eq("id", existente.id);
         if (error) throw new Error(error.message);
-        ids.set(valores.codigo_cargo, existente.id);
+        ids.set(claveCargo, existente.id);
         actualizados += 1;
       } else {
         const creado = unwrap(await db.from("cargos").insert(valores).select("id").single());
         if (!creado) throw new Error(`No se pudo crear el cargo ${valores.nombre}`);
-        ids.set(valores.codigo_cargo, creado.id);
+        ids.set(claveCargo, creado.id);
         creados += 1;
       }
     }
     for (const banda of data.bandas) {
-      const cargo_id = ids.get(String(banda.codigo_cargo));
+      const cargo_id = ids.get(`${data.tipo}|${String(banda.codigo_cargo)}`);
       if (!cargo_id) continue;
       const valores = { cargo_id, tipo_empresa: banda.tipo_empresa, p25: banda.p25, p50: banda.p50, p75: banda.p75, promedio: banda.promedio };
       const { error } = await db.from("bandas_salariales").upsert(valores, { onConflict: "cargo_id,tipo_empresa" });
