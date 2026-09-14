@@ -61,6 +61,19 @@ function valor(row: Celda[], indices: Map<string, number>, ...nombres: string[])
   return "";
 }
 
+export function normalizarNombreEmpresa(v: string) {
+  return clave(v);
+}
+
+export function leerTipoEmpresa(v: Celda): EmpresaTipo | null {
+  const k = clave(v);
+  if (!k) return null;
+  if (k === "p" || k.startsWith("pequen")) return "P";
+  if (k === "m" || k.startsWith("median")) return "M";
+  if (k === "g" || k.startsWith("grande")) return "G";
+  return null;
+}
+
 export function leerCargos(rows: Celda[][]) {
   const headerIndex = buscarEncabezado(rows);
   if (headerIndex < 0) throw new Error("No se encontró la columna ID Cargo");
