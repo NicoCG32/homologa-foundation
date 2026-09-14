@@ -130,7 +130,7 @@ function EjecucionDetalle() {
                     <td className="border-b py-2">{pct(r.score_final)}</td>
                     <td className="border-b py-2">
                       {formatSueldo(r.cargos?.sueldo)}
-                      {(r.cargos?.bandas_salariales ?? []).map((b) => (
+                      {(data.bandas ?? []).filter((b) => b.cargo_id === r.candidato_id).map((b) => (
                         <div key={b.tipo_empresa} className="text-xs text-muted-foreground">
                           {b.tipo_empresa}: P25 {formatSueldo(b.p25)} · P50 {formatSueldo(b.p50)} · P75 {formatSueldo(b.p75)} · PP {formatSueldo(b.promedio)}
                         </div>
