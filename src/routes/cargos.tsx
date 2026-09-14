@@ -144,6 +144,53 @@ function CargosPage() {
     catch (e) { setError(e instanceof Error ? e.message : "No se pudo leer el archivo de remuneraciones"); }
   }
 
+  const empresaDestino = (empresas.data ?? []).find((e) => e.id === empresaId) ?? null;
+
+  const tarjetas = useMemo(() => {
+    const conocidas = new Map((empresas.data ?? []).map((e) => [normalizarNombreEmpresa(e.nombre), e]));
+    const bandasPorCodigo = new Map<string, BandaImport[]>();
+    for (const b of bandasCarga) {
+      const lista = bandasPorCodigo.get(b.codigo_cargo) ?? [];
+      lista.push(b);
+      bandasPorCodigo.set(b.codigo_cargo, lista);
+    }
+    return cargosCarga.map((c) => {
+      const nombreEmpresa =
+        c.empresa_nombre ||
+        (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO : empresaDestino?.nombre ?? "");
+      const existente = nombreEmpresa ? conocidas.get(normalizarNombreEmpresa(nombreEmpresa)) : undefined;
+      const tipoEmpresa = existente?.tipo ?? c.empresa_tipo ?? (modoCarga === "REFERENCIA" ? EMPRESA_CATALOGO_TIPO : null);
+      return {
+        cargo: c,
+        nombreEmpresa,
+        nueva: Boolean(nombreEmpresa) && !existente,
+        tipoEmpresa,
+        sinEmpresa: !nombreEmpresa,
+        bandas: modoCarga === "REFERENCIA" ? bandasPorCodigo.get(c.codigo_cargo) ?? [] : [],
+      };
+    });
+  }, [cargosCarga, bandasCarga, empresas.data, empresaDestino, modoCarga]);
+
+  const tarjetasFiltradas = useMemo(() => {
+    const q = normalizarNombreEmpresa(busqueda);
+    if (!q) return tarjetas;
+    return tarjetas.filter((t) =>
+      normalizarNombreEmpresa(`${t.cargo.nombre} ${t.cargo.codigo_cargo} ${t.nombreEmpresa} ${t.cargo.nombre_area}`).includes(q),
+    );
+  }, [tarjetas, busqueda]);
+
+  const empresasNuevas = useMemo(
+    () => new Set(tarjetas.filter((t) => t.nueva).map((t) => normalizarNombreEmpresa(t.nombreEmpresa))).size,
+    [tarjetas],
+  );
+  const faltaEmpresa = tarjetas.some((t) => t.sinEmpresa);
+  const puedeGuardar =
+    !!cargosCarga.length &&
+    !faltaEmpresa &&
+    revisado &&
+    !importMut.isPending &&
+    (modoCarga === "INTERNO" || bandasCarga.length > 0);
+
   const filtrados = useMemo(
     () =>
       (cargos.data ?? []).filter(
