@@ -45,14 +45,14 @@ function NuevaHomologacion() {
   const [pesos, setPesos] = useState<Record<string, number>>({});
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
-  const activos = (criterios.data ?? []).filter((c) => c.activo);
+  const activos = criterios.data ?? [];
   useEffect(() => {
     if (!activos.length) return;
-    setPesos((prev) => Object.keys(prev).length ? prev : Object.fromEntries(activos.map((c) => [c.id, Number(c.peso)])));
+    setPesos((prev) => (Object.keys(prev).length ? prev : pesosIniciales(activos)));
   }, [criterios.data]);
 
   const mut = useMutation({
-    mutationFn: () => ejecutar({ data: { cargo_id: cargoId, pesos: activos.map((c) => ({ id: c.id, peso: Number(pesos[c.id] ?? c.peso) })) } }),
+    mutationFn: () => ejecutar({ data: { cargo_id: cargoId, pesos: activos.map((c) => ({ id: c.id, peso: Number(pesos[c.id] ?? 0) })) } }),
     onMutate: () => {
       setError(null);
       setSemError(null);
