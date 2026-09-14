@@ -148,7 +148,7 @@ export function leerBandas(rows: Celda[][]) {
 }
 
 export function descargarPlantilla() {
-  const contenido = "ID Cargo,Nombre del Cargo,Código Área,Nombre Área,Código Subárea,Nombre Subárea,Código Nivel Jerárquico,Nivel Jerárquico,DESCRIPCIÓN,Experiencia Requerida,Requisitos Formación\n";
+  const contenido = "ID Cargo,Nombre del Cargo,Empresa,Tamaño,Código Área,Nombre Área,Código Subárea,Nombre Subárea,Código Nivel Jerárquico,Nivel Jerárquico,DESCRIPCIÓN,Experiencia Requerida,Requisitos Formación\n";
   const url = URL.createObjectURL(new Blob([contenido], { type: "text/csv;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;
