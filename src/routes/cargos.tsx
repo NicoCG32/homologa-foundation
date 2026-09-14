@@ -17,7 +17,16 @@ import {
   type CargoTipo,
   type Estructurales,
 } from "@/lib/cargos.functions";
-import { descargarPlantilla, leerBandas, leerCargos, type BandaImport, type ImportCargo } from "@/lib/cargos-import";
+import {
+  EMPRESA_CATALOGO,
+  EMPRESA_CATALOGO_TIPO,
+  descargarPlantilla,
+  leerBandas,
+  leerCargos,
+  normalizarNombreEmpresa,
+  type BandaImport,
+  type ImportCargo,
+} from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
