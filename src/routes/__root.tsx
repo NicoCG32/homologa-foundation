@@ -9,7 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { Building2, ClipboardList, History, Home, Settings2, Sparkles } from "lucide-react";
+import { BookMarked, Building2, ClipboardList, History, Home, Settings2, Sparkles } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -130,6 +130,7 @@ const NAV = [
   { to: "/cargos", label: "Cargos", icon: ClipboardList, group: "gestión" },
   { to: "/empresas", label: "Empresas", icon: Building2, group: "gestión" },
   { to: "/criterios", label: "Criterios", icon: Settings2, group: "gestión" },
+  { to: "/diccionario", label: "Diccionario", icon: BookMarked, group: "gestión" },
 ] as const;
 
 const JOURNEY = ["Cargo", "Revisión", "Candidatos", "Análisis IA", "Decisión"];
