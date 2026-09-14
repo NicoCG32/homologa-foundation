@@ -32,6 +32,7 @@ import {
 } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { importarDiccionario, listDiccionario } from "@/lib/diccionario.functions";
+import { limpiarDatos } from "@/lib/mantenimiento.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
@@ -64,6 +65,7 @@ function CargosPage() {
   const importar = useServerFn(importarCargos);
   const listD = useServerFn(listDiccionario);
   const importarDicc = useServerFn(importarDiccionario);
+  const limpiar = useServerFn(limpiarDatos);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
@@ -88,6 +90,8 @@ function CargosPage() {
   const [archivoBandas, setArchivoBandas] = useState("");
   const [diccionarioArchivo, setDiccionarioArchivo] = useState<EntradaDiccionario[]>([]);
   const [resultadoDicc, setResultadoDicc] = useState<string | null>(null);
+  const [mostrarLimpieza, setMostrarLimpieza] = useState(false);
+  const [confirmacionLimpieza, setConfirmacionLimpieza] = useState("");
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
@@ -122,6 +126,17 @@ function CargosPage() {
   const deleteMut = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: invalidate,
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const limpiarMut = useMutation({
+    mutationFn: () => limpiar({ data: { confirmacion: confirmacionLimpieza } }),
+    onSuccess: () => {
+      setConfirmacionLimpieza("");
+      setMostrarLimpieza(false);
+      setError(null);
+      invalidate();
+    },
     onError: (e: Error) => setError(e.message),
   });
 
@@ -389,7 +404,31 @@ function CargosPage() {
           </div>
         )}
 
-        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
+        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button><Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => setMostrarLimpieza((v) => !v)}>Eliminar datos</Button></div>
+        {mostrarLimpieza && (
+          <div className="grid gap-2 rounded-lg border border-destructive/40 p-3 text-sm">
+            <p>Esto borra todas las empresas, cargos, bandas, homologaciones y sus resultados. El diccionario y los criterios se conservan.</p>
+            <p>Para confirmar, escribe <strong>ELIMINAR</strong>.</p>
+            <input
+              className="w-full max-w-xs rounded-md border bg-background px-3 py-2"
+              value={confirmacionLimpieza}
+              onChange={(e) => setConfirmacionLimpieza(e.target.value)}
+              placeholder="ELIMINAR"
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={confirmacionLimpieza.trim().toUpperCase() !== "ELIMINAR" || limpiarMut.isPending}
+                onClick={() => limpiarMut.mutate()}
+              >
+                {limpiarMut.isPending ? "Eliminando…" : "Eliminar definitivamente"}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => { setMostrarLimpieza(false); setConfirmacionLimpieza(""); }}>Cancelar</Button>
+            </div>
+          </div>
+        )}
         {importMut.data && <p className="text-sm">Carga lista: {importMut.data.empresas} empresas nuevas, {importMut.data.creados} cargos nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
       </section>
 
