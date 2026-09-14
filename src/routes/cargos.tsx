@@ -64,6 +64,7 @@ function CargosPage() {
   const importar = useServerFn(importarCargos);
   const listD = useServerFn(listDiccionario);
   const importarDicc = useServerFn(importarDiccionario);
+  const limpiar = useServerFn(limpiarDatos);
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
