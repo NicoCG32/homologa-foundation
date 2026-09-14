@@ -8,6 +8,13 @@
       "when": 1789420009820,
       "tag": "0000_add_import_bands_and_execution_weights",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789420483853,
+      "tag": "0001_restrict_public_table_access",
+      "breakpoints": true
     }
   ]
 }
