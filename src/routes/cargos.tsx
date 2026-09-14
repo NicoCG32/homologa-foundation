@@ -342,7 +342,10 @@ function CargosPage() {
                   <header>
                     <div>
                       <strong>{t.cargo.nombre}</strong>
-                      <small>{t.cargo.codigo_cargo}</small>
+                      <small>
+                        {t.cargo.codigo_cargo} · {modoCarga === "INTERNO" ? "Interno" : "Referencia"} ·{" "}
+                        {t.actualiza ? "actualiza un cargo existente" : "cargo nuevo"}
+                      </small>
                     </div>
                     <span className={`empresa-tag${t.nueva ? " is-nueva" : ""}`}>
                       {t.sinEmpresa ? "Sin empresa" : `${t.nombreEmpresa}${t.tipoEmpresa ? ` · ${t.tipoEmpresa}` : ""}${t.nueva ? " · nueva" : ""}`}
