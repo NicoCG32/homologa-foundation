@@ -25,7 +25,7 @@ export const getEjecucion = createServerFn({ method: "GET" })
       await getDb()
         .from("resultados")
         .select(
-          "id, candidato_id, score_deterministico, score_semantico, score_final, cargos:candidato_id(id, nombre, sueldo, empresas(nombre))",
+          "id, candidato_id, score_deterministico, score_semantico, score_final, cargos:candidato_id(id, nombre, sueldo, empresas(nombre), bandas_salariales(tipo_empresa, p25, p50, p75, promedio))",
         )
         .eq("ejecucion_id", data.id)
         .order("score_final", { ascending: false, nullsFirst: false }),
