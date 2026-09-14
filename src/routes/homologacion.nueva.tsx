@@ -105,11 +105,11 @@ function NuevaHomologacion() {
           </select></div>
         </label>
 
-        <details className="criteria-summary" open><summary>Ajustar pesos de esta homologación</summary><div>
+        <details className="criteria-summary" open><summary>Ajustar ponderación de esta homologación</summary><div>
           {criterios.isLoading
             ? "…"
             : activos.length
-              ? <div className="weights-table">{activos.map((c) => <label key={c.id}><span><strong>{c.nombre}</strong><small>{CAMPOS_CRITERIO[c.campo]}{c.obligatorio ? " · obligatorio" : ""}</small></span><input aria-label={`Peso de ${c.nombre}`} type="number" min="0" step="0.1" value={pesos[c.id] ?? Number(c.peso)} onChange={(e) => setPesos((p) => ({ ...p, [c.id]: Number(e.target.value) }))} /></label>)}</div>
+              ? <PesosEditor criterios={activos} pesos={pesos} onChange={setPesos} />
               : "ninguna definida"}
         </div></details>
 
