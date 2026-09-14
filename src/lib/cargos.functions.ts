@@ -179,7 +179,7 @@ export const importarCargos = createServerFn({ method: "POST" })
       const k = claveEmpresa(nombre);
       const encontrada = porNombre.get(k);
       if (encontrada) return encontrada;
-      const creada = unwrap(await db.from("empresas").insert({ nombre: nombre.trim(), tipo: tipo ?? "G" }).select("id").single());
+      const creada = unwrap(await db.from("empresas").insert({ nombre: nombre.trim(), tipo: tipo ?? "G", tamano: tipo }).select("id").single());
       if (!creada) throw new Error(`No se pudo crear la empresa ${nombre}`);
       porNombre.set(k, creada.id);
       empresasCreadas += 1;
