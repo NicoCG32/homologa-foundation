@@ -102,9 +102,9 @@ function EjecucionDetalle() {
             <thead className="text-left text-muted-foreground">
               <tr>
                 <th className="border-b py-2">Candidato</th>
-                <th className="border-b py-2">Determinístico</th>
-                <th className="border-b py-2">Semántico</th>
-                <th className="border-b py-2">Final</th>
+                <th className="border-b py-2">Score motor</th>
+                <th className="border-b py-2">Score Gemini</th>
+                <th className="border-b py-2">Score final</th>
                 <th className="border-b py-2">Sueldo</th>
                 <th className="border-b py-2">Diferencia</th>
               </tr>
@@ -122,7 +122,7 @@ function EjecucionDetalle() {
                       </div>
                     </td>
                     <td className="border-b py-2">{r.score_deterministico ?? "—"}</td>
-                    <td className="border-b py-2">{r.score_semantico ?? "—"}</td>
+                    <td className="border-b py-2">{r.score_semantico ?? "Pendiente"}</td>
                     <td className="border-b py-2">{r.score_final ?? "—"}</td>
                     <td className="border-b py-2">{formatSueldo(r.cargos?.sueldo)}</td>
                     <td className="border-b py-2">
