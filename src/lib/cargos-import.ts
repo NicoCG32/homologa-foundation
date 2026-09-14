@@ -215,13 +215,8 @@ export function aplicarDiccionario(cargos: ImportCargo[], diccionario: EntradaDi
         });
         continue;
       }
-      if (campo.nombre && clave(campo.nombre) !== clave(delDiccionario)) {
-        avisos.push({
-          cargo: c.codigo_cargo,
-          mensaje: `la ${campo.etiqueta} «${campo.nombre}» no coincide con el diccionario («${delDiccionario}» para el código ${campo.codigo}); se guardará el nombre de la planilla`,
-        });
-        continue;
-      }
+      // El código manda: si el nombre del archivo difiere del diccionario no es
+      // un problema, se conserva el nombre original de cada planilla.
       if (!campo.nombre) campo.set(delDiccionario);
     }
     return copia;
