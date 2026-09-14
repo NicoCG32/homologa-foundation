@@ -138,7 +138,11 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
       [];
     const pesos = new Map(data.pesos.map((p) => [p.id, p.peso]));
-    const criterios = criteriosBase.map((c) => ({ ...c, peso: pesos.has(c.id) ? Number(pesos.get(c.id)) : Number(c.peso) }));
+    const criterios = criteriosBase.map((c) => {
+      const peso = pesos.has(c.id) ? Number(pesos.get(c.id)) : Number(c.peso);
+      // La ponderación de esta homologación manda: 0% equivale a no comparar la columna.
+      return { ...c, peso, activo: pesos.has(c.id) ? peso > 0 : c.activo };
+    });
 
     const ejecucion = unwrap(
       await db
