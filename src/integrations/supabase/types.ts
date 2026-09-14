@@ -200,6 +200,33 @@ export type Database = {
         }
         Relationships: []
       }
+      diccionario_entradas: {
+        Row: {
+          codigo: string
+          created_at: string
+          id: string
+          nombre: string
+          tipo: Database["public"]["Enums"]["diccionario_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          id?: string
+          nombre: string
+          tipo: Database["public"]["Enums"]["diccionario_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          id?: string
+          nombre?: string
+          tipo?: Database["public"]["Enums"]["diccionario_tipo"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ejecuciones: {
         Row: {
           cargo_id: string
@@ -236,16 +263,19 @@ export type Database = {
         Row: {
           id: string
           nombre: string
+          tamano: Database["public"]["Enums"]["empresa_tipo"] | null
           tipo: Database["public"]["Enums"]["empresa_tipo"]
         }
         Insert: {
           id?: string
           nombre: string
+          tamano?: Database["public"]["Enums"]["empresa_tipo"] | null
           tipo: Database["public"]["Enums"]["empresa_tipo"]
         }
         Update: {
           id?: string
           nombre?: string
+          tamano?: Database["public"]["Enums"]["empresa_tipo"] | null
           tipo?: Database["public"]["Enums"]["empresa_tipo"]
         }
         Relationships: []
@@ -311,6 +341,7 @@ export type Database = {
         | "experiencia"
         | "requisitos"
         | "tipo_empresa"
+      diccionario_tipo: "AREA" | "SUBAREA" | "NIVEL"
       ejecucion_estado: "PENDIENTE" | "EN_PROCESO" | "COMPLETADA" | "ERROR"
       empresa_tipo: "P" | "M" | "G"
       semantico_estado: "OK" | "ERROR"
@@ -453,6 +484,7 @@ export const Constants = {
         "requisitos",
         "tipo_empresa",
       ],
+      diccionario_tipo: ["AREA", "SUBAREA", "NIVEL"],
       ejecucion_estado: ["PENDIENTE", "EN_PROCESO", "COMPLETADA", "ERROR"],
       empresa_tipo: ["P", "M", "G"],
       semantico_estado: ["OK", "ERROR"],
