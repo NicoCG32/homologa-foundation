@@ -59,8 +59,6 @@ function NuevaHomologacion() {
     faltantes.push({ texto: "No hay criterios de comparación definidos.", to: "/criterios", pestana: "Criterios" });
   else if (!criterios.isLoading && totalPesos <= 0)
     faltantes.push({ texto: "Toda la ponderación está en 0%: asigna porcentaje a al menos un criterio o carga una configuración guardada.", to: "/criterios", pestana: "Criterios" });
-  if (!cargoId && internos.length)
-    faltantes.push({ texto: "Todavía no eliges el cargo interno a homologar.", to: "/cargos", pestana: "Cargos" });
 
   useEffect(() => {
     if (!activos.length) return;
