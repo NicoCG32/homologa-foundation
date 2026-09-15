@@ -265,12 +265,30 @@ function CargosPage() {
     [tarjetas],
   );
   const faltaEmpresa = tarjetas.some((t) => t.sinEmpresa);
+
+  // Resumen de validación previo al guardado. Solo los problemas estructurales
+  // (código o nombre ausente, códigos repetidos, filas sin empresa) bloquean.
+  const resumen = useMemo(() => {
+    const codigos = new Set(cargosCarga.map((c) => c.codigo_cargo));
+    const codigosConBanda = new Set(bandasCarga.map((b) => b.codigo_cargo));
+    const conRemuneracion = [...codigosConBanda].filter((c) => codigos.has(c)).length;
+    const sinCargo = [...codigosConBanda].filter((c) => !codigos.has(c));
+    const sinRemuneracion = [...codigos].filter((c) => !codigosConBanda.has(c));
+    const sinSueldo = cargosCarga.filter((c) => c.sueldo === null).length;
+    return {
+      cargos: cargosCarga.length,
+      bandas: bandasCarga.length,
+      conRemuneracion,
+      sinCargo,
+      sinRemuneracion,
+      sinSueldo,
+      avisos: resueltos.avisos.length,
+      errores: erroresCarga,
+    };
+  }, [cargosCarga, bandasCarga, resueltos.avisos, erroresCarga]);
+
   const puedeGuardar =
-    !!cargosCarga.length &&
-    !faltaEmpresa &&
-    revisado &&
-    !importMut.isPending &&
-    (modoCarga === "INTERNO" || bandasCarga.length > 0);
+    !!cargosCarga.length && !faltaEmpresa && !erroresCarga.length && revisado && !importMut.isPending;
 
   const filtrados = useMemo(
     () =>
