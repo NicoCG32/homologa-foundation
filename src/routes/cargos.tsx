@@ -265,12 +265,30 @@ function CargosPage() {
     [tarjetas],
   );
   const faltaEmpresa = tarjetas.some((t) => t.sinEmpresa);
+
+  // Resumen de validación previo al guardado. Solo los problemas estructurales
+  // (código o nombre ausente, códigos repetidos, filas sin empresa) bloquean.
+  const resumen = useMemo(() => {
+    const codigos = new Set(cargosCarga.map((c) => c.codigo_cargo));
+    const codigosConBanda = new Set(bandasCarga.map((b) => b.codigo_cargo));
+    const conRemuneracion = [...codigosConBanda].filter((c) => codigos.has(c)).length;
+    const sinCargo = [...codigosConBanda].filter((c) => !codigos.has(c));
+    const sinRemuneracion = [...codigos].filter((c) => !codigosConBanda.has(c));
+    const sinSueldo = cargosCarga.filter((c) => c.sueldo === null).length;
+    return {
+      cargos: cargosCarga.length,
+      bandas: bandasCarga.length,
+      conRemuneracion,
+      sinCargo,
+      sinRemuneracion,
+      sinSueldo,
+      avisos: resueltos.avisos.length,
+      errores: erroresCarga,
+    };
+  }, [cargosCarga, bandasCarga, resueltos.avisos, erroresCarga]);
+
   const puedeGuardar =
-    !!cargosCarga.length &&
-    !faltaEmpresa &&
-    revisado &&
-    !importMut.isPending &&
-    (modoCarga === "INTERNO" || bandasCarga.length > 0);
+    !!cargosCarga.length && !faltaEmpresa && !erroresCarga.length && revisado && !importMut.isPending;
 
   const filtrados = useMemo(
     () =>
@@ -324,16 +342,28 @@ function CargosPage() {
         )}
         {(cargosCarga.length > 0 || erroresCarga.length > 0) && (
           <div className="import-preview">
-            <strong>Vista previa</strong>
-            <p>
-              {cargosCarga.length} cargos · {empresasNuevas} empresas nuevas
-              {modoCarga === "REFERENCIA" ? ` · ${bandasCarga.length} bandas salariales` : ""} · {erroresCarga.length + resueltos.avisos.length} observaciones
-            </p>
-            {erroresCarga.slice(0, 4).map((e) => <p key={e} className="text-destructive">{e}</p>)}
-            {resueltos.avisos.slice(0, 4).map((a, i) => (
-              <p key={`${a.cargo}-${i}`} className="text-amber-700">El cargo {a.cargo} {a.mensaje}.</p>
-            ))}
-            {resueltos.avisos.length > 4 && <p className="text-amber-700">…y {resueltos.avisos.length - 4} avisos más en las tarjetas.</p>}
+            <strong>Resumen de validación</strong>
+            <p>✓ {resumen.cargos} {modoCarga === "INTERNO" ? "cargos internos" : "cargos de referencia"} detectados · {empresasNuevas} empresas nuevas</p>
+            {modoCarga === "REFERENCIA" && (
+              <>
+                <p>✓ {resumen.bandas} registros de remuneraciones detectados</p>
+                <p>✓ {resumen.conRemuneracion} de {resumen.cargos} cargos de referencia tienen remuneraciones</p>
+                {resumen.sinRemuneracion.length > 0 && (
+                  <p className="text-amber-700">⚠ {resumen.sinRemuneracion.length} cargos sin remuneración informada (se guardan igual): {resumen.sinRemuneracion.slice(0, 6).join(", ")}{resumen.sinRemuneracion.length > 6 ? "…" : ""}</p>
+                )}
+                {resumen.sinCargo.length > 0 && (
+                  <p className="text-amber-700">⚠ {resumen.sinCargo.length} IDs de remuneraciones sin cargo en el catálogo: {resumen.sinCargo.slice(0, 6).join(", ")}{resumen.sinCargo.length > 6 ? "…" : ""}</p>
+                )}
+                {resumen.bandas === 0 && <p className="text-amber-700">⚠ Aún no cargas el archivo de remuneraciones.</p>}
+              </>
+            )}
+            {modoCarga === "INTERNO" && resumen.sinSueldo > 0 && (
+              <p className="text-amber-700">⚠ {resumen.sinSueldo} cargos sin remuneración en la planilla (se guardan como dato no disponible).</p>
+            )}
+            {resumen.avisos > 0 && <p className="text-amber-700">⚠ {resumen.avisos} datos faltantes o códigos fuera del diccionario (detalle en cada tarjeta).</p>}
+            {erroresCarga.length > 0 && <p className="text-destructive">⚠ {erroresCarga.length} inconsistencias que impiden guardar:</p>}
+            {erroresCarga.slice(0, 5).map((e) => <p key={e} className="text-destructive">{e}</p>)}
+            {erroresCarga.length > 5 && <p className="text-destructive">…y {erroresCarga.length - 5} más.</p>}
             {faltaEmpresa && <p className="text-destructive">Hay filas sin empresa: agrégala en la planilla o elige una empresa de destino.</p>}
           </div>
         )}
