@@ -7,7 +7,16 @@ import { listCargos } from "@/lib/cargos.functions";
 import { listCriterios } from "@/lib/criterios.functions";
 import { PesosEditor, pesosIniciales } from "@/components/pesos-editor";
 import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
-import { ArrowRight, Bot, CheckCircle2, Search, ShieldCheck, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  Flag,
+  Search,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/homologacion/nueva")({
@@ -31,6 +40,8 @@ function pct(v: number) {
   return `${(v * 100).toFixed(1)}%`;
 }
 
+const PASOS = ["Cargo", "Revisión", "Candidatos", "Análisis IA", "Decisión"];
+
 function NuevaHomologacion() {
   const listC = useServerFn(listCargos);
   const listCr = useServerFn(listCriterios);
@@ -44,6 +55,7 @@ function NuevaHomologacion() {
   const [error, setError] = useState<string | null>(null);
   const [semError, setSemError] = useState<string | null>(null);
   const [pesos, setPesos] = useState<Record<string, number>>({});
+  const [paso, setPaso] = useState(1);
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
   const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
@@ -72,6 +84,7 @@ function NuevaHomologacion() {
       setSemError(null);
       sem.reset();
     },
+    onSuccess: () => setPaso(2),
     onError: (e: Error) => setError(e.message),
   });
 
@@ -86,114 +99,108 @@ function NuevaHomologacion() {
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
-
+  const maxPaso = res ? PASOS.length : 1;
 
   return (
     <div className="process-page">
       <div className="page-heading">
         <p className="eyebrow">Nueva homologación</p>
-        <h1>¿Qué cargo quieres homologar?</h1>
-        <p>Selecciona un cargo interno. Revisaremos su información antes de buscar equivalencias.</p>
+        <h1>{paso === 1 ? "¿Qué cargo quieres homologar?" : PASOS[paso - 1]}</h1>
+        <p>
+          {paso === 1
+            ? "Selecciona un cargo interno. Revisaremos su información antes de buscar equivalencias."
+            : "Avanza paso a paso; puedes volver atrás cuando quieras."}
+        </p>
       </div>
 
-      <form
-        className="selection-panel"
-        onSubmit={(e) => {
-          e.preventDefault();
-          mut.mutate();
-        }}
-      >
-        <label className="block text-sm">
-          <span>Cargo interno</span>
-          <div className="select-with-icon"><Search aria-hidden="true" /><select
-            value={cargoId}
-            onChange={(e) => setCargoId(e.target.value)}
-            required
-          >
-            <option value="">Selecciona…</option>
-            {internos.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}{c.nombre} — Interno · {c.empresas?.nombre ?? "sin empresa"}
-              </option>
-            ))}
-          </select></div>
-        </label>
+      <ol className="wizard-steps">
+        {PASOS.map((p, i) => (
+          <li key={p} className={i + 1 === paso ? "current" : i + 1 < paso ? "done" : ""}>
+            <button
+              type="button"
+              disabled={i + 1 > maxPaso}
+              onClick={() => setPaso(i + 1)}
+            >
+              <span>{i + 1}</span>
+              {p}
+            </button>
+          </li>
+        ))}
+      </ol>
 
-        <details className="criteria-summary" open><summary>Ajustar ponderación de esta homologación</summary><div>
-          {criterios.isLoading
-            ? "…"
-            : activos.length
-              ? <PesosEditor criterios={activos} pesos={pesos} onChange={setPesos} />
-              : "ninguna definida"}
-        </div></details>
-
-        {faltantes.length > 0 && (
-          <div className="missing-panel">
-            <strong>Falta información para poder homologar</strong>
-            <ul>
-              {faltantes.map((f) => (
-                <li key={f.texto}>
-                  {f.texto}{" "}
-                  <Link to={f.to}>Ir a {f.pestana} <ArrowRight aria-hidden="true" /></Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <Button
-          type="submit"
-          disabled={mut.isPending || faltantes.length > 0}
-          size="lg"
+      {paso === 1 && (
+        <form
+          className="selection-panel"
+          onSubmit={(e) => {
+            e.preventDefault();
+            mut.mutate();
+          }}
         >
-          {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
-        </Button>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </form>
+          <label className="block text-sm">
+            <span>Cargo interno</span>
+            <div className="select-with-icon"><Search aria-hidden="true" /><select
+              value={cargoId}
+              onChange={(e) => setCargoId(e.target.value)}
+              required
+            >
+              <option value="">Selecciona…</option>
+              {internos.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}{c.nombre} — Interno · {c.empresas?.nombre ?? "sin empresa"}
+                </option>
+              ))}
+            </select></div>
+          </label>
 
-      {res && (
-        <div className="space-y-6">
-          <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium"><ShieldCheck /> Cargo revisado</h2>
-            <p className="text-sm">
-              <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"}
-              {res.cargo.nombre_area ? ` · área ${res.cargo.nombre_area}` : ""}
-              {res.cargo.nivel_jerarquico ? ` · nivel ${res.cargo.nivel_jerarquico}` : ""}
-            </p>
-            {res.cargo.descripcion && (
-              <p className="mt-1 text-sm text-muted-foreground">{res.cargo.descripcion}</p>
-            )}
-            <p className="mt-2 text-sm">
-              <Link className="underline" to="/historial/$id" params={{ id: res.ejecucion_id }}>
-                Ver ejecución en el historial
-              </Link>
-            </p>
-          </section>
+          <details className="criteria-summary"><summary>Ajustar ponderación de esta homologación</summary><div>
+            {criterios.isLoading
+              ? "…"
+              : activos.length
+                ? <PesosEditor criterios={activos} pesos={pesos} onChange={setPesos} />
+                : "ninguna definida"}
+          </div></details>
 
-          <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium"><Users /> Candidatos encontrados</h2>
-            <p className="text-sm">
-              {res.evaluados} cargos de referencia revisados
-              {res.pesoTotal <= 0 && " — no hay criterios activos para comparar"}
-            </p>
-          </section>
-
-          <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">Candidatos no compatibles</h2>
-            {!res.descartados.length ? (
-              <p className="text-sm text-muted-foreground">Ninguno.</p>
-            ) : (
-              <ul className="space-y-1 text-sm">
-                {res.descartados.map((d) => (
-                  <li key={d.cargo.id} className="border-b py-1">
-                    <strong>{d.cargo.nombre}</strong> ({d.cargo.empresa_nombre ?? "sin empresa"}) —{" "}
-                    {d.motivo}
+          {faltantes.length > 0 && (
+            <div className="missing-panel">
+              <strong>Falta información para poder homologar</strong>
+              <ul>
+                {faltantes.map((f) => (
+                  <li key={f.texto}>
+                    {f.texto}{" "}
+                    <Link to={f.to}>Ir a {f.pestana} <ArrowRight aria-hidden="true" /></Link>
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
+            </div>
+          )}
 
+          <Button type="submit" disabled={mut.isPending || faltantes.length > 0} size="lg">
+            {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
+          </Button>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </form>
+      )}
+
+      {res && paso === 2 && (
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium"><ShieldCheck /> Cargo revisado</h2>
+          <p className="text-sm">
+            <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"}
+            {res.cargo.nombre_area ? ` · área ${res.cargo.nombre_area}` : ""}
+            {res.cargo.nivel_jerarquico ? ` · nivel ${res.cargo.nivel_jerarquico}` : ""}
+          </p>
+          {res.cargo.descripcion && (
+            <p className="mt-1 text-sm text-muted-foreground">{res.cargo.descripcion}</p>
+          )}
+          <p className="mt-3 text-sm">
+            {res.evaluados} cargos de referencia revisados
+            {res.pesoTotal <= 0 && " — no hay criterios activos para comparar"}
+          </p>
+        </section>
+      )}
+
+      {res && paso === 3 && (
+        <div className="space-y-6">
           <section className="rounded-lg border p-4">
             <h2 className="mb-2 font-medium"><CheckCircle2 /> Candidatos preseleccionados</h2>
             {!res.preseleccionados.length ? (
@@ -228,58 +235,117 @@ function NuevaHomologacion() {
           </section>
 
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium"><Bot /> Análisis IA</h2>
-            <p className="mb-3 text-sm text-muted-foreground">
-              La IA revisará únicamente los {res.preseleccionados.length} candidatos preseleccionados y comparará el contenido de cada cargo.
-            </p>
-            <Button
-              type="button"
-              disabled={sem.isPending || !res.preseleccionados.length}
-              onClick={() => sem.mutate(res.ejecucion_id)}
-              variant="outline"
-            >
-              {sem.isPending ? "Analizando…" : "Continuar con análisis IA"}
-            </Button>
-            {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
-            {semOk && (
-              <div className="mt-4 space-y-3 text-sm">
-                <p>
-                  Candidato recomendado:{" "}
-                  <strong>
-                    {res.preseleccionados.find(
-                      (p) => p.cargo.id === semOk.analisis.candidato_recomendado_id,
-                    )?.cargo.nombre ?? semOk.analisis.candidato_recomendado_id}
-                  </strong>{" "}
-                  · score semántico {semOk.analisis.score_semantico} · confianza{" "}
-                  {semOk.analisis.confianza}
-                </p>
-                <p className="text-muted-foreground">{semOk.analisis.explicacion_breve}</p>
-                <ul className="space-y-2">
-                  {semOk.analisis.scores_por_candidato.map((s) => (
-                    <li key={s.candidato_id} className="border-b pb-2">
-                      <p>
-                        <strong>
-                          {res.preseleccionados.find((p) => p.cargo.id === s.candidato_id)?.cargo
-                            .nombre ?? s.candidato_id}
-                        </strong>{" "}
-                        — score semántico {s.score_semantico}
-                      </p>
-                      <p className="text-muted-foreground">
-                        Similitudes: {s.similitudes.length ? s.similitudes.join(", ") : "ninguna"}
-                      </p>
-                      <p className="text-muted-foreground">
-                        Diferencias: {s.diferencias.length ? s.diferencias.join(", ") : "ninguna"}
-                      </p>
-                      <p className="text-muted-foreground">{s.explicacion_breve}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <h2 className="mb-2 font-medium"><Users /> Candidatos no compatibles</h2>
+            {!res.descartados.length ? (
+              <p className="text-sm text-muted-foreground">Ninguno.</p>
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {res.descartados.map((d) => (
+                  <li key={d.cargo.id} className="border-b py-1">
+                    <strong>{d.cargo.nombre}</strong> ({d.cargo.empresa_nombre ?? "sin empresa"}) —{" "}
+                    {d.motivo}
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
         </div>
       )}
 
+      {res && paso === 4 && (
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium"><Bot /> Análisis IA</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            La IA revisará únicamente los {res.preseleccionados.length} candidatos preseleccionados y comparará el contenido de cada cargo.
+          </p>
+          <Button
+            type="button"
+            disabled={sem.isPending || !res.preseleccionados.length}
+            onClick={() => sem.mutate(res.ejecucion_id)}
+            variant="outline"
+          >
+            {sem.isPending ? "Analizando…" : "Continuar con análisis IA"}
+          </Button>
+          {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
+          {semOk && (
+            <div className="mt-4 space-y-3 text-sm">
+              <p>
+                Candidato recomendado:{" "}
+                <strong>
+                  {res.preseleccionados.find(
+                    (p) => p.cargo.id === semOk.analisis.candidato_recomendado_id,
+                  )?.cargo.nombre ?? semOk.analisis.candidato_recomendado_id}
+                </strong>{" "}
+                · score semántico {semOk.analisis.score_semantico} · confianza{" "}
+                {semOk.analisis.confianza}
+              </p>
+              <p className="text-muted-foreground">{semOk.analisis.explicacion_breve}</p>
+              <ul className="space-y-2">
+                {semOk.analisis.scores_por_candidato.map((s) => (
+                  <li key={s.candidato_id} className="border-b pb-2">
+                    <p>
+                      <strong>
+                        {res.preseleccionados.find((p) => p.cargo.id === s.candidato_id)?.cargo
+                          .nombre ?? s.candidato_id}
+                      </strong>{" "}
+                      — score semántico {s.score_semantico}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Similitudes: {s.similitudes.length ? s.similitudes.join(", ") : "ninguna"}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Diferencias: {s.diferencias.length ? s.diferencias.join(", ") : "ninguna"}
+                    </p>
+                    <p className="text-muted-foreground">{s.explicacion_breve}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      {res && paso === 5 && (
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium"><Flag /> Decisión</h2>
+          <p className="text-sm">
+            Cargo analizado: <strong>{res.cargo.nombre}</strong> · {res.preseleccionados.length}{" "}
+            candidatos preseleccionados
+            {semOk
+              ? ` · sugerencia de la IA: ${
+                  res.preseleccionados.find(
+                    (p) => p.cargo.id === semOk.analisis.candidato_recomendado_id,
+                  )?.cargo.nombre ?? semOk.analisis.candidato_recomendado_id
+                }`
+              : " · análisis IA pendiente"}
+          </p>
+          <p className="mt-3 text-sm">
+            <Link className="underline" to="/historial/$id" params={{ id: res.ejecucion_id }}>
+              Ver ejecución en el historial y registrar la decisión
+            </Link>
+          </p>
+        </section>
+      )}
+
+      {res && (
+        <div className="wizard-nav">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={paso === 1}
+            onClick={() => setPaso((p) => Math.max(1, p - 1))}
+          >
+            <ArrowLeft /> Atrás
+          </Button>
+          <Button
+            type="button"
+            disabled={paso === PASOS.length}
+            onClick={() => setPaso((p) => Math.min(PASOS.length, p + 1))}
+          >
+            Siguiente <ArrowRight />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
