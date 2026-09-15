@@ -1,184 +1,86 @@
-# Homologa Foundation
+<div align="center">
 
-Crea la base inicial de HOMOLOGA (nombre provisional) como un MVP funcional usando Lovable Cloud.
+# Espejo · Homologa
 
-OBJETIVO
+**Homologación de cargos por contenido, no por sueldo.**
 
-Construir únicamente la estructura mínima necesaria para probar este flujo:
+Motor determinístico auditable + análisis semántico asistido por IA,
+sobre las planillas reales del piloto.
 
-Cargo interno
+[![Estado](https://img.shields.io/badge/estado-piloto-1558B0)](#)
+[![Stack](https://img.shields.io/badge/TanStack_Start-React_19-0B2B55)](#)
+[![Backend](https://img.shields.io/badge/Lovable_Cloud-PostgreSQL-25BDA7)](#)
+[![IA](https://img.shields.io/badge/Gemini-structured_output-1558B0)](#)
 
-→ Motor determinístico
+[Documentación](./docs/README.md) ·
+[Arquitectura](./docs/01-arquitectura.md) ·
+[Flujo](./docs/03-flujo-homologacion.md) ·
+[Base de datos](./docs/04-base-de-datos.md)
 
-→ Candidatos preseleccionados
+</div>
 
-→ Gemini
+---
 
-→ Resultado
+## Qué resuelve
 
-→ Decisión profesional
+Un profesional de compensaciones necesita saber a qué cargo del mercado equivale un cargo interno.
+Espejo: Homologa toma las planillas tal como existen, reconstruye empresas y cargos sin carga
+manual, compara por contenido del cargo y entrega candidatos ordenados con la explicación de cada
+coincidencia y cada diferencia.
 
-→ Comparación salarial
+## El flujo
 
-No implementes todavía el motor determinístico ni la integración con Gemini.
+```text
+Excel  →  Validación  →  Cargos en base
+                              │
+                              ▼
+            Cargo  →  Revisión  →  Candidatos  →  Análisis IA  →  Decisión  →  Historial
+                         (pesos)     (motor)       (Gemini)
+```
 
-BASE DE DATOS MÍNIMA
+## Principios
 
-Crea solo estas entidades:
+| | |
+|---|---|
+| **Sin datos ficticios** | Lo que falta se informa; nunca se inventa ni se rellena |
+| **El sueldo no homologa** | La remuneración es informativa y jamás llega a la IA |
+| **El motor manda** | La IA sólo interpreta candidatos ya preseleccionados por reglas |
+| **El código manda** | Áreas y subáreas se identifican por código; se conserva el nombre de cada fuente |
+| **Reproducible** | La ponderación aplicada queda guardada en cada ejecución |
 
-1. empresas
+## Pestañas
 
-- id
+`Inicio` · `Cargos` · `Empresas` · `Criterios` · `Diccionario` · `Nueva homologación` · `Historial`
 
-- nombre
+Detalle en [docs/02-funcionalidades.md](./docs/02-funcionalidades.md).
 
-- tipo: enum P / M / G
+## Stack
 
-  P = Pequeña
+TanStack Start v1 (React 19, SSR) · TanStack Router y Query · Tailwind CSS v4 ·
+Lovable Cloud (PostgreSQL, RLS cerrada, acceso sólo desde el servidor) · Gemini vía `@google/genai` ·
+`xlsx` para las planillas.
 
-  M = Mediana
-
-  G = Grande
-
-2. cargos
-
-- id
-
-- empresa_id
-
-- tipo: INTERNO / REFERENCIA
-
-- nombre
-
-- descripción
-
-- sueldo
-
-El sueldo corresponde a la remuneración actual del cargo y debe almacenarse como valor numérico.
-
-3. criterios
-
-- id
-
-- nombre
-
-- peso
-
-- activo
-
-4. ejecuciones
-
-- id
-
-- cargo_id
-
-- fecha
-
-- estado
-
-5. resultados
-
-- id
-
-- ejecucion_id
-
-- candidato_id
-
-- score_deterministico
-
-- score_semantico
-
-- score_final
-
-RELACIONES
-
-- Una empresa puede tener muchos cargos.
-
-- Un cargo pertenece a una empresa.
-
-- Una ejecución corresponde a un cargo interno.
-
-- Una ejecución puede tener muchos resultados.
-
-- Cada resultado corresponde a un cargo candidato.
-
-REGLAS
-
-- Usa Lovable Cloud.
-
-- Mantén separadas base de datos, lógica de negocio y UI.
-
-- No hardcodees criterios ni pesos en la interfaz.
-
-- No generes datos ficticios.
-
-- No agregues atributos que no sean necesarios para este MVP.
-
-- Mantén la estructura preparada para ampliarla posteriormente.
-
-- El sueldo debe mantenerse separado de los scores de homologación.
-
-INTERFAZ MÍNIMA
-
-Crea solamente:
-
-- Inicio
-
-- Empresas
-
-- Cargos
-
-- Criterios
-
-- Nueva homologación
-
-- Historial
-
-La interfaz debe ser simple y funcional. No priorices diseño visual avanzado.
-
-EN ESTA ETAPA NO CONSTRUIR
-
-- Gemini
-
-- motor determinístico
-
-- importación Excel
-
-- benchmark salarial avanzado
-
-- extracción automática de encuestas
-
-- predicción salarial
-
-- recomendaciones de aumentos
-
-- dashboards
-
-- autenticación
-
-- multiempresa avanzada
-
-Solo construye la base mínima para implementar posteriormente el flujo de homologación.
-
-Al finalizar, verifica que las relaciones entre empresas, cargos, ejecuciones y resultados funcionen correctamente.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/520c32c6-6eaa-4ac9-8ce9-6c21e669e185).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Puesta en marcha
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
 npm i
-npm run dev
+npm run dev      # http://localhost:8080
 ```
+
+Variables de entorno y publicación: [docs/09-deploy-y-entorno.md](./docs/09-deploy-y-entorno.md).
+
+## Mapa del código
+
+```text
+src/routes/      una página por pestaña + layout y navegación
+src/lib/         *.functions.ts (RPC) · motor.server.ts · semantica.server.ts · cargos-import.ts
+src/components/  editor de ponderaciones + primitivas de interfaz
+supabase/        migraciones del esquema
+docs/            documentación completa
+```
+
+---
+
+<div align="center">
+Construido con <a href="https://lovable.dev">Lovable</a>.
+</div>
