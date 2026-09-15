@@ -32,7 +32,7 @@ import {
 } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { importarDiccionario, listDiccionario } from "@/lib/diccionario.functions";
-import { limpiarDatos } from "@/lib/mantenimiento.functions";
+
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
@@ -65,7 +65,7 @@ function CargosPage() {
   const importar = useServerFn(importarCargos);
   const listD = useServerFn(listDiccionario);
   const importarDicc = useServerFn(importarDiccionario);
-  const limpiar = useServerFn(limpiarDatos);
+  
 
   const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
   const empresas = useQuery({ queryKey: ["empresas"], queryFn: () => listE() });
@@ -90,8 +90,8 @@ function CargosPage() {
   const [archivoBandas, setArchivoBandas] = useState("");
   const [diccionarioArchivo, setDiccionarioArchivo] = useState<EntradaDiccionario[]>([]);
   const [resultadoDicc, setResultadoDicc] = useState<string | null>(null);
-  const [mostrarLimpieza, setMostrarLimpieza] = useState(false);
-  const [confirmacionLimpieza, setConfirmacionLimpieza] = useState("");
+  const [detalleFila, setDetalleFila] = useState<string | null>(null);
+  const [detalleTarjeta, setDetalleTarjeta] = useState<string | null>(null);
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
@@ -129,16 +129,6 @@ function CargosPage() {
     onError: (e: Error) => setError(e.message),
   });
 
-  const limpiarMut = useMutation({
-    mutationFn: () => limpiar({ data: { confirmacion: confirmacionLimpieza } }),
-    onSuccess: () => {
-      setConfirmacionLimpieza("");
-      setMostrarLimpieza(false);
-      setError(null);
-      invalidate();
-    },
-    onError: (e: Error) => setError(e.message),
-  });
 
   const resueltos = useMemo(
     () => aplicarDiccionario(cargosCarga, diccionario.data ?? []),
@@ -370,25 +360,42 @@ function CargosPage() {
                     <div><dt>Área</dt><dd>{[t.cargo.codigo_area, t.cargo.nombre_area].filter(Boolean).join(" · ") || "—"}</dd></div>
                     <div><dt>Subárea</dt><dd>{[t.cargo.codigo_subarea, t.cargo.nombre_subarea].filter(Boolean).join(" · ") || "—"}</dd></div>
                     <div><dt>Nivel</dt><dd>{[t.cargo.codigo_nivel_jerarquico, t.cargo.nivel_jerarquico].filter(Boolean).join(" · ") || "—"}</dd></div>
-                    <div><dt>Experiencia</dt><dd>{t.cargo.experiencia_requerida || "—"}</dd></div>
-                    <div><dt>Formación</dt><dd>{t.cargo.requisitos_formacion || "—"}</dd></div>
-                    {t.cargo.sueldo !== null && <div><dt>Remuneración</dt><dd>{t.cargo.sueldo}</dd></div>}
                   </dl>
-                  {t.cargo.descripcion && <p className="import-card-desc">{t.cargo.descripcion}</p>}
                   {t.avisos.length > 0 && (
                     <ul className="import-card-avisos">
                       {t.avisos.map((a) => <li key={a}>{a}</li>)}
                     </ul>
                   )}
-                  {t.bandas.length > 0 && (
-                    <ul className="import-card-bandas">
-                      {t.bandas.map((b) => (
-                        <li key={b.tipo_empresa}>
-                          <span>{b.tipo_empresa}</span> P25 {b.p25 ?? "—"} · P50 {b.p50 ?? "—"} · P75 {b.p75 ?? "—"} · Prom. {b.promedio ?? "—"}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {(() => {
+                    const clave = `${t.cargo.codigo_cargo}-${i}`;
+                    const abierto = detalleTarjeta === clave;
+                    return (
+                      <>
+                        <button type="button" className="detail-toggle" onClick={() => setDetalleTarjeta(abierto ? null : clave)}>
+                          {abierto ? "Ocultar detalle" : "Mostrar detalle"}
+                        </button>
+                        {abierto && (
+                          <div className="detail-block">
+                            <dl>
+                              <div><dt>Experiencia</dt><dd>{t.cargo.experiencia_requerida || "—"}</dd></div>
+                              <div><dt>Formación</dt><dd>{t.cargo.requisitos_formacion || "—"}</dd></div>
+                              {t.cargo.sueldo !== null && <div><dt>Remuneración</dt><dd>{t.cargo.sueldo}</dd></div>}
+                              <div><dt>Descripción</dt><dd>{t.cargo.descripcion || "—"}</dd></div>
+                            </dl>
+                            {t.bandas.length > 0 && (
+                              <ul className="import-card-bandas">
+                                {t.bandas.map((b) => (
+                                  <li key={b.tipo_empresa}>
+                                    <span>{b.tipo_empresa}</span> P25 {b.p25 ?? "—"} · P50 {b.p50 ?? "—"} · P75 {b.p75 ?? "—"} · Prom. {b.promedio ?? "—"}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </article>
               ))}
             </div>
@@ -404,31 +411,7 @@ function CargosPage() {
           </div>
         )}
 
-        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button><Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => setMostrarLimpieza((v) => !v)}>Eliminar datos</Button></div>
-        {mostrarLimpieza && (
-          <div className="grid gap-2 rounded-lg border border-destructive/40 p-3 text-sm">
-            <p>Esto borra todas las empresas, cargos, bandas, homologaciones y sus resultados. El diccionario y los criterios se conservan.</p>
-            <p>Para confirmar, escribe <strong>ELIMINAR</strong>.</p>
-            <input
-              className="w-full max-w-xs rounded-md border bg-background px-3 py-2"
-              value={confirmacionLimpieza}
-              onChange={(e) => setConfirmacionLimpieza(e.target.value)}
-              placeholder="ELIMINAR"
-            />
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                disabled={confirmacionLimpieza.trim().toUpperCase() !== "ELIMINAR" || limpiarMut.isPending}
-                onClick={() => limpiarMut.mutate()}
-              >
-                {limpiarMut.isPending ? "Eliminando…" : "Eliminar definitivamente"}
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => { setMostrarLimpieza(false); setConfirmacionLimpieza(""); }}>Cancelar</Button>
-            </div>
-          </div>
-        )}
+        <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
         {importMut.data && <p className="text-sm">Carga lista: {importMut.data.empresas} empresas nuevas, {importMut.data.creados} cargos nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
       </section>
 
