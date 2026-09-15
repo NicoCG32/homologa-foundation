@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { AlertTriangle, ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
 import logoAsset from "@/assets/espejo-homologa-logo.jpg.asset.json";
+import { limpiarDatos } from "@/lib/mantenimiento.functions";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,6 +50,58 @@ function Index() {
         <Link to="/historial"><History /><span><strong>Historial</strong><small>Consulta homologaciones y resultados anteriores.</small></span><ArrowRight /></Link>
         <Link to="/empresas"><Building2 /><span><strong>Empresas</strong><small>Mantén actualizada la información de empresas.</small></span><ArrowRight /></Link>
       </section>
+
+      <ReiniciarDatos />
     </div>
+  );
+}
+
+function ReiniciarDatos() {
+  const qc = useQueryClient();
+  const limpiar = useServerFn(limpiarDatos);
+  const [abierto, setAbierto] = useState(false);
+  const [confirmacion, setConfirmacion] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const limpiarMut = useMutation({
+    mutationFn: () => limpiar({ data: { confirmacion } }),
+    onSuccess: () => {
+      setConfirmacion("");
+      setAbierto(false);
+      setError(null);
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  return (
+    <section className="danger-panel">
+      <div className="danger-head">
+        <AlertTriangle aria-hidden="true" />
+        <div>
+          <strong>Reiniciar todos los datos</strong>
+          <small>Borra empresas, cargos, bandas e historial de homologaciones. El diccionario y los criterios se conservan.</small>
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={() => setAbierto((v) => !v)}>
+          {abierto ? "Cancelar" : "Eliminar datos"}
+        </Button>
+      </div>
+      {abierto && (
+        <div className="danger-confirm">
+          <p>Para confirmar, escribe <strong>ELIMINAR</strong>.</p>
+          <input value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} placeholder="ELIMINAR" />
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            disabled={confirmacion.trim().toUpperCase() !== "ELIMINAR" || limpiarMut.isPending}
+            onClick={() => limpiarMut.mutate()}
+          >
+            {limpiarMut.isPending ? "Eliminando…" : "Eliminar definitivamente"}
+          </Button>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+      )}
+    </section>
   );
 }

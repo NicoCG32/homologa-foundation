@@ -226,3 +226,60 @@
 .import-card-avisos li::before {
   content: "⚠ ";
 }
+
+/* Columnar data table with on-demand detail */
+.data-table { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--card); font-size: 13px; }
+.data-row { display: grid; grid-template-columns: 96px minmax(0,1.6fr) minmax(0,1fr) 92px minmax(0,1fr) 96px 178px; gap: 12px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+.data-group:last-child .data-row { border-bottom: 0; }
+.data-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.data-head { color: var(--muted-foreground); background: var(--muted); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.data-code { color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.data-main { font-weight: 600; }
+.data-actions { display: flex; justify-content: flex-end; gap: 10px; white-space: nowrap; }
+.detail-toggle { color: var(--primary); font-size: 11px; font-weight: 600; }
+.detail-toggle:hover { text-decoration: underline; }
+.row-delete { color: var(--destructive); font-size: 11px; font-weight: 600; }
+.row-delete:hover { text-decoration: underline; }
+.detail-block { padding: 12px 14px 16px; border-bottom: 1px solid var(--border); background: var(--muted); font-size: 12px; }
+.detail-block dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 20px; }
+.detail-block dl > div { display: grid; gap: 3px; }
+.detail-block dt { color: var(--muted-foreground); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.detail-block dd { line-height: 1.55; }
+.import-card dl > div { grid-template-columns: 78px minmax(0,1fr); }
+.import-card dd { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Reset panel on home */
+.danger-panel { padding: 18px; border: 1px solid color-mix(in oklab, var(--destructive) 35%, var(--border)); border-radius: 10px; background: var(--card); }
+.danger-head { display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 12px; align-items: center; }
+.danger-head > svg { width: 22px; color: var(--destructive); }
+.danger-head strong { display: block; font: 700 14px var(--font-display); }
+.danger-head small { color: var(--muted-foreground); font-size: 11px; line-height: 1.5; }
+.danger-confirm { display: grid; gap: 10px; justify-items: start; margin-top: 14px; font-size: 12px; }
+.danger-confirm input { width: min(100%, 220px); padding: 8px 11px; border: 1px solid var(--input); border-radius: 7px; background: var(--background); }
+
+/* Missing requirements notice */
+.missing-panel { padding: 14px; border: 1px solid color-mix(in oklab, var(--primary) 35%, var(--border)); border-radius: 9px; background: var(--secondary); font-size: 12px; }
+.missing-panel strong { display: block; margin-bottom: 8px; }
+.missing-panel ul { display: grid; gap: 7px; }
+.missing-panel li { line-height: 1.55; }
+.missing-panel a { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 600; }
+.missing-panel a svg { width: 13px; }
+
+@media (max-width: 900px) {
+  .data-row { grid-template-columns: 90px minmax(0,1.4fr) minmax(0,1fr) 150px; }
+  .data-row > span:nth-child(4), .data-row > span:nth-child(5), .data-row > span:nth-child(6) { display: none; }
+  .data-head > span:nth-child(4), .data-head > span:nth-child(5), .data-head > span:nth-child(6) { display: none; }
+}
+@media (max-width: 620px) {
+  .data-head { display: none; }
+  .data-row { grid-template-columns: minmax(0,1fr); gap: 4px; padding: 13px 14px; }
+  .data-row > span { white-space: normal; }
+  .data-row > span[data-label]::before { content: attr(data-label) ": "; color: var(--muted-foreground); font-size: 10px; text-transform: uppercase; }
+  .data-row > span:nth-child(4), .data-row > span:nth-child(5), .data-row > span:nth-child(6) { display: block; }
+  .data-main::before { display: none; }
+  .data-main { font-size: 14px; }
+  .data-actions { justify-content: flex-start; margin-top: 6px; }
+  .detail-block dl { grid-template-columns: 1fr; }
+  .danger-head { grid-template-columns: 22px minmax(0,1fr); }
+  .danger-head > button { grid-column: 1 / -1; justify-self: start; }
+}

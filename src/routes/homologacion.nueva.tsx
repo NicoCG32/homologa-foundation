@@ -46,7 +46,20 @@ function NuevaHomologacion() {
   const [pesos, setPesos] = useState<Record<string, number>>({});
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
+  const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
   const activos = criterios.data ?? [];
+  const totalPesos = activos.reduce((s, c) => s + Number(pesos[c.id] ?? 0), 0);
+
+  const faltantes: { texto: string; to: "/cargos" | "/criterios"; pestana: string }[] = [];
+  if (!cargos.isLoading && !internos.length)
+    faltantes.push({ texto: "No hay cargos internos cargados; carga al menos uno.", to: "/cargos", pestana: "Cargos" });
+  if (!cargos.isLoading && !referencias.length)
+    faltantes.push({ texto: "No hay cargos de referencia para comparar; carga el catálogo de la encuesta.", to: "/cargos", pestana: "Cargos" });
+  if (!criterios.isLoading && !activos.length)
+    faltantes.push({ texto: "No hay criterios de comparación definidos.", to: "/criterios", pestana: "Criterios" });
+  else if (!criterios.isLoading && totalPesos <= 0)
+    faltantes.push({ texto: "Toda la ponderación está en 0%: asigna porcentaje a al menos un criterio o carga una configuración guardada.", to: "/criterios", pestana: "Criterios" });
+
   useEffect(() => {
     if (!activos.length) return;
     setPesos((prev) => (Object.keys(prev).length ? prev : pesosIniciales(activos)));
@@ -114,18 +127,27 @@ function NuevaHomologacion() {
               : "ninguna definida"}
         </div></details>
 
+        {faltantes.length > 0 && (
+          <div className="missing-panel">
+            <strong>Falta información para poder homologar</strong>
+            <ul>
+              {faltantes.map((f) => (
+                <li key={f.texto}>
+                  {f.texto}{" "}
+                  <Link to={f.to}>Ir a {f.pestana} <ArrowRight aria-hidden="true" /></Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <Button
           type="submit"
-          disabled={mut.isPending || !internos.length}
+          disabled={mut.isPending || faltantes.length > 0}
           size="lg"
         >
           {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
         </Button>
-        {!cargos.isLoading && !internos.length && (
-          <p className="text-sm text-muted-foreground">
-            Necesitas al menos un cargo de tipo interno.
-          </p>
-        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
 
