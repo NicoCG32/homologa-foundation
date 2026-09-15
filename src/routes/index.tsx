@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { AlertTriangle, ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
 import logoAsset from "@/assets/espejo-homologa-logo.jpg.asset.json";
+import { limpiarDatos } from "@/lib/mantenimiento.functions";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
