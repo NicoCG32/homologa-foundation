@@ -560,54 +560,46 @@ function CargosPage() {
       ) : !filtrados.length ? (
         <p className="text-sm text-muted-foreground">No hay cargos que coincidan.</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead className="text-left text-muted-foreground">
-            <tr>
-              <th className="border-b py-2">Cargo</th>
-              <th className="border-b py-2">Empresa</th>
-              <th className="border-b py-2">Tipo</th>
-              <th className="border-b py-2">Sueldo</th>
-              <th className="border-b py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtrados.map((c) => (
-              <tr key={c.id}>
-                <td className="border-b py-2">
-                  {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
-                  {c.nombre}
-                  {c.descripcion && (
-                    <div className="text-xs text-muted-foreground">{c.descripcion}</div>
-                  )}
-                  {CAMPOS_ESTRUCTURALES.some((k) => c[k.clave]) && (
-                    <div className="text-xs text-muted-foreground">
-                      {CAMPOS_ESTRUCTURALES.filter((k) => c[k.clave])
-                        .map((k) => `${k.etiqueta}: ${c[k.clave]}`)
-                        .join(" · ")}
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    Atributos semánticos: {contarAtributos(c.atributos_semanticos)}/
-                    {ATRIBUTOS_SEMANTICOS.length}
+        <div className="data-table">
+          <div className="data-row data-head">
+            <span>Código</span><span>Cargo</span><span>Empresa</span><span>Tipo</span><span>Área</span><span>Sueldo</span><span />
+          </div>
+          {filtrados.map((c) => {
+            const abierto = detalleFila === c.id;
+            return (
+              <div key={c.id} className="data-group">
+                <div className="data-row">
+                  <span data-label="Código" className="data-code">{c.codigo_cargo || "—"}</span>
+                  <span data-label="Cargo" className="data-main">{c.nombre}</span>
+                  <span data-label="Empresa">{c.empresas?.nombre ?? "—"}</span>
+                  <span data-label="Tipo">{c.tipo === "INTERNO" ? "Interno" : "Referencia"}</span>
+                  <span data-label="Área">{c.nombre_area || "—"}</span>
+                  <span data-label="Sueldo">{formatSueldo(c.sueldo)}</span>
+                  <span className="data-actions">
+                    <button type="button" className="detail-toggle" onClick={() => setDetalleFila(abierto ? null : c.id)}>
+                      {abierto ? "Ocultar detalle" : "Mostrar detalle"}
+                    </button>
+                    <button type="button" className="row-delete" onClick={() => deleteMut.mutate(c.id)}>Eliminar</button>
+                  </span>
+                </div>
+                {abierto && (
+                  <div className="detail-block">
+                    <dl>
+                      {CAMPOS_ESTRUCTURALES.filter((k) => c[k.clave]).map((k) => (
+                        <div key={k.clave}><dt>{k.etiqueta}</dt><dd>{String(c[k.clave])}</dd></div>
+                      ))}
+                      <div><dt>Descripción</dt><dd>{c.descripcion || "—"}</dd></div>
+                      <div>
+                        <dt>Atributos semánticos</dt>
+                        <dd>{contarAtributos(c.atributos_semanticos)} de {ATRIBUTOS_SEMANTICOS.length} completos</dd>
+                      </div>
+                    </dl>
                   </div>
-                </td>
-                <td className="border-b py-2">{c.empresas?.nombre ?? "—"}</td>
-                <td className="border-b py-2">{c.tipo === "INTERNO" ? "Interno" : "Referencia"}</td>
-                <td className="border-b py-2">{formatSueldo(c.sueldo)}</td>
-                <td className="border-b py-2 text-right">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="text-destructive hover:underline"
-                    onClick={() => deleteMut.mutate(c.id)}
-                  >
-                    Eliminar
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
