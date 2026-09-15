@@ -114,18 +114,27 @@ function NuevaHomologacion() {
               : "ninguna definida"}
         </div></details>
 
+        {faltantes.length > 0 && (
+          <div className="missing-panel">
+            <strong>Falta información para poder homologar</strong>
+            <ul>
+              {faltantes.map((f) => (
+                <li key={f.texto}>
+                  {f.texto}{" "}
+                  <Link to={f.to}>Ir a {f.pestana} <ArrowRight aria-hidden="true" /></Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <Button
           type="submit"
-          disabled={mut.isPending || !internos.length}
+          disabled={mut.isPending || faltantes.length > 0}
           size="lg"
         >
           {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
         </Button>
-        {!cargos.isLoading && !internos.length && (
-          <p className="text-sm text-muted-foreground">
-            Necesitas al menos un cargo de tipo interno.
-          </p>
-        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
 
