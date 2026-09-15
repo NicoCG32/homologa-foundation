@@ -46,7 +46,22 @@ function NuevaHomologacion() {
   const [pesos, setPesos] = useState<Record<string, number>>({});
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
+  const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
   const activos = criterios.data ?? [];
+  const totalPesos = activos.reduce((s, c) => s + Number(pesos[c.id] ?? 0), 0);
+
+  const faltantes: { texto: string; to: "/cargos" | "/criterios"; pestana: string }[] = [];
+  if (!cargos.isLoading && !internos.length)
+    faltantes.push({ texto: "No hay cargos internos cargados; carga al menos uno.", to: "/cargos", pestana: "Cargos" });
+  if (!cargos.isLoading && !referencias.length)
+    faltantes.push({ texto: "No hay cargos de referencia para comparar; carga el catálogo de la encuesta.", to: "/cargos", pestana: "Cargos" });
+  if (!criterios.isLoading && !activos.length)
+    faltantes.push({ texto: "No hay criterios de comparación definidos.", to: "/criterios", pestana: "Criterios" });
+  else if (!criterios.isLoading && totalPesos <= 0)
+    faltantes.push({ texto: "Toda la ponderación está en 0%: asigna porcentaje a al menos un criterio o carga una configuración guardada.", to: "/criterios", pestana: "Criterios" });
+  if (!cargoId && internos.length)
+    faltantes.push({ texto: "Todavía no eliges el cargo interno a homologar.", to: "/cargos", pestana: "Cargos" });
+
   useEffect(() => {
     if (!activos.length) return;
     setPesos((prev) => (Object.keys(prev).length ? prev : pesosIniciales(activos)));
