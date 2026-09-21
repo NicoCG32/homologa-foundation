@@ -75,11 +75,11 @@ export type CargoSemantico = {
   id: string;
   nombre: string;
   descripcion: string | null;
-  tipo_empresa: "P" | "M" | "G" | null;
   atributos_semanticos: AtributosSemanticos;
   experiencia_requerida: string;
   requisitos_formacion: string;
 };
+
 
 export type ScorePorCandidato = {
   candidato_id: string;
