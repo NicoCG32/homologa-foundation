@@ -182,29 +182,17 @@ function EjecucionDetalle() {
       {decision && (
         <section className="rounded-lg border p-4 text-sm">
           <h2 className="mb-2 text-lg font-medium">Comparación salarial</h2>
-          <p>
-            Sueldo del cargo interno: <strong>{formatSueldo(cargo?.sueldo)}</strong> · sueldo del
-            cargo homologado: <strong>{formatSueldo(sueldoElegido)}</strong>
-            {diferencia !== null && (
-              <> · diferencia {diferencia > 0 ? "+" : ""}{formatSueldo(diferencia)}</>
-            )}
-          </p>
-          {(data.bandas ?? []).length ? (
-            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-              {(data.bandas ?? []).map((b) => (
-                <li key={b.tipo_empresa}>
-                  {b.tipo_empresa}: P25 {formatSueldo(b.p25)} · P50 {formatSueldo(b.p50)} · P75{" "}
-                  {formatSueldo(b.p75)} · PP {formatSueldo(b.promedio)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-xs text-muted-foreground">
-              El cargo homologado no tiene bandas salariales cargadas.
-            </p>
-          )}
+          <BenchmarkPanel
+            ejecucionId={id}
+            cargoInterno={cargo?.nombre ?? ""}
+            cargoReferencia={decision.cargos?.nombre ?? decision.candidato_id}
+            sueldoInterno={cargo?.sueldo ?? null}
+            bandas={data.bandas ?? []}
+            tamanoGuardado={(decision.tamano_empresa as "P" | "M" | "G" | null) ?? null}
+          />
         </section>
       )}
+
     </div>
   );
 }

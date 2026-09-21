@@ -91,6 +91,21 @@ export function DecisionForm({
       </label>
 
       <label className="block">
+        <span>Tamaño de empresa para el benchmark</span>
+        <select
+          className="mt-1 w-full rounded-md border bg-background p-2"
+          value={tamano}
+          onChange={(e) => setTamano(e.target.value as "P" | "M" | "G" | "")}
+        >
+          <option value="">Selecciona…</option>
+          <option value="P">Pequeña</option>
+          <option value="M">Mediana</option>
+          <option value="G">Grande</option>
+        </select>
+      </label>
+
+
+      <label className="block">
         <span>Analista que confirma</span>
         <input
           className="mt-1 w-full rounded-md border bg-background p-2"
