@@ -319,9 +319,20 @@ function NuevaHomologacion() {
                 }`
               : " · análisis IA pendiente"}
           </p>
+          <div className="mt-4 border-t pt-4">
+            <DecisionForm
+              ejecucionId={res.ejecucion_id}
+              candidatos={res.preseleccionados.map((p) => ({
+                id: p.cargo.id,
+                nombre: p.cargo.nombre,
+                empresa: p.cargo.empresa_nombre,
+              }))}
+              sugerido={semOk?.analisis.candidato_recomendado_id ?? null}
+            />
+          </div>
           <p className="mt-3 text-sm">
             <Link className="underline" to="/historial/$id" params={{ id: res.ejecucion_id }}>
-              Ver ejecución en el historial y registrar la decisión
+              Ver la homologación en el historial y la comparación salarial
             </Link>
           </p>
         </section>
