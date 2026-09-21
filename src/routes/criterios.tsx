@@ -32,7 +32,12 @@ function CriteriosPage() {
   const asegurar = useServerFn(asegurarCriterios);
   const guardar = useServerFn(guardarPesos);
 
+  const getHibrido = useServerFn(getPesosScore);
+  const setHibrido = useServerFn(setPesosScore);
+
   const [pesos, setPesos] = useState<MapaPesos>({});
+  const [pesoMotor, setPesoMotor] = useState(70);
+  const [avisoHibrido, setAvisoHibrido] = useState<string | null>(null);
   const [obligatorios, setObligatorios] = useState<Record<string, boolean>>({});
   const [aviso, setAviso] = useState<string | null>(null);
 
