@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { getEjecucion } from "@/lib/homologacion.functions";
 import { formatFecha, formatSueldo } from "@/lib/format";
+import { DecisionForm } from "@/components/decision-form";
 
 function pct(v: number | null | undefined) {
   return v == null ? "—" : `${(Number(v) * 100).toFixed(1)}%`;
