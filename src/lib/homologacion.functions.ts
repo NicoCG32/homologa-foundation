@@ -88,6 +88,7 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
     const { ejecutarMotor } = await import("./motor.server");
+    const norm = await import("./normalizacion.server");
     type CargoRow = {
       id: string;
       tipo: string;
@@ -101,9 +102,63 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       nivel_jerarquico: string | null;
       experiencia_requerida: string | null;
       requisitos_formacion: string | null;
-      empresas: { nombre: string; tipo: "P" | "M" | "G" } | null;
+      atributos_semanticos: unknown;
+      empresas: { nombre: string } | null;
     };
-    // El sueldo no se recupera aquí: no participa del motor determinístico.
+
+    const db = getDb();
+    const select =
+      "id, tipo, nombre, descripcion, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, nivel_jerarquico, experiencia_requerida, requisitos_formacion, atributos_semanticos, empresas(nombre)";
+
+    const interno = unwrap(
+      await db.from("cargos").select(select).eq("id", data.cargo_id).maybeSingle(),
+    ) as CargoRow | null;
+    if (!interno) throw new Error("El cargo no existe");
+    if (interno.tipo !== "INTERNO") throw new Error("La homologación sólo aplica a cargos internos");
+
+    const referencias = (unwrap(
+      await db.from("cargos").select(select).eq("tipo", "REFERENCIA").order("nombre"),
+    ) ?? []) as CargoRow[];
+
+    // Normalización previa de experiencia y formación: solo traduce el texto a una
+    // ficha estructurada y se guarda junto al cargo para no repetir llamadas.
+    const todos = [interno, ...referencias.filter((c) => c.id !== interno.id)];
+    const fichas = new Map<string, norm.FichaNorm>();
+    const pendientes: norm.EntradaNorm[] = [];
+    for (const c of todos) {
+      const huella = norm.huellaTexto(c.experiencia_requerida, c.requisitos_formacion);
+      const atributos = (c.atributos_semanticos ?? {}) as Record<string, unknown>;
+      const vigente = norm.fichaVigente(atributos["_norm"], huella);
+      if (vigente) fichas.set(c.id, vigente);
+      else if ((c.experiencia_requerida ?? "").trim() || (c.requisitos_formacion ?? "").trim()) {
+        pendientes.push({
+          id: c.id,
+          experiencia_requerida: c.experiencia_requerida,
+          requisitos_formacion: c.requisitos_formacion,
+        });
+      }
+    }
+
+    let avisoNormalizacion: string | null = null;
+    if (pendientes.length) {
+      try {
+        const nuevas = await norm.normalizarLote(pendientes);
+        for (const [id, ficha] of nuevas) {
+          fichas.set(id, ficha);
+          const cargo = todos.find((c) => c.id === id);
+          const atributos = { ...((cargo?.atributos_semanticos ?? {}) as Record<string, unknown>) };
+          atributos["_norm"] = ficha;
+          await db.from("cargos").update({ atributos_semanticos: atributos }).eq("id", id);
+        }
+      } catch (e) {
+        avisoNormalizacion =
+          e instanceof Error
+            ? `${e.message}. Experiencia y formación se compararon con el texto original.`
+            : "No fue posible normalizar experiencia y formación; se comparó el texto original.";
+      }
+    }
+
+    // El sueldo y el tamaño de empresa no participan del motor determinístico.
     const toMotor = (c: CargoRow) => ({
       id: c.id,
       nombre: c.nombre,
@@ -116,33 +171,21 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       nivel_jerarquico: c.nivel_jerarquico,
       experiencia_requerida: c.experiencia_requerida,
       requisitos_formacion: c.requisitos_formacion,
+      experiencia_norm: fichas.get(c.id)?.experiencia ?? null,
+      formacion_norm: fichas.get(c.id)?.formacion ?? null,
       empresa_nombre: c.empresas?.nombre ?? null,
-      empresa_tipo: c.empresas?.tipo ?? null,
     });
 
-    const db = getDb();
-    const select =
-      "id, tipo, nombre, descripcion, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, nivel_jerarquico, experiencia_requerida, requisitos_formacion, empresas(nombre, tipo)";
-
-    const interno = unwrap(
-      await db.from("cargos").select(select).eq("id", data.cargo_id).maybeSingle(),
-    ) as CargoRow | null;
-    if (!interno) throw new Error("El cargo no existe");
-    if (interno.tipo !== "INTERNO") throw new Error("La homologación sólo aplica a cargos internos");
-
-    const referencias = (unwrap(
-      await db.from("cargos").select(select).eq("tipo", "REFERENCIA").order("nombre"),
-    ) ?? []) as CargoRow[];
-
     const criteriosBase =
-      unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
-      [];
+      (unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
+        []).filter((c) => c.campo !== "tipo_empresa");
     const pesos = new Map(data.pesos.map((p) => [p.id, p.peso]));
     const criterios = criteriosBase.map((c) => {
       const peso = pesos.has(c.id) ? Number(pesos.get(c.id)) : Number(c.peso);
       // La ponderación de esta homologación manda: 0% equivale a no comparar la columna.
       return { ...c, peso, activo: pesos.has(c.id) ? peso > 0 : c.activo };
     });
+
 
     const ejecucion = unwrap(
       await db
