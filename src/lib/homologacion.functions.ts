@@ -42,6 +42,15 @@ export const getEjecucion = createServerFn({ method: "GET" })
         .limit(1)
         .maybeSingle(),
     );
+    const decision = unwrap(
+      await getDb()
+        .from("decisiones")
+        .select(
+          "id, candidato_id, decision, comentario, usuario, fecha, scores_utilizados, cargos:candidato_id(id, nombre, empresas(nombre))",
+        )
+        .eq("ejecucion_id", data.id)
+        .maybeSingle(),
+    );
     const candidatoIds = (resultados ?? []).map((r) => r.candidato_id);
     const bandas = candidatoIds.length
       ? unwrap(
