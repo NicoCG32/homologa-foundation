@@ -61,8 +61,10 @@ ponderación del score final híbrido (debe sumar 100).
 
 ### `decisiones`
 `id`, `ejecucion_id` → `ejecuciones` (**único**), `candidato_id` → `cargos`, `decision`,
-`comentario`, `usuario`, `scores_utilizados` (jsonb con los tres scores al decidir), `fecha`.
+`comentario`, `usuario`, `scores_utilizados` (jsonb con los tres scores al decidir),
+`tamano_empresa` (tamaño elegido para el benchmark, nullable), `fecha`.
 Una decisión por ejecución; no modifica ningún score.
+
 
 ### `analisis_semanticos`
 `id`, `ejecucion_id`, `estado` (`OK`/`ERROR`), `modelo`, `prompt_version`, `candidatos_enviados`,
