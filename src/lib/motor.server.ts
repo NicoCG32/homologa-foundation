@@ -4,6 +4,8 @@
  * El sueldo NO participa: la homologación evalúa contenido y estructura del cargo.
  */
 
+import type { ExperienciaNorm, FormacionNorm } from "./normalizacion.server";
+
 export type CriterioCampo =
   | "nombre"
   | "descripcion"
@@ -12,8 +14,7 @@ export type CriterioCampo =
   | "codigo_cargo"
   | "nivel_jerarquico"
   | "experiencia"
-  | "requisitos"
-  | "tipo_empresa";
+  | "requisitos";
 
 export type CriterioMotor = {
   id: string;
@@ -36,9 +37,11 @@ export type CargoMotor = {
   nivel_jerarquico: string | null;
   experiencia_requerida: string | null;
   requisitos_formacion: string | null;
+  experiencia_norm?: ExperienciaNorm | null;
+  formacion_norm?: FormacionNorm | null;
   empresa_nombre: string | null;
-  empresa_tipo: "P" | "M" | "G" | null;
 };
+
 
 export type DetalleCriterio = {
   criterio: string;
