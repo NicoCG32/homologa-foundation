@@ -126,8 +126,9 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
     // Normalización previa de experiencia y formación: solo traduce el texto a una
     // ficha estructurada y se guarda junto al cargo para no repetir llamadas.
     const todos = [interno, ...referencias.filter((c) => c.id !== interno.id)];
-    const fichas = new Map<string, norm.FichaNorm>();
-    const pendientes: norm.EntradaNorm[] = [];
+    const fichas = new Map<string, FichaNorm>();
+    const pendientes: EntradaNorm[] = [];
+
     for (const c of todos) {
       const huella = norm.huellaTexto(c.experiencia_requerida, c.requisitos_formacion);
       const atributos = (c.atributos_semanticos ?? {}) as Record<string, unknown>;
