@@ -8,8 +8,7 @@ export type CriterioCampo =
   | "codigo_cargo"
   | "nivel_jerarquico"
   | "experiencia"
-  | "requisitos"
-  | "tipo_empresa";
+  | "requisitos";
 
 export const CAMPOS_CRITERIO: Record<CriterioCampo, string> = {
   nombre: "Nombre del cargo",
@@ -20,8 +19,8 @@ export const CAMPOS_CRITERIO: Record<CriterioCampo, string> = {
   nivel_jerarquico: "Nivel jerárquico",
   experiencia: "Experiencia requerida",
   requisitos: "Requisitos / formación",
-  tipo_empresa: "Tamaño de empresa",
 };
+
 
 export type Criterio = {
   id: string;
@@ -34,12 +33,18 @@ export type Criterio = {
 
 export const listCriterios = createServerFn({ method: "GET" }).handler(async () => {
   const { getDb, unwrap } = await import("./supabase-public.server");
-  return unwrap(
-    await getDb()
-      .from("criterios")
-      .select("id, nombre, peso, activo, campo, obligatorio")
-      .order("nombre"),
-  );
+  const filas =
+    unwrap(
+      await getDb()
+        .from("criterios")
+        .select("id, nombre, peso, activo, campo, obligatorio")
+        .order("nombre"),
+    ) ?? [];
+  // El tamaño de empresa ya no es criterio del motor: queda reservado al benchmark salarial.
+  return filas
+    .filter((c) => c.campo !== "tipo_empresa")
+    .map((c) => ({ ...c, campo: c.campo as CriterioCampo }));
+
 });
 
 /**
@@ -49,8 +54,7 @@ export const listCriterios = createServerFn({ method: "GET" }).handler(async () 
 export const asegurarCriterios = createServerFn({ method: "POST" }).handler(async () => {
   const { getDb, unwrap } = await import("./supabase-public.server");
   const db = getDb();
-  const existentes =
-    unwrap(await db.from("criterios").select("id, campo, peso, activo")) ?? [];
+  const existentes = unwrap(await db.from("criterios").select("id, campo, peso, activo")) ?? [];
   const campos = Object.keys(CAMPOS_CRITERIO) as CriterioCampo[];
   const faltantes = campos.filter((c) => !existentes.some((e) => e.campo === c));
   if (faltantes.length) {
@@ -65,8 +69,16 @@ export const asegurarCriterios = createServerFn({ method: "POST" }).handler(asyn
     );
     if (error) throw new Error(error.message);
   }
+  // Se conserva el registro histórico, pero sin peso ni actividad.
+  if (existentes.some((e) => e.campo === "tipo_empresa" && (e.activo || Number(e.peso) > 0))) {
+    await db
+      .from("criterios")
+      .update({ peso: 0, activo: false, obligatorio: false })
+      .eq("campo", "tipo_empresa");
+  }
   return { creados: faltantes.length };
 });
+
 
 /** Guarda de una sola vez la ponderación (en %) de todas las columnas. */
 export const guardarPesos = createServerFn({ method: "POST" })

@@ -1,4 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { EntradaNorm, FichaNorm } from "./normalizacion.server";
+import type { Json } from "@/integrations/supabase/types";
+
 
 export const listEjecuciones = createServerFn({ method: "GET" }).handler(async () => {
   const { getDb, unwrap } = await import("./supabase-public.server");
@@ -88,6 +91,7 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
     const { ejecutarMotor } = await import("./motor.server");
+    const norm = await import("./normalizacion.server");
     type CargoRow = {
       id: string;
       tipo: string;
@@ -101,9 +105,68 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       nivel_jerarquico: string | null;
       experiencia_requerida: string | null;
       requisitos_formacion: string | null;
-      empresas: { nombre: string; tipo: "P" | "M" | "G" } | null;
+      atributos_semanticos: unknown;
+      empresas: { nombre: string } | null;
     };
-    // El sueldo no se recupera aquí: no participa del motor determinístico.
+
+    const db = getDb();
+    const select =
+      "id, tipo, nombre, descripcion, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, nivel_jerarquico, experiencia_requerida, requisitos_formacion, atributos_semanticos, empresas(nombre)";
+
+    const interno = unwrap(
+      await db.from("cargos").select(select).eq("id", data.cargo_id).maybeSingle(),
+    ) as CargoRow | null;
+    if (!interno) throw new Error("El cargo no existe");
+    if (interno.tipo !== "INTERNO") throw new Error("La homologación sólo aplica a cargos internos");
+
+    const referencias = (unwrap(
+      await db.from("cargos").select(select).eq("tipo", "REFERENCIA").order("nombre"),
+    ) ?? []) as CargoRow[];
+
+    // Normalización previa de experiencia y formación: solo traduce el texto a una
+    // ficha estructurada y se guarda junto al cargo para no repetir llamadas.
+    const todos = [interno, ...referencias.filter((c) => c.id !== interno.id)];
+    const fichas = new Map<string, FichaNorm>();
+    const pendientes: EntradaNorm[] = [];
+
+    for (const c of todos) {
+      const huella = norm.huellaTexto(c.experiencia_requerida, c.requisitos_formacion);
+      const atributos = (c.atributos_semanticos ?? {}) as Record<string, unknown>;
+      const vigente = norm.fichaVigente(atributos["_norm"], huella);
+      if (vigente) fichas.set(c.id, vigente);
+      else if ((c.experiencia_requerida ?? "").trim() || (c.requisitos_formacion ?? "").trim()) {
+        pendientes.push({
+          id: c.id,
+          experiencia_requerida: c.experiencia_requerida,
+          requisitos_formacion: c.requisitos_formacion,
+        });
+      }
+    }
+
+    let avisoNormalizacion: string | null = null;
+    if (pendientes.length) {
+      try {
+        const nuevas = await norm.normalizarLote(pendientes);
+        for (const [id, ficha] of nuevas) {
+          fichas.set(id, ficha);
+          const cargo = todos.find((c) => c.id === id);
+          const atributos = { ...((cargo?.atributos_semanticos ?? {}) as Record<string, unknown>) };
+          atributos["_norm"] = ficha;
+          await db
+            .from("cargos")
+            .update({ atributos_semanticos: atributos as Json })
+            .eq("id", id);
+
+        }
+      } catch (e) {
+        avisoNormalizacion =
+          e instanceof Error
+            ? `${e.message}. Experiencia y formación se compararon con el texto original.`
+            : "No fue posible normalizar experiencia y formación; se comparó el texto original.";
+      }
+    }
+
+    // El sueldo y el tamaño de empresa no participan del motor determinístico.
     const toMotor = (c: CargoRow) => ({
       id: c.id,
       nombre: c.nombre,
@@ -116,33 +179,21 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       nivel_jerarquico: c.nivel_jerarquico,
       experiencia_requerida: c.experiencia_requerida,
       requisitos_formacion: c.requisitos_formacion,
+      experiencia_norm: fichas.get(c.id)?.experiencia ?? null,
+      formacion_norm: fichas.get(c.id)?.formacion ?? null,
       empresa_nombre: c.empresas?.nombre ?? null,
-      empresa_tipo: c.empresas?.tipo ?? null,
     });
 
-    const db = getDb();
-    const select =
-      "id, tipo, nombre, descripcion, codigo_area, nombre_area, codigo_subarea, nombre_subarea, codigo_cargo, nivel_jerarquico, experiencia_requerida, requisitos_formacion, empresas(nombre, tipo)";
-
-    const interno = unwrap(
-      await db.from("cargos").select(select).eq("id", data.cargo_id).maybeSingle(),
-    ) as CargoRow | null;
-    if (!interno) throw new Error("El cargo no existe");
-    if (interno.tipo !== "INTERNO") throw new Error("La homologación sólo aplica a cargos internos");
-
-    const referencias = (unwrap(
-      await db.from("cargos").select(select).eq("tipo", "REFERENCIA").order("nombre"),
-    ) ?? []) as CargoRow[];
-
     const criteriosBase =
-      unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
-      [];
+      (unwrap(await db.from("criterios").select("id, nombre, peso, activo, campo, obligatorio")) ??
+        []).filter((c) => c.campo !== "tipo_empresa");
     const pesos = new Map(data.pesos.map((p) => [p.id, p.peso]));
     const criterios = criteriosBase.map((c) => {
       const peso = pesos.has(c.id) ? Number(pesos.get(c.id)) : Number(c.peso);
       // La ponderación de esta homologación manda: 0% equivale a no comparar la columna.
       return { ...c, peso, activo: pesos.has(c.id) ? peso > 0 : c.activo };
     });
+
 
     const ejecucion = unwrap(
       await db
@@ -157,7 +208,9 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       const motor = ejecutarMotor(
         toMotor(interno),
         referencias.filter((c) => c.id !== interno.id).map(toMotor),
-        criterios.map((c) => ({ ...c, peso: Number(c.peso) })),
+        criterios.map((c) => ({ ...c, peso: Number(c.peso) })) as Parameters<
+          typeof ejecutarMotor
+        >[2],
       );
 
       await db.from("resultados").delete().eq("ejecucion_id", ejecucion.id);
@@ -176,7 +229,13 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
 
       await db.from("ejecuciones").update({ estado: "COMPLETADA" }).eq("id", ejecucion.id);
 
-      return { ejecucion_id: ejecucion.id, cargo: toMotor(interno), ...motor };
+      return {
+        ejecucion_id: ejecucion.id,
+        cargo: toMotor(interno),
+        aviso_normalizacion: avisoNormalizacion,
+        ...motor,
+      };
+
     } catch (e) {
       await db.from("ejecuciones").update({ estado: "ERROR" }).eq("id", ejecucion.id);
       throw e instanceof Error ? e : new Error("Error al ejecutar el motor");
@@ -199,7 +258,6 @@ export const analizarSemantica = createServerFn({ method: "POST" })
     const semantica = await import("./semantica.server");
     const db = getDb();
 
-    type EmpresaRow = { tipo: "P" | "M" | "G" } | null;
     type CargoRow = {
       id: string;
       nombre: string;
@@ -207,13 +265,16 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       atributos_semanticos: unknown;
       experiencia_requerida: string | null;
       requisitos_formacion: string | null;
-      empresas: EmpresaRow;
     };
+
+    // Gemini no recibe tamaño de empresa ni información salarial.
+    const campos =
+      "id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion";
 
     const ejecucion = unwrap(
       await db
         .from("ejecuciones")
-        .select("id, cargos(id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion, empresas(tipo))")
+        .select(`id, cargos(${campos})`)
         .eq("id", data.ejecucion_id)
         .maybeSingle(),
     ) as { id: string; cargos: CargoRow | null } | null;
@@ -223,7 +284,6 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       id: ejecucion.cargos.id,
       nombre: ejecucion.cargos.nombre,
       descripcion: ejecucion.cargos.descripcion,
-      tipo_empresa: ejecucion.cargos.empresas?.tipo ?? null,
       atributos_semanticos: semantica.normalizarAtributos(ejecucion.cargos.atributos_semanticos),
       experiencia_requerida: ejecucion.cargos.experiencia_requerida ?? "",
       requisitos_formacion: ejecucion.cargos.requisitos_formacion ?? "",
@@ -233,7 +293,7 @@ export const analizarSemantica = createServerFn({ method: "POST" })
     const resultados = (unwrap(
       await db
         .from("resultados")
-        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion, empresas(tipo))")
+        .select(`id, candidato_id, cargos:candidato_id(${campos})`)
         .eq("ejecucion_id", data.ejecucion_id),
     ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
 
@@ -243,11 +303,11 @@ export const analizarSemantica = createServerFn({ method: "POST" })
         id: r.cargos!.id,
         nombre: r.cargos!.nombre,
         descripcion: r.cargos!.descripcion,
-        tipo_empresa: r.cargos!.empresas?.tipo ?? null,
         atributos_semanticos: semantica.normalizarAtributos(r.cargos!.atributos_semanticos),
         experiencia_requerida: r.cargos!.experiencia_requerida ?? "",
         requisitos_formacion: r.cargos!.requisitos_formacion ?? "",
       }));
+
 
     const registrarError = async (mensaje: string) => {
       await db.from("analisis_semanticos").insert({

@@ -75,11 +75,11 @@ export type CargoSemantico = {
   id: string;
   nombre: string;
   descripcion: string | null;
-  tipo_empresa: "P" | "M" | "G" | null;
   atributos_semanticos: AtributosSemanticos;
   experiencia_requerida: string;
   requisitos_formacion: string;
 };
+
 
 export type ScorePorCandidato = {
   candidato_id: string;
@@ -217,13 +217,12 @@ export function validarAnalisis(raw: unknown, enviados: CargoSemantico[]): Anali
   };
 }
 
-/** Construye el payload permitido: sin sueldos, sin candidatos no preseleccionados. */
+/** Construye el payload permitido: sin sueldos, sin tamaño de empresa, sin candidatos no preseleccionados. */
 export function construirPayload(interno: CargoSemantico, candidatos: CargoSemantico[]) {
   const limpiar = (c: CargoSemantico) => ({
     id: c.id,
     nombre: c.nombre,
     descripcion: c.descripcion,
-    tipo_empresa: c.tipo_empresa,
     atributos_semanticos: normalizarAtributos(c.atributos_semanticos),
     experiencia_requerida: c.experiencia_requerida || "",
     requisitos_formacion: c.requisitos_formacion || "",
@@ -233,7 +232,6 @@ export function construirPayload(interno: CargoSemantico, candidatos: CargoSeman
     cargo_interno: {
       nombre: interno.nombre,
       descripcion: interno.descripcion,
-      tipo_empresa: interno.tipo_empresa,
       atributos_semanticos: normalizarAtributos(interno.atributos_semanticos),
       experiencia_requerida: interno.experiencia_requerida || "",
       requisitos_formacion: interno.requisitos_formacion || "",
@@ -241,6 +239,7 @@ export function construirPayload(interno: CargoSemantico, candidatos: CargoSeman
     candidatos_preseleccionados: candidatos.map(limpiar),
   };
 }
+
 
 export async function analizarConGemini(interno: CargoSemantico, candidatos: CargoSemantico[]) {
   const apiKey = process.env["GEMINI_API_KEY"];
