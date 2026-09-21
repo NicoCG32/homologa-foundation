@@ -41,7 +41,10 @@ export const listCriterios = createServerFn({ method: "GET" }).handler(async () 
         .order("nombre"),
     ) ?? [];
   // El tamaño de empresa ya no es criterio del motor: queda reservado al benchmark salarial.
-  return filas.filter((c) => c.campo !== "tipo_empresa");
+  return filas
+    .filter((c) => c.campo !== "tipo_empresa")
+    .map((c) => ({ ...c, campo: c.campo as CriterioCampo }));
+
 });
 
 /**
