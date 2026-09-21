@@ -9,3 +9,4 @@
 - [x] Leer las tres planillas sin crear datos manuales
 - [x] Tamaño de empresa opcional con aviso en Empresas
 - [x] Documentar el proyecto en docs/ y renovar el README
+- [x] Incorporar tabla y gráfico comparativo al benchmark salarial

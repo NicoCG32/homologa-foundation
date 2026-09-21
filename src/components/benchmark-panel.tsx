@@ -1,6 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { setTamanoBenchmark } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
@@ -31,6 +42,16 @@ function num(v: number | string | null | undefined) {
   if (v == null || v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function etiquetaGrafico(v: number) {
+  if (Math.abs(v) >= 1_000_000) {
+    return `${new Intl.NumberFormat("es-CL", { maximumFractionDigits: 1 }).format(v / 1_000_000)} M`;
+  }
+  if (Math.abs(v) >= 1_000) {
+    return `${new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 }).format(v / 1_000)} mil`;
+  }
+  return formatSueldo(v);
 }
 
 /**
@@ -66,12 +87,19 @@ export function BenchmarkPanel({
   const banda = tamano ? bandas.find((b) => b.tipo_empresa === tamano) : undefined;
   const actual = num(sueldoInterno);
 
-  const filas: { etiqueta: string; v: number | string | null | undefined }[] = [
-    { etiqueta: "P25", v: banda?.p25 ?? null },
-    { etiqueta: "P50 (mediana)", v: banda?.p50 ?? null },
-    { etiqueta: "P75", v: banda?.p75 ?? null },
-    { etiqueta: "Promedio", v: banda?.promedio ?? null },
+  const filas: { etiqueta: string; corta: string; v: number | string | null | undefined }[] = [
+    { etiqueta: "Remuneración actual", corta: "Actual", v: sueldoInterno },
+    { etiqueta: "P25", corta: "P25", v: banda?.p25 ?? null },
+    { etiqueta: "P50 (mediana)", corta: "P50", v: banda?.p50 ?? null },
+    { etiqueta: "P75", corta: "P75", v: banda?.p75 ?? null },
+    { etiqueta: "Promedio", corta: "Prom.", v: banda?.promedio ?? null },
   ];
+
+  const datosGrafico = filas.map((fila) => ({
+    indicador: fila.corta,
+    valor: num(fila.v),
+    actual: fila.corta === "Actual",
+  }));
 
   return (
     <div className="space-y-3 text-sm">
@@ -116,30 +144,56 @@ export function BenchmarkPanel({
           {ND}.
         </p>
       ) : (
-        <table className="benchmark-table w-full">
-          <thead className="text-left text-muted-foreground">
-            <tr>
-              <th className="border-b py-2">Mercado ({TAMANOS.find((t) => t.valor === tamano)?.etiqueta})</th>
-              <th className="border-b py-2">Valor</th>
-              <th className="border-b py-2">Diferencia con la remuneración actual</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filas.map((f) => {
-              const v = num(f.v);
-              const dif = actual != null && v != null ? actual - v : null;
-              return (
-                <tr key={f.etiqueta}>
-                  <td className="border-b py-2" data-label="Mercado">{f.etiqueta}</td>
-                  <td className="border-b py-2" data-label="Valor">{valor(f.v)}</td>
-                  <td className="border-b py-2" data-label="Diferencia">
-                    {dif == null ? ND : `${dif > 0 ? "+" : ""}${formatSueldo(dif)}`}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="benchmark-comparison">
+          <div className="benchmark-chart" aria-label="Gráfico comparativo de remuneración y mercado">
+            <h3>Comparación visual</h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={datosGrafico} margin={{ top: 28, right: 8, left: 2, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="indicador" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} width={54} tickFormatter={etiquetaGrafico} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} />
+                <Tooltip
+                  cursor={{ fill: "var(--muted)" }}
+                  formatter={(v) => [v == null ? ND : formatSueldo(Number(v)), "Remuneración"]}
+                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                  contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6 }}
+                />
+                <Bar dataKey="valor" radius={[5, 5, 0, 0]} maxBarSize={64}>
+                  {datosGrafico.map((dato) => (
+                    <Cell key={dato.indicador} fill={dato.actual ? "var(--primary)" : "var(--chart-2)"} />
+                  ))}
+                  <LabelList dataKey="valor" position="top" formatter={(v: number) => etiquetaGrafico(v)} className="benchmark-chart-label" />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <table className="benchmark-table w-full">
+            <thead className="text-left text-muted-foreground">
+              <tr>
+                <th>Indicador</th>
+                <th>Valor</th>
+                <th>Diferencia con la remuneración actual</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((f) => {
+                const v = num(f.v);
+                const esActual = f.corta === "Actual";
+                const dif = !esActual && actual != null && v != null ? actual - v : null;
+                return (
+                  <tr key={f.etiqueta} className={esActual ? "is-current" : undefined}>
+                    <td data-label="Indicador">{f.etiqueta}</td>
+                    <td data-label="Valor">{valor(f.v)}</td>
+                    <td data-label="Diferencia">
+                      {esActual ? "Referencia" : dif == null ? ND : `${dif > 0 ? "+" : ""}${formatSueldo(dif)}`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
       <p className="text-xs text-muted-foreground">
         Información referencial. La remuneración no participa en ningún puntaje ni en la selección
