@@ -463,6 +463,7 @@ export const guardarDecision = createServerFn({ method: "POST" })
             decision: "CONFIRMADA",
             usuario: data.usuario,
             comentario: data.comentario,
+            tamano_empresa: data.tamano_empresa,
             fecha: new Date().toISOString(),
             scores_utilizados: {
               score_deterministico: fila.score_deterministico,
@@ -472,7 +473,8 @@ export const guardarDecision = createServerFn({ method: "POST" })
           },
           { onConflict: "ejecucion_id" },
         )
-        .select("id, candidato_id, usuario, comentario, fecha, scores_utilizados")
+        .select("id, candidato_id, usuario, comentario, fecha, scores_utilizados, tamano_empresa")
+
         .single(),
     );
   });
