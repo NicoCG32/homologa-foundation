@@ -63,14 +63,15 @@ function anios(v: unknown): number | null {
 function normalizarExperiencia(raw: unknown): ExperienciaNorm | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
-  const ficha: ExperienciaNorm = {
-    min_anios: anios(o["min_anios"]),
-    max_anios: anios(o["max_anios"]),
-    areas: lista(o["areas"]),
-  };
+  const min = anios(o["min_anios"]);
+  let max = anios(o["max_anios"]);
+  // "6 años o más" a veces vuelve con máximo 0: eso es rango abierto, no un tope.
+  if (max !== null && min !== null && max < min) max = null;
+  const ficha: ExperienciaNorm = { min_anios: min, max_anios: max, areas: lista(o["areas"]) };
   if (ficha.min_anios === null && ficha.max_anios === null && !ficha.areas.length) return null;
   return ficha;
 }
+
 
 function normalizarFormacion(raw: unknown): FormacionNorm | null {
   if (!raw || typeof raw !== "object") return null;
