@@ -30,9 +30,11 @@ opcionales: `codigo_cargo`, `codigo_area`, `nombre_area`, `codigo_subarea`, `nom
 un `RRHH-001` interno y un `RRHH-001` de referencia de la misma empresa son registros distintos.
 
 ### `bandas_salariales`
-`id`, `cargo_id` → `cargos`, `tipo_empresa`, `p25`, `p50`, `p75`, `promedio`.
+`id`, `cargo_id` → `cargos`, `tipo_empresa`, `p25`, `p50`, `p75`, `promedio`, `fuente`, `anio`.
 Único por `(cargo_id, tipo_empresa)`. Celda vacía en la planilla = `NULL` ("dato no disponible"),
-nunca 0.
+nunca 0. `fuente` y `anio` se declaran al cargar la planilla de remuneraciones; si no se informan
+quedan en `NULL` y el benchmark muestra "No disponible".
+
 
 ### `criterios`
 `id`, `nombre`, `campo` (`criterio_campo`), `peso`, `activo`, `obligatorio`.
@@ -59,8 +61,10 @@ ponderación del score final híbrido (debe sumar 100).
 
 ### `decisiones`
 `id`, `ejecucion_id` → `ejecuciones` (**único**), `candidato_id` → `cargos`, `decision`,
-`comentario`, `usuario`, `scores_utilizados` (jsonb con los tres scores al decidir), `fecha`.
+`comentario`, `usuario`, `scores_utilizados` (jsonb con los tres scores al decidir),
+`tamano_empresa` (tamaño elegido para el benchmark, nullable), `fecha`.
 Una decisión por ejecución; no modifica ningún score.
+
 
 ### `analisis_semanticos`
 `id`, `ejecucion_id`, `estado` (`OK`/`ERROR`), `modelo`, `prompt_version`, `candidatos_enviados`,

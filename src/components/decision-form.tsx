@@ -29,6 +29,7 @@ export function DecisionForm({
   const guardar = useServerFn(guardarDecision);
   const qc = useQueryClient();
   const [candidatoId, setCandidatoId] = useState(sugerido ?? "");
+  const [tamano, setTamano] = useState<"P" | "M" | "G" | "">("");
   const [usuario, setUsuario] = useState("");
   const [comentario, setComentario] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,16 @@ export function DecisionForm({
 
   const mut = useMutation({
     mutationFn: () =>
-      guardar({ data: { ejecucion_id: ejecucionId, candidato_id: candidatoId, usuario, comentario } }),
+      guardar({
+        data: {
+          ejecucion_id: ejecucionId,
+          candidato_id: candidatoId,
+          usuario,
+          comentario,
+          tamano_empresa: tamano || null,
+        },
+      }),
+
     onMutate: () => setError(null),
     onSuccess: () => {
       setListo(true);
@@ -79,6 +89,21 @@ export function DecisionForm({
           ))}
         </select>
       </label>
+
+      <label className="block">
+        <span>Tamaño de empresa para el benchmark</span>
+        <select
+          className="mt-1 w-full rounded-md border bg-background p-2"
+          value={tamano}
+          onChange={(e) => setTamano(e.target.value as "P" | "M" | "G" | "")}
+        >
+          <option value="">Selecciona…</option>
+          <option value="P">Pequeña</option>
+          <option value="M">Mediana</option>
+          <option value="G">Grande</option>
+        </select>
+      </label>
+
 
       <label className="block">
         <span>Analista que confirma</span>

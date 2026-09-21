@@ -135,7 +135,7 @@ type FilaImport = {
   requisitos_formacion: string; empresa_nombre?: string; empresa_tipo?: EmpresaTipo | null;
   sueldo?: number | null; proposito?: string; funciones?: string; responsabilidades?: string;
 };
-type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null };
+type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null; fuente?: string | null; anio?: number | null };
 type EmpresaTipo = "P" | "M" | "G";
 
 function claveEmpresa(v: string) {
@@ -219,9 +219,13 @@ export const importarCargos = createServerFn({ method: "POST" })
     for (const banda of data.bandas) {
       const cargo_id = ids.get(`${data.tipo}|${String(banda.codigo_cargo)}`);
       if (!cargo_id) continue;
-      const valores = { cargo_id, tipo_empresa: banda.tipo_empresa, p25: banda.p25, p50: banda.p50, p75: banda.p75, promedio: banda.promedio };
+      const fuente = String(banda.fuente ?? "").trim() || null;
+      const anioRaw = Number(banda.anio);
+      const anio = Number.isInteger(anioRaw) && anioRaw > 1900 && anioRaw < 2200 ? anioRaw : null;
+      const valores = { cargo_id, tipo_empresa: banda.tipo_empresa, p25: banda.p25, p50: banda.p50, p75: banda.p75, promedio: banda.promedio, fuente, anio };
       const { error } = await db.from("bandas_salariales").upsert(valores, { onConflict: "cargo_id,tipo_empresa" });
       if (error) throw new Error(error.message);
     }
+
     return { creados, actualizados, empresas: empresasCreadas, bandas: data.bandas.length };
   });

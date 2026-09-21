@@ -66,8 +66,10 @@ export type Database = {
       }
       bandas_salariales: {
         Row: {
+          anio: number | null
           cargo_id: string
           created_at: string
+          fuente: string | null
           id: string
           p25: number | null
           p50: number | null
@@ -77,8 +79,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anio?: number | null
           cargo_id: string
           created_at?: string
+          fuente?: string | null
           id?: string
           p25?: number | null
           p50?: number | null
@@ -88,8 +92,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anio?: number | null
           cargo_id?: string
           created_at?: string
+          fuente?: string | null
           id?: string
           p25?: number | null
           p50?: number | null
@@ -228,6 +234,7 @@ export type Database = {
           fecha: string
           id: string
           scores_utilizados: Json
+          tamano_empresa: Database["public"]["Enums"]["empresa_tipo"] | null
           updated_at: string
           usuario: string
         }
@@ -240,6 +247,7 @@ export type Database = {
           fecha?: string
           id?: string
           scores_utilizados?: Json
+          tamano_empresa?: Database["public"]["Enums"]["empresa_tipo"] | null
           updated_at?: string
           usuario: string
         }
@@ -252,6 +260,7 @@ export type Database = {
           fecha?: string
           id?: string
           scores_utilizados?: Json
+          tamano_empresa?: Database["public"]["Enums"]["empresa_tipo"] | null
           updated_at?: string
           usuario?: string
         }

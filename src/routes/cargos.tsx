@@ -88,6 +88,9 @@ function CargosPage() {
   const [erroresCarga, setErroresCarga] = useState<string[]>([]);
   const [archivoCargos, setArchivoCargos] = useState("");
   const [archivoBandas, setArchivoBandas] = useState("");
+  const [fuenteBandas, setFuenteBandas] = useState("");
+  const [anioBandas, setAnioBandas] = useState("");
+
   const [diccionarioArchivo, setDiccionarioArchivo] = useState<EntradaDiccionario[]>([]);
   const [resultadoDicc, setResultadoDicc] = useState<string | null>(null);
   const [detalleFila, setDetalleFila] = useState<string | null>(null);
@@ -143,7 +146,7 @@ function CargosPage() {
           empresa_defecto: modoCarga === "REFERENCIA" ? { nombre: EMPRESA_CATALOGO, tipo: EMPRESA_CATALOGO_TIPO } : null,
           tipo: modoCarga,
           cargos: resueltos.cargos,
-          bandas: modoCarga === "REFERENCIA" ? bandasCarga : [],
+          bandas: modoCarga === "REFERENCIA" ? bandasCarga.map((b) => ({ ...b, fuente: fuenteBandas.trim() || null, anio: anioBandas ? Number(anioBandas) : null })) : [],
         },
       }),
     onSuccess: () => { setCargosCarga([]); setBandasCarga([]); setErroresCarga([]); setArchivoCargos(""); setArchivoBandas(""); setDiccionarioArchivo([]); setRevisado(false); setBusqueda(""); setVisibles(12); setError(null); invalidate(); },
@@ -329,6 +332,12 @@ function CargosPage() {
           <label className="file-picker"><Upload aria-hidden="true" /><span><strong>{modoCarga === "INTERNO" ? "Planilla de cargos" : "Encuesta Piloto"}</strong><small>{archivoCargos || "CSV o XLSX"}</small></span><input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => cargarEstructura(e.target.files?.[0])} /></label>
           {modoCarga === "REFERENCIA" && <label className="file-picker"><Upload aria-hidden="true" /><span><strong>Encuesta Piloto Remuneraciones</strong><small>{archivoBandas || "XLSX"}</small></span><input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => cargarBandas(e.target.files?.[0])} /></label>}
         </div>
+        {modoCarga === "REFERENCIA" && (
+          <div className="import-files">
+            <label className="text-sm"><span className="mb-1 block text-muted-foreground">Fuente de las remuneraciones</span><input value={fuenteBandas} onChange={(e) => setFuenteBandas(e.target.value)} placeholder="Ej.: Encuesta Piloto" /></label>
+            <label className="text-sm"><span className="mb-1 block text-muted-foreground">Año de las remuneraciones</span><input value={anioBandas} onChange={(e) => setAnioBandas(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))} inputMode="numeric" placeholder="Ej.: 2026" /></label>
+          </div>
+        )}
         <details className="criteria-summary"><summary>Ver formato esperado</summary><div>Se acepta «ID Cargo» o «Código del cargo» junto al nombre del cargo, los códigos de Área, Subárea y Nivel Jerárquico (se traducen con el Diccionario), la descripción u Objetivo del cargo, Funciones principales, Responsabilidades, Requisitos de formación, Experiencia requerida y la remuneración bruta mensual (solo informativa). Las remuneraciones de la encuesta se cruzan por ID Cargo.</div></details>
         {diccionarioArchivo.length > 0 && (
           <div className="import-preview">
