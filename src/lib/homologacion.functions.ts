@@ -46,7 +46,7 @@ export const getEjecucion = createServerFn({ method: "GET" })
       await getDb()
         .from("decisiones")
         .select(
-          "id, candidato_id, decision, comentario, usuario, fecha, scores_utilizados, cargos:candidato_id(id, nombre, empresas(nombre))",
+          "id, candidato_id, decision, comentario, usuario, fecha, scores_utilizados, tamano_empresa, cargos:candidato_id(id, nombre, empresas(nombre))",
         )
         .eq("ejecucion_id", data.id)
         .maybeSingle(),
@@ -56,12 +56,33 @@ export const getEjecucion = createServerFn({ method: "GET" })
       ? unwrap(
           await getDb()
             .from("bandas_salariales")
-            .select("cargo_id, tipo_empresa, p25, p50, p75, promedio")
+            .select("cargo_id, tipo_empresa, p25, p50, p75, promedio, fuente, anio")
             .eq("cargo_id", decision.candidato_id),
         )
       : [];
     return { ejecucion, resultados, analisis, decision, bandas };
   });
+
+/** Guarda el tamaño de empresa elegido para ver el benchmark. No toca scores. */
+export const setTamanoBenchmark = createServerFn({ method: "POST" })
+  .inputValidator((input: { ejecucion_id: string; tamano_empresa: "P" | "M" | "G" }) => {
+    if (!input?.ejecucion_id) throw new Error("Falta la ejecución");
+    if (!(["P", "M", "G"] as const).includes(input.tamano_empresa))
+      throw new Error("Selecciona un tamaño de empresa válido");
+    return { ejecucion_id: String(input.ejecucion_id), tamano_empresa: input.tamano_empresa };
+  })
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    return unwrap(
+      await getDb()
+        .from("decisiones")
+        .update({ tamano_empresa: data.tamano_empresa })
+        .eq("ejecucion_id", data.ejecucion_id)
+        .select("id, tamano_empresa")
+        .single(),
+    );
+  });
+
 
 
 export const createEjecucion = createServerFn({ method: "POST" })
