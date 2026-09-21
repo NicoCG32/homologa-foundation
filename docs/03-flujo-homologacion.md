@@ -69,3 +69,13 @@ decisión no modifica ningún score.
 
 `getEjecucion` sólo devuelve bandas salariales cuando existe decisión: el benchmark no se muestra
 antes de la selección.
+
+### Benchmark por tamaño de empresa
+
+El analista elige el tamaño (`P`/`M`/`G`) al confirmar, o desde el propio panel; queda guardado en
+`decisiones.tamano_empresa` (`setTamanoBenchmark`). El panel muestra **un solo tamaño a la vez**:
+cargo interno, cargo de referencia confirmado, tamaño seleccionado, fuente, año, P25, P50, P75,
+promedio, remuneración actual del cargo interno y las diferencias informativas frente a cada valor
+de mercado. Todo dato ausente se muestra como "No disponible"; nunca se estima ni se interpola, y
+la remuneración no participa en ningún score ni en la selección de candidatos.
+

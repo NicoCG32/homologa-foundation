@@ -30,9 +30,11 @@ opcionales: `codigo_cargo`, `codigo_area`, `nombre_area`, `codigo_subarea`, `nom
 un `RRHH-001` interno y un `RRHH-001` de referencia de la misma empresa son registros distintos.
 
 ### `bandas_salariales`
-`id`, `cargo_id` → `cargos`, `tipo_empresa`, `p25`, `p50`, `p75`, `promedio`.
+`id`, `cargo_id` → `cargos`, `tipo_empresa`, `p25`, `p50`, `p75`, `promedio`, `fuente`, `anio`.
 Único por `(cargo_id, tipo_empresa)`. Celda vacía en la planilla = `NULL` ("dato no disponible"),
-nunca 0.
+nunca 0. `fuente` y `anio` se declaran al cargar la planilla de remuneraciones; si no se informan
+quedan en `NULL` y el benchmark muestra "No disponible".
+
 
 ### `criterios`
 `id`, `nombre`, `campo` (`criterio_campo`), `peso`, `activo`, `obligatorio`.
