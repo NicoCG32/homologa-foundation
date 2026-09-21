@@ -114,7 +114,68 @@ function comparaCategoria(
   return similitudTexto(nomA, nomB);
 }
 
-const ORDEN_EMPRESA: Record<string, number> = { P: 0, M: 1, G: 2 };
+/** Jaccard sobre listas de términos canónicos ya normalizados por Gemini. */
+function similitudListas(a: string[], b: string[]): number | null {
+  const sa = new Set(a.map(clave).filter(Boolean));
+  const sb = new Set(b.map(clave).filter(Boolean));
+  if (!sa.size || !sb.size) return null;
+  let comunes = 0;
+  for (const x of sa) if (sb.has(x)) comunes++;
+  const union = new Set([...sa, ...sb]).size;
+  return union ? comunes / union : null;
+}
+
+function promedio(valores: (number | null)[]) {
+  const usables = valores.filter((v): v is number => v !== null);
+  if (!usables.length) return null;
+  return usables.reduce((s, v) => s + v, 0) / usables.length;
+}
+
+/** Traslape de rangos de años: total, parcial o sin traslape. */
+function comparaRangoAnios(a: ExperienciaNorm, b: ExperienciaNorm): number | null {
+  const ra = rango(a);
+  const rb = rango(b);
+  if (!ra || !rb) return null;
+  const inicio = Math.max(ra[0], rb[0]);
+  const fin = Math.min(ra[1], rb[1]);
+  if (inicio > fin) return 0;
+  const largo = Math.min(ra[1] - ra[0], rb[1] - rb[0]);
+  if (largo <= 0) return 1;
+  return Math.min(1, (fin - inicio) / largo);
+}
+
+function rango(e: ExperienciaNorm): [number, number] | null {
+  const min = e.min_anios;
+  const max = e.max_anios;
+  if (min === null && max === null) return null;
+  const lo = min ?? 0;
+  const hi = max ?? Math.max(lo + 5, lo);
+  return [lo, Math.max(lo, hi)];
+}
+
+const ORDEN_NIVEL = [
+  "educacionmedia",
+  "tecniconivelmedio",
+  "tecniconivelsuperior",
+  "profesional",
+  "postitulo",
+  "magister",
+  "doctorado",
+];
+
+function comparaNivelFormacion(a: string | null, b: string | null): number | null {
+  if (!a?.trim() || !b?.trim()) return null;
+  const ka = clave(a);
+  const kb = clave(b);
+  if (ka === kb) return 1;
+  const ia = ORDEN_NIVEL.indexOf(ka);
+  const ib = ORDEN_NIVEL.indexOf(kb);
+  if (ia < 0 || ib < 0) return similitudTexto(a, b) ?? 0;
+  const d = Math.abs(ia - ib);
+  if (d === 1) return 0.6;
+  if (d === 2) return 0.3;
+  return 0;
+}
 
 /** Devuelve el puntaje 0..1 del criterio, o null si falta el dato en alguno de los cargos. */
 function evaluarCriterio(
@@ -149,18 +210,28 @@ function evaluarCriterio(
       if (exacto === null) return null;
       return similitudTexto(interno.nivel_jerarquico, candidato.nivel_jerarquico) ?? 0;
     }
-    case "experiencia":
+    case "experiencia": {
+      // Ficha normalizada cuando existe; si no, el texto original como hasta ahora.
+      const a = interno.experiencia_norm;
+      const b = candidato.experiencia_norm;
+      if (a && b) {
+        const valor = promedio([comparaRangoAnios(a, b), similitudListas(a.areas, b.areas)]);
+        if (valor !== null) return valor;
+      }
       return similitudTexto(interno.experiencia_requerida, candidato.experiencia_requerida);
-    case "requisitos":
+    }
+    case "requisitos": {
+      const a = interno.formacion_norm;
+      const b = candidato.formacion_norm;
+      if (a && b) {
+        const valor = promedio([
+          comparaNivelFormacion(a.nivel, b.nivel),
+          similitudListas(a.areas, b.areas),
+          similitudListas(a.carreras, b.carreras),
+        ]);
+        if (valor !== null) return valor;
+      }
       return similitudTexto(interno.requisitos_formacion, candidato.requisitos_formacion);
-    case "tipo_empresa": {
-      if (!interno.empresa_tipo || !candidato.empresa_tipo) return null;
-      const d = Math.abs(
-        (ORDEN_EMPRESA[interno.empresa_tipo] ?? 0) - (ORDEN_EMPRESA[candidato.empresa_tipo] ?? 0),
-      );
-      if (d === 0) return 1;
-      if (d === 1) return 0.5;
-      return 0;
     }
     default:
       return null;
@@ -176,8 +247,8 @@ const ETIQUETA_CAMPO: Record<CriterioCampo, string> = {
   nivel_jerarquico: "nivel jerárquico",
   experiencia: "experiencia requerida",
   requisitos: "requisitos / formación",
-  tipo_empresa: "tamaño de empresa",
 };
+
 
 export function ejecutarMotor(
   interno: CargoMotor,
