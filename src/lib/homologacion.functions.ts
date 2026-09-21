@@ -420,19 +420,25 @@ export const guardarDecision = createServerFn({ method: "POST" })
       candidato_id: string;
       usuario: string;
       comentario?: string | null;
+      tamano_empresa?: "P" | "M" | "G" | null;
     }) => {
       if (!input?.ejecucion_id) throw new Error("Falta la ejecución");
       if (!input?.candidato_id) throw new Error("Debes seleccionar un cargo de referencia");
       const usuario = String(input.usuario ?? "").trim();
       if (!usuario) throw new Error("Indica el nombre del analista que confirma");
+      const tamano = (["P", "M", "G"] as const).includes(input.tamano_empresa as "P")
+        ? (input.tamano_empresa as "P" | "M" | "G")
+        : null;
       return {
         ejecucion_id: String(input.ejecucion_id),
         candidato_id: String(input.candidato_id),
         usuario,
         comentario: input.comentario ? String(input.comentario).trim() : null,
+        tamano_empresa: tamano,
       };
     },
   )
+
   .handler(async ({ data }) => {
     const { getDb, unwrap } = await import("./supabase-public.server");
     const db = getDb();
