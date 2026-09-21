@@ -30,7 +30,11 @@ export type BandaImport = {
   p50: number | null;
   p75: number | null;
   promedio: number | null;
+  /** Origen declarado al cargar la planilla. Nunca se deduce. */
+  fuente?: string | null;
+  anio?: number | null;
 };
+
 
 export type EntradaDiccionario = { tipo: "AREA" | "SUBAREA" | "NIVEL"; codigo: string; nombre: string };
 
