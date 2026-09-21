@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { getEjecucion } from "@/lib/homologacion.functions";
 import { formatFecha, formatSueldo } from "@/lib/format";
 import { DecisionForm } from "@/components/decision-form";
+import { BenchmarkPanel } from "@/components/benchmark-panel";
+
 
 function pct(v: number | null | undefined) {
   return v == null ? "—" : `${(Number(v) * 100).toFixed(1)}%`;
@@ -46,12 +48,8 @@ function EjecucionDetalle() {
     score_semantico: number | null;
     score_final: number | null;
   } | null;
-  const elegido = decision
-    ? resultados.find((r) => r.candidato_id === decision.candidato_id)
-    : undefined;
-  const sueldoElegido = elegido?.cargos?.sueldo ?? null;
-  const diferencia =
-    sueldoInterno != null && sueldoElegido != null ? Number(sueldoElegido) - sueldoInterno : null;
+  void sueldoInterno;
+
   const validada = (analisis?.respuesta_validada ?? null) as {
     candidato_recomendado_id: string;
     score_semantico: number;
