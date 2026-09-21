@@ -250,7 +250,6 @@ export const analizarSemantica = createServerFn({ method: "POST" })
     const semantica = await import("./semantica.server");
     const db = getDb();
 
-    type EmpresaRow = { tipo: "P" | "M" | "G" } | null;
     type CargoRow = {
       id: string;
       nombre: string;
@@ -258,13 +257,16 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       atributos_semanticos: unknown;
       experiencia_requerida: string | null;
       requisitos_formacion: string | null;
-      empresas: EmpresaRow;
     };
+
+    // Gemini no recibe tamaño de empresa ni información salarial.
+    const campos =
+      "id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion";
 
     const ejecucion = unwrap(
       await db
         .from("ejecuciones")
-        .select("id, cargos(id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion, empresas(tipo))")
+        .select(`id, cargos(${campos})`)
         .eq("id", data.ejecucion_id)
         .maybeSingle(),
     ) as { id: string; cargos: CargoRow | null } | null;
@@ -274,7 +276,6 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       id: ejecucion.cargos.id,
       nombre: ejecucion.cargos.nombre,
       descripcion: ejecucion.cargos.descripcion,
-      tipo_empresa: ejecucion.cargos.empresas?.tipo ?? null,
       atributos_semanticos: semantica.normalizarAtributos(ejecucion.cargos.atributos_semanticos),
       experiencia_requerida: ejecucion.cargos.experiencia_requerida ?? "",
       requisitos_formacion: ejecucion.cargos.requisitos_formacion ?? "",
@@ -284,7 +285,7 @@ export const analizarSemantica = createServerFn({ method: "POST" })
     const resultados = (unwrap(
       await db
         .from("resultados")
-        .select("id, candidato_id, cargos:candidato_id(id, nombre, descripcion, atributos_semanticos, experiencia_requerida, requisitos_formacion, empresas(tipo))")
+        .select(`id, candidato_id, cargos:candidato_id(${campos})`)
         .eq("ejecucion_id", data.ejecucion_id),
     ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
 
@@ -294,11 +295,11 @@ export const analizarSemantica = createServerFn({ method: "POST" })
         id: r.cargos!.id,
         nombre: r.cargos!.nombre,
         descripcion: r.cargos!.descripcion,
-        tipo_empresa: r.cargos!.empresas?.tipo ?? null,
         atributos_semanticos: semantica.normalizarAtributos(r.cargos!.atributos_semanticos),
         experiencia_requerida: r.cargos!.experiencia_requerida ?? "",
         requisitos_formacion: r.cargos!.requisitos_formacion ?? "",
       }));
+
 
     const registrarError = async (mensaje: string) => {
       await db.from("analisis_semanticos").insert({
