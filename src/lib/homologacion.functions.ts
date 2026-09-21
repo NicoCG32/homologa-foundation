@@ -51,16 +51,16 @@ export const getEjecucion = createServerFn({ method: "GET" })
         .eq("ejecucion_id", data.id)
         .maybeSingle(),
     );
-    const candidatoIds = (resultados ?? []).map((r) => r.candidato_id);
-    const bandas = candidatoIds.length
+    // El benchmark salarial sólo existe después de la selección del analista.
+    const bandas = decision
       ? unwrap(
           await getDb()
             .from("bandas_salariales")
             .select("cargo_id, tipo_empresa, p25, p50, p75, promedio")
-            .in("cargo_id", candidatoIds),
+            .eq("cargo_id", decision.candidato_id),
         )
       : [];
-    return { ejecucion, resultados, analisis, bandas };
+    return { ejecucion, resultados, analisis, decision, bandas };
   });
 
 
