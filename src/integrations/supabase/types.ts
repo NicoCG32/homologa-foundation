@@ -173,6 +173,24 @@ export type Database = {
           },
         ]
       }
+      configuracion: {
+        Row: {
+          clave: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          clave: string
+          updated_at?: string
+          valor: Json
+        }
+        Update: {
+          clave?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
       criterios: {
         Row: {
           activo: boolean
@@ -199,6 +217,60 @@ export type Database = {
           peso?: number
         }
         Relationships: []
+      }
+      decisiones: {
+        Row: {
+          candidato_id: string
+          comentario: string | null
+          created_at: string
+          decision: string
+          ejecucion_id: string
+          fecha: string
+          id: string
+          scores_utilizados: Json
+          updated_at: string
+          usuario: string
+        }
+        Insert: {
+          candidato_id: string
+          comentario?: string | null
+          created_at?: string
+          decision?: string
+          ejecucion_id: string
+          fecha?: string
+          id?: string
+          scores_utilizados?: Json
+          updated_at?: string
+          usuario: string
+        }
+        Update: {
+          candidato_id?: string
+          comentario?: string | null
+          created_at?: string
+          decision?: string
+          ejecucion_id?: string
+          fecha?: string
+          id?: string
+          scores_utilizados?: Json
+          updated_at?: string
+          usuario?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decisiones_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decisiones_ejecucion_id_fkey"
+            columns: ["ejecucion_id"]
+            isOneToOne: true
+            referencedRelation: "ejecuciones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       diccionario_entradas: {
         Row: {
