@@ -162,23 +162,32 @@ export async function normalizarLote(entradas: EntradaNorm[]): Promise<Map<strin
   const { GoogleGenAI } = await import("@google/genai");
   const ai = new GoogleGenAI({ apiKey });
 
-  let respuesta: { text?: string | undefined };
-  try {
-    respuesta = await ai.models.generateContent({
-      model: MODELO_NORMALIZACION,
-      contents: JSON.stringify({ entradas: payload }),
-      config: {
-        systemInstruction: SYSTEM_NORMALIZACION,
-        responseMimeType: "application/json",
-        responseSchema: SCHEMA as unknown as Record<string, unknown>,
-        temperature: 0,
-      },
-    });
-  } catch (e) {
-    throw new NormalizacionError(
-      `La normalización no pudo ejecutarse: ${e instanceof Error ? e.message : "error desconocido"}`,
-    );
+  // El servicio puede estar momentáneamente saturado (503): se reintenta con espera breve.
+  let respuesta: { text?: string | undefined } | null = null;
+  let ultimo = "";
+  for (let intento = 0; intento < 3 && !respuesta; intento++) {
+    if (intento) await new Promise((r) => setTimeout(r, 1500 * intento));
+    try {
+      respuesta = await ai.models.generateContent({
+        model: MODELO_NORMALIZACION,
+        contents: JSON.stringify({ entradas: payload }),
+        config: {
+          systemInstruction: SYSTEM_NORMALIZACION,
+          responseMimeType: "application/json",
+          responseSchema: SCHEMA as unknown as Record<string, unknown>,
+          temperature: 0,
+        },
+      });
+    } catch (e) {
+      ultimo = e instanceof Error ? e.message : "error desconocido";
+      const transitorio = /503|UNAVAILABLE|429|overload/i.test(ultimo);
+      if (!transitorio) break;
+    }
   }
+  if (!respuesta) {
+    throw new NormalizacionError(`La normalización no pudo ejecutarse: ${ultimo}`);
+  }
+
 
   let parsed: unknown;
   try {
