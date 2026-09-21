@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DecisionForm } from "@/components/decision-form";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
