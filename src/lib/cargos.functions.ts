@@ -135,7 +135,7 @@ type FilaImport = {
   requisitos_formacion: string; empresa_nombre?: string; empresa_tipo?: EmpresaTipo | null;
   sueldo?: number | null; proposito?: string; funciones?: string; responsabilidades?: string;
 };
-type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null };
+type BandaImport = { codigo_cargo: string; tipo_empresa: EmpresaTipo; p25: number | null; p50: number | null; p75: number | null; promedio: number | null; fuente?: string | null; anio?: number | null };
 type EmpresaTipo = "P" | "M" | "G";
 
 function claveEmpresa(v: string) {
