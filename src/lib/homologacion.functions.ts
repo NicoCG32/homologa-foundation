@@ -152,7 +152,11 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
           const cargo = todos.find((c) => c.id === id);
           const atributos = { ...((cargo?.atributos_semanticos ?? {}) as Record<string, unknown>) };
           atributos["_norm"] = ficha;
-          await db.from("cargos").update({ atributos_semanticos: atributos }).eq("id", id);
+          await db
+            .from("cargos")
+            .update({ atributos_semanticos: atributos as Json })
+            .eq("id", id);
+
         }
       } catch (e) {
         avisoNormalizacion =
