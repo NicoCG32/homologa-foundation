@@ -1,4 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { EntradaNorm, FichaNorm } from "./normalizacion.server";
+import type { Json } from "@/integrations/supabase/types";
+
 
 export const listEjecuciones = createServerFn({ method: "GET" }).handler(async () => {
   const { getDb, unwrap } = await import("./supabase-public.server");
