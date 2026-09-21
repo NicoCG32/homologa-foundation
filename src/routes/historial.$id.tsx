@@ -98,9 +98,7 @@ function EjecucionDetalle() {
       <section className="space-y-2">
         <h2 className="text-lg font-medium">Resultados</h2>
         {!resultados.length ? (
-          <p className="text-sm text-muted-foreground">
-            Sin resultados todavía. El motor de homologación se implementará en la siguiente etapa.
-          </p>
+          <p className="text-sm text-muted-foreground">Sin resultados para esta homologación.</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="text-left text-muted-foreground">
@@ -109,43 +107,91 @@ function EjecucionDetalle() {
                 <th className="border-b py-2">Score motor</th>
                 <th className="border-b py-2">Score Gemini</th>
                 <th className="border-b py-2">Score final</th>
-                <th className="border-b py-2">Sueldo</th>
-                <th className="border-b py-2">Diferencia</th>
               </tr>
             </thead>
             <tbody>
-              {resultados.map((r) => {
-                const sc = r.cargos?.sueldo != null ? Number(r.cargos.sueldo) : null;
-                const diff = sueldoInterno != null && sc != null ? sc - sueldoInterno : null;
-                return (
-                  <tr key={r.id}>
-                    <td className="border-b py-2">
-                      {r.cargos?.nombre ?? "—"}
-                      <div className="text-xs text-muted-foreground">
-                        {r.cargos?.empresas?.nombre ?? ""}
-                      </div>
-                    </td>
-                    <td className="border-b py-2">{pct(r.score_deterministico)}</td>
-                    <td className="border-b py-2">{r.score_semantico == null ? "Pendiente" : `${r.score_semantico}%`}</td>
-                    <td className="border-b py-2">{pct(r.score_final)}</td>
-                    <td className="border-b py-2">
-                      {formatSueldo(r.cargos?.sueldo)}
-                      {(data.bandas ?? []).filter((b) => b.cargo_id === r.candidato_id).map((b) => (
-                        <div key={b.tipo_empresa} className="text-xs text-muted-foreground">
-                          {b.tipo_empresa}: P25 {formatSueldo(b.p25)} · P50 {formatSueldo(b.p50)} · P75 {formatSueldo(b.p75)} · PP {formatSueldo(b.promedio)}
-                        </div>
-                      ))}
-                    </td>
-                    <td className="border-b py-2">
-                      {diff === null ? "—" : `${diff > 0 ? "+" : ""}${formatSueldo(diff)}`}
-                    </td>
-                  </tr>
-                );
-              })}
+              {resultados.map((r) => (
+                <tr key={r.id}>
+                  <td className="border-b py-2">
+                    {r.cargos?.nombre ?? "—"}
+                    <div className="text-xs text-muted-foreground">
+                      {r.cargos?.empresas?.nombre ?? ""}
+                    </div>
+                  </td>
+                  <td className="border-b py-2">{pct(r.score_deterministico)}</td>
+                  <td className="border-b py-2">
+                    {r.score_semantico == null ? "Pendiente" : `${r.score_semantico}%`}
+                  </td>
+                  <td className="border-b py-2">
+                    {r.score_final == null ? "Pendiente" : pct(r.score_final)}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
       </section>
+
+      <section className="rounded-lg border p-4 text-sm">
+        <h2 className="mb-2 text-lg font-medium">Decisión del analista</h2>
+        {decision ? (
+          <div className="space-y-1">
+            <p>
+              Cargo homologado:{" "}
+              <strong>{decision.cargos?.nombre ?? decision.candidato_id}</strong>
+              {decision.cargos?.empresas?.nombre ? ` — ${decision.cargos.empresas.nombre}` : ""}
+            </p>
+            <p className="text-muted-foreground">
+              Confirmado por {decision.usuario} · {formatFecha(decision.fecha)}
+            </p>
+            {decision.comentario && <p>{decision.comentario}</p>}
+            <p className="text-xs text-muted-foreground">
+              Scores al momento de decidir: motor {pct(scoresDecision?.score_deterministico)} · IA{" "}
+              {scoresDecision?.score_semantico == null
+                ? "—"
+                : `${scoresDecision.score_semantico}%`}{" "}
+              · final {pct(scoresDecision?.score_final)}
+            </p>
+          </div>
+        ) : (
+          <DecisionForm
+            ejecucionId={id}
+            candidatos={resultados.map((r) => ({
+              id: r.candidato_id,
+              nombre: r.cargos?.nombre ?? r.candidato_id,
+              empresa: r.cargos?.empresas?.nombre ?? null,
+            }))}
+            sugerido={validada?.candidato_recomendado_id ?? null}
+          />
+        )}
+      </section>
+
+      {decision && (
+        <section className="rounded-lg border p-4 text-sm">
+          <h2 className="mb-2 text-lg font-medium">Comparación salarial</h2>
+          <p>
+            Sueldo del cargo interno: <strong>{formatSueldo(cargo?.sueldo)}</strong> · sueldo del
+            cargo homologado: <strong>{formatSueldo(sueldoElegido)}</strong>
+            {diferencia !== null && (
+              <> · diferencia {diferencia > 0 ? "+" : ""}{formatSueldo(diferencia)}</>
+            )}
+          </p>
+          {(data.bandas ?? []).length ? (
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              {(data.bandas ?? []).map((b) => (
+                <li key={b.tipo_empresa}>
+                  {b.tipo_empresa}: P25 {formatSueldo(b.p25)} · P50 {formatSueldo(b.p50)} · P75{" "}
+                  {formatSueldo(b.p75)} · PP {formatSueldo(b.promedio)}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              El cargo homologado no tiene bandas salariales cargadas.
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }
