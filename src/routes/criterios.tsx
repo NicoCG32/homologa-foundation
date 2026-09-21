@@ -51,6 +51,21 @@ function CriteriosPage() {
 
   const criterios = data ?? [];
 
+  const hibrido = useQuery({ queryKey: ["pesos-score"], queryFn: () => getHibrido() });
+
+  useEffect(() => {
+    if (hibrido.data) setPesoMotor(hibrido.data.motor);
+  }, [hibrido.data]);
+
+  const hibridoMut = useMutation({
+    mutationFn: () => setHibrido({ data: { motor: pesoMotor, ia: 100 - pesoMotor } }),
+    onSuccess: () => {
+      setAvisoHibrido("Ponderación del resultado guardada.");
+      qc.invalidateQueries({ queryKey: ["pesos-score"] });
+    },
+    onError: (e: Error) => setAvisoHibrido(e.message),
+  });
+
   useEffect(() => {
     if (!criterios.length) return;
     setPesos((prev) => (Object.keys(prev).length ? prev : pesosIniciales(criterios)));
