@@ -200,7 +200,9 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
       const motor = ejecutarMotor(
         toMotor(interno),
         referencias.filter((c) => c.id !== interno.id).map(toMotor),
-        criterios.map((c) => ({ ...c, peso: Number(c.peso) })),
+        criterios.map((c) => ({ ...c, peso: Number(c.peso) })) as Parameters<
+          typeof ejecutarMotor
+        >[2],
       );
 
       await db.from("resultados").delete().eq("ejecucion_id", ejecucion.id);
@@ -219,7 +221,13 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
 
       await db.from("ejecuciones").update({ estado: "COMPLETADA" }).eq("id", ejecucion.id);
 
-      return { ejecucion_id: ejecucion.id, cargo: toMotor(interno), ...motor };
+      return {
+        ejecucion_id: ejecucion.id,
+        cargo: toMotor(interno),
+        aviso_normalizacion: avisoNormalizacion,
+        ...motor,
+      };
+
     } catch (e) {
       await db.from("ejecuciones").update({ estado: "ERROR" }).eq("id", ejecucion.id);
       throw e instanceof Error ? e : new Error("Error al ejecutar el motor");
