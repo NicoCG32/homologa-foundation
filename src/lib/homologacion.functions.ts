@@ -303,9 +303,14 @@ export const analizarSemantica = createServerFn({ method: "POST" })
     const resultados = (unwrap(
       await db
         .from("resultados")
-        .select(`id, candidato_id, cargos:candidato_id(${campos})`)
+        .select(`id, candidato_id, score_deterministico, cargos:candidato_id(${campos})`)
         .eq("ejecucion_id", data.ejecucion_id),
-    ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
+    ) ?? []) as {
+      id: string;
+      candidato_id: string;
+      score_deterministico: number | null;
+      cargos: CargoRow | null;
+    }[];
 
     const candidatos = resultados
       .filter((r) => r.cargos)
