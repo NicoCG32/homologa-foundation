@@ -9,6 +9,7 @@ import {
   listCriterios,
 } from "@/lib/criterios.functions";
 import { PesosEditor, pesosIniciales, type MapaPesos } from "@/components/pesos-editor";
+import { getPesosScore, setPesosScore } from "@/lib/configuracion.functions";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/criterios")({
