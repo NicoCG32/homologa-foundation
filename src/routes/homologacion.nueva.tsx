@@ -212,8 +212,8 @@ function NuevaHomologacion() {
                     <div>
                       <strong>
                         {i + 1}. {p.cargo.nombre}
-                      </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
-                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{pct(p.score)}</span>
+                    </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
+                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{(() => { const f = semOk?.finales.find((item) => item.candidato_id === p.cargo.id)?.score_final; return f == null ? "Pendiente" : pct(f); })()}</span>
                     <div className="score-detail">
                     <p className="text-muted-foreground">
                       Coincidencias:{" "}
