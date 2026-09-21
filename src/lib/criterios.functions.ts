@@ -8,8 +8,7 @@ export type CriterioCampo =
   | "codigo_cargo"
   | "nivel_jerarquico"
   | "experiencia"
-  | "requisitos"
-  | "tipo_empresa";
+  | "requisitos";
 
 export const CAMPOS_CRITERIO: Record<CriterioCampo, string> = {
   nombre: "Nombre del cargo",
@@ -20,8 +19,8 @@ export const CAMPOS_CRITERIO: Record<CriterioCampo, string> = {
   nivel_jerarquico: "Nivel jerárquico",
   experiencia: "Experiencia requerida",
   requisitos: "Requisitos / formación",
-  tipo_empresa: "Tamaño de empresa",
 };
+
 
 export type Criterio = {
   id: string;
