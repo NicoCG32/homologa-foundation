@@ -39,6 +39,18 @@ function EjecucionDetalle() {
   const cargo = ejecucion.cargos;
   const sueldoInterno = cargo?.sueldo != null ? Number(cargo.sueldo) : null;
   const analisis = data.analisis;
+  const decision = data.decision;
+  const scoresDecision = (decision?.scores_utilizados ?? null) as {
+    score_deterministico: number | null;
+    score_semantico: number | null;
+    score_final: number | null;
+  } | null;
+  const elegido = decision
+    ? resultados.find((r) => r.candidato_id === decision.candidato_id)
+    : undefined;
+  const sueldoElegido = elegido?.cargos?.sueldo ?? null;
+  const diferencia =
+    sueldoInterno != null && sueldoElegido != null ? Number(sueldoElegido) - sueldoInterno : null;
   const validada = (analisis?.respuesta_validada ?? null) as {
     candidato_recomendado_id: string;
     score_semantico: number;
