@@ -124,6 +124,34 @@ function CriteriosPage() {
       )}
 
       {aviso && <p className="text-sm text-muted-foreground">{aviso}</p>}
+
+      <div className="rounded-lg border p-4 space-y-3">
+        <h2 className="font-medium">Ponderación del resultado</h2>
+        <p className="text-sm text-muted-foreground">
+          El resultado final combina la comparación por reglas y el análisis de la IA. Ambas partes
+          suman 100%. Si la IA no alcanza a analizar, el resultado final queda pendiente y la
+          comparación por reglas se conserva intacta.
+        </p>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={pesoMotor}
+            onChange={(e) => setPesoMotor(Number(e.target.value))}
+            className="flex-1"
+            aria-label="Porcentaje de la comparación por reglas"
+          />
+          <span className="text-sm whitespace-nowrap">
+            Reglas {pesoMotor}% · IA {100 - pesoMotor}%
+          </span>
+        </div>
+        <Button type="button" disabled={hibridoMut.isPending} onClick={() => hibridoMut.mutate()}>
+          {hibridoMut.isPending ? "Guardando…" : "Guardar ponderación del resultado"}
+        </Button>
+        {avisoHibrido && <p className="text-sm text-muted-foreground">{avisoHibrido}</p>}
+      </div>
     </div>
   );
 }
