@@ -52,7 +52,20 @@ UI (homologacion.nueva.tsx)
 |-------|--------|---------------|
 | `score_deterministico` | Motor, 0–1 | Calculado siempre |
 | `score_semantico` | Gemini, 0–100 | Sólo si el análisis IA se ejecuta con éxito |
-| `score_final` | Consolidado | Hoy equivale al score del motor |
+| `score_final` | Híbrido, 0–1 | `det × peso_motor + (sem/100) × peso_ia` |
+
+La ponderación por defecto es **70% motor / 30% IA**, editable en **Criterios** (ambas partes suman
+100%) y almacenada en `configuracion.pesos_score`.
 
 Si Gemini falla, los scores determinísticos **no se alteran**: el análisis queda registrado con
-estado `ERROR` y su mensaje, y la homologación sigue siendo utilizable.
+estado `ERROR` y su mensaje, el `score_final` queda en `NULL` (se muestra "Pendiente") y la
+homologación sigue siendo utilizable.
+
+## Decisión del analista y benchmark
+
+Tras el análisis IA, el analista confirma un único cargo de referencia. Se guarda en `decisiones`:
+candidato, decisión, comentario, nombre del analista, fecha y los scores vigentes al decidir. La
+decisión no modifica ningún score.
+
+`getEjecucion` sólo devuelve bandas salariales cuando existe decisión: el benchmark no se muestra
+antes de la selección.
