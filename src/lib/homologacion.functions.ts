@@ -230,7 +230,8 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
             ejecucion_id: ejecucion.id,
             candidato_id: p.cargo.id,
             score_deterministico: p.score,
-            score_final: p.score,
+            // El score final es híbrido: sólo existe cuando el análisis IA entrega score semántico.
+            score_final: null,
           })),
         );
         if (error) throw new Error(error.message);
