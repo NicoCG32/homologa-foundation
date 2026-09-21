@@ -9,6 +9,7 @@ import {
   listCriterios,
 } from "@/lib/criterios.functions";
 import { PesosEditor, pesosIniciales, type MapaPesos } from "@/components/pesos-editor";
+import { getPesosScore, setPesosScore } from "@/lib/configuracion.functions";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/criterios")({
@@ -31,7 +32,12 @@ function CriteriosPage() {
   const asegurar = useServerFn(asegurarCriterios);
   const guardar = useServerFn(guardarPesos);
 
+  const getHibrido = useServerFn(getPesosScore);
+  const setHibrido = useServerFn(setPesosScore);
+
   const [pesos, setPesos] = useState<MapaPesos>({});
+  const [pesoMotor, setPesoMotor] = useState(70);
+  const [avisoHibrido, setAvisoHibrido] = useState<string | null>(null);
   const [obligatorios, setObligatorios] = useState<Record<string, boolean>>({});
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -44,6 +50,21 @@ function CriteriosPage() {
   });
 
   const criterios = data ?? [];
+
+  const hibrido = useQuery({ queryKey: ["pesos-score"], queryFn: () => getHibrido() });
+
+  useEffect(() => {
+    if (hibrido.data) setPesoMotor(hibrido.data.motor);
+  }, [hibrido.data]);
+
+  const hibridoMut = useMutation({
+    mutationFn: () => setHibrido({ data: { motor: pesoMotor, ia: 100 - pesoMotor } }),
+    onSuccess: () => {
+      setAvisoHibrido("Ponderación del resultado guardada.");
+      qc.invalidateQueries({ queryKey: ["pesos-score"] });
+    },
+    onError: (e: Error) => setAvisoHibrido(e.message),
+  });
 
   useEffect(() => {
     if (!criterios.length) return;
@@ -103,6 +124,34 @@ function CriteriosPage() {
       )}
 
       {aviso && <p className="text-sm text-muted-foreground">{aviso}</p>}
+
+      <div className="rounded-lg border p-4 space-y-3">
+        <h2 className="font-medium">Ponderación del resultado</h2>
+        <p className="text-sm text-muted-foreground">
+          El resultado final combina la comparación por reglas y el análisis de la IA. Ambas partes
+          suman 100%. Si la IA no alcanza a analizar, el resultado final queda pendiente y la
+          comparación por reglas se conserva intacta.
+        </p>
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={pesoMotor}
+            onChange={(e) => setPesoMotor(Number(e.target.value))}
+            className="flex-1"
+            aria-label="Porcentaje de la comparación por reglas"
+          />
+          <span className="text-sm whitespace-nowrap">
+            Reglas {pesoMotor}% · IA {100 - pesoMotor}%
+          </span>
+        </div>
+        <Button type="button" disabled={hibridoMut.isPending} onClick={() => hibridoMut.mutate()}>
+          {hibridoMut.isPending ? "Guardando…" : "Guardar ponderación del resultado"}
+        </Button>
+        {avisoHibrido && <p className="text-sm text-muted-foreground">{avisoHibrido}</p>}
+      </div>
     </div>
   );
 }

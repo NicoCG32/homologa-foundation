@@ -43,6 +43,13 @@
       "when": 1789429764829,
       "tag": "0005_create_presets_pesos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790027232911,
+      "tag": "0006_score_hibrido_y_decision_analista",
+      "breakpoints": true
     }
   ]
 }

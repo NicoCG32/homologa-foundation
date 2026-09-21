@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DecisionForm } from "@/components/decision-form";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
@@ -212,8 +213,8 @@ function NuevaHomologacion() {
                     <div>
                       <strong>
                         {i + 1}. {p.cargo.nombre}
-                      </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
-                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{pct(p.score)}</span>
+                    </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
+                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{(() => { const f = semOk?.finales.find((item) => item.candidato_id === p.cargo.id)?.score_final; return f == null ? "Pendiente" : pct(f); })()}</span>
                     <div className="score-detail">
                     <p className="text-muted-foreground">
                       Coincidencias:{" "}
@@ -319,9 +320,20 @@ function NuevaHomologacion() {
                 }`
               : " · análisis IA pendiente"}
           </p>
+          <div className="mt-4 border-t pt-4">
+            <DecisionForm
+              ejecucionId={res.ejecucion_id}
+              candidatos={res.preseleccionados.map((p) => ({
+                id: p.cargo.id,
+                nombre: p.cargo.nombre,
+                empresa: p.cargo.empresa_nombre,
+              }))}
+              sugerido={semOk?.analisis.candidato_recomendado_id ?? null}
+            />
+          </div>
           <p className="mt-3 text-sm">
             <Link className="underline" to="/historial/$id" params={{ id: res.ejecucion_id }}>
-              Ver ejecución en el historial y registrar la decisión
+              Ver la homologación en el historial y la comparación salarial
             </Link>
           </p>
         </section>

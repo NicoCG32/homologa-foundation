@@ -51,6 +51,16 @@ esa homologación, para reproducibilidad).
 ### `resultados`
 `id`, `ejecucion_id` → `ejecuciones`, `candidato_id` → `cargos`, `score_deterministico`,
 `score_semantico`, `score_final`.
+`score_final` es híbrido y queda `NULL` mientras no exista análisis IA válido.
+
+### `configuracion`
+`clave` (PK), `valor` (jsonb), `updated_at`. Clave `pesos_score`: `{"motor": 70, "ia": 30}`,
+ponderación del score final híbrido (debe sumar 100).
+
+### `decisiones`
+`id`, `ejecucion_id` → `ejecuciones` (**único**), `candidato_id` → `cargos`, `decision`,
+`comentario`, `usuario`, `scores_utilizados` (jsonb con los tres scores al decidir), `fecha`.
+Una decisión por ejecución; no modifica ningún score.
 
 ### `analisis_semanticos`
 `id`, `ejecucion_id`, `estado` (`OK`/`ERROR`), `modelo`, `prompt_version`, `candidatos_enviados`,

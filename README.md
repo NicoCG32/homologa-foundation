@@ -34,8 +34,8 @@ coincidencia y cada diferencia.
 Excel  →  Validación  →  Cargos en base
                               │
                               ▼
-            Cargo  →  Revisión  →  Candidatos  →  Análisis IA  →  Decisión  →  Historial
-                         (pesos)     (motor)       (Gemini)
+            Cargo  →  Revisión  →  Candidatos  →  Análisis IA  →  Score híbrido  →  Decisión  →  Benchmark
+                         (pesos)     (motor)       (Gemini)      (70/30)        (analista)
 ```
 
 ## Principios
@@ -47,6 +47,35 @@ Excel  →  Validación  →  Cargos en base
 | **El motor manda** | La IA sólo interpreta candidatos ya preseleccionados por reglas |
 | **El código manda** | Áreas y subáreas se identifican por código; se conserva el nombre de cada fuente |
 | **Reproducible** | La ponderación aplicada queda guardada en cada ejecución |
+
+## El resultado final
+
+El score final es **híbrido** y mantiene sus tres componentes separados y trazables:
+
+```text
+score_final = score_deterministico × peso_motor  +  (score_semantico / 100) × peso_ia
+```
+
+| Componente | Origen | Rango |
+|---|---|---|
+| `score_deterministico` | Motor de reglas | 0–1 |
+| `score_semantico` | Gemini | 0–100 |
+| `score_final` | Combinación ponderada | 0–1 |
+
+Ponderación inicial: **70% motor / 30% IA**. Es configurable en la pestaña **Criterios** y las dos
+partes deben sumar 100%; el valor vive en `configuracion.pesos_score` y puede cambiarse en cualquier
+momento sin tocar el código.
+
+Si el análisis IA falla o aún no se ejecuta, el score final queda **pendiente** (`NULL`): no se
+inventa un score semántico ni un score final, y el score determinístico se conserva intacto.
+
+## La decisión del analista
+
+Después del análisis IA, el analista confirma **un único** cargo de referencia. Se guardan el
+candidato elegido, la decisión, el comentario, la fecha, el nombre del analista y los scores vigentes
+en ese momento. La decisión **no modifica ningún score**.
+
+La comparación salarial (benchmark) sólo aparece **después** de esa confirmación.
 
 ## Pestañas
 

@@ -42,16 +42,25 @@ export const getEjecucion = createServerFn({ method: "GET" })
         .limit(1)
         .maybeSingle(),
     );
-    const candidatoIds = (resultados ?? []).map((r) => r.candidato_id);
-    const bandas = candidatoIds.length
+    const decision = unwrap(
+      await getDb()
+        .from("decisiones")
+        .select(
+          "id, candidato_id, decision, comentario, usuario, fecha, scores_utilizados, cargos:candidato_id(id, nombre, empresas(nombre))",
+        )
+        .eq("ejecucion_id", data.id)
+        .maybeSingle(),
+    );
+    // El benchmark salarial sólo existe después de la selección del analista.
+    const bandas = decision
       ? unwrap(
           await getDb()
             .from("bandas_salariales")
             .select("cargo_id, tipo_empresa, p25, p50, p75, promedio")
-            .in("cargo_id", candidatoIds),
+            .eq("cargo_id", decision.candidato_id),
         )
       : [];
-    return { ejecucion, resultados, analisis, bandas };
+    return { ejecucion, resultados, analisis, decision, bandas };
   });
 
 
@@ -221,7 +230,8 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
             ejecucion_id: ejecucion.id,
             candidato_id: p.cargo.id,
             score_deterministico: p.score,
-            score_final: p.score,
+            // El score final es híbrido: sólo existe cuando el análisis IA entrega score semántico.
+            score_final: null,
           })),
         );
         if (error) throw new Error(error.message);
@@ -293,9 +303,14 @@ export const analizarSemantica = createServerFn({ method: "POST" })
     const resultados = (unwrap(
       await db
         .from("resultados")
-        .select(`id, candidato_id, cargos:candidato_id(${campos})`)
+        .select(`id, candidato_id, score_deterministico, cargos:candidato_id(${campos})`)
         .eq("ejecucion_id", data.ejecucion_id),
-    ) ?? []) as { id: string; candidato_id: string; cargos: CargoRow | null }[];
+    ) ?? []) as {
+      id: string;
+      candidato_id: string;
+      score_deterministico: number | null;
+      cargos: CargoRow | null;
+    }[];
 
     const candidatos = resultados
       .filter((r) => r.cargos)
@@ -346,15 +361,91 @@ export const analizarSemantica = createServerFn({ method: "POST" })
       respuesta_validada: validada,
     });
 
-    // Solo se escribe score_semantico; score_deterministico y score_final quedan intactos.
+    // score_deterministico nunca se toca. Se escribe score_semantico y, con ambos,
+    // el score final híbrido: determinístico (0–1) × peso motor + semántico (0–100) × peso IA.
+    const { getPesosScore } = await import("./configuracion.functions");
+    const pesos = await getPesosScore();
+    const finales: { candidato_id: string; score_final: number }[] = [];
+
     for (const s of validada.scores_por_candidato) {
       const fila = resultados.find((r) => r.candidato_id === s.candidato_id);
       if (!fila) continue;
+      const det = fila.score_deterministico;
+      const final =
+        det === null || det === undefined
+          ? null
+          : Math.round(
+              ((Number(det) * pesos.motor + (Number(s.score_semantico) / 100) * pesos.ia) / 100) *
+                10000,
+            ) / 10000;
+      if (final !== null) finales.push({ candidato_id: s.candidato_id, score_final: final });
       await db
         .from("resultados")
-        .update({ score_semantico: s.score_semantico })
+        .update({ score_semantico: s.score_semantico, score_final: final })
         .eq("id", fila.id);
     }
 
-    return { ok: true as const, analisis: validada, candidatos };
+    return { ok: true as const, analisis: validada, candidatos, pesos, finales };
+  });
+
+/**
+ * Registra la decisión del analista: un único cargo de referencia confirmado.
+ * No modifica ningún score; sólo deja constancia de los scores usados al decidir.
+ */
+export const guardarDecision = createServerFn({ method: "POST" })
+  .inputValidator(
+    (input: {
+      ejecucion_id: string;
+      candidato_id: string;
+      usuario: string;
+      comentario?: string | null;
+    }) => {
+      if (!input?.ejecucion_id) throw new Error("Falta la ejecución");
+      if (!input?.candidato_id) throw new Error("Debes seleccionar un cargo de referencia");
+      const usuario = String(input.usuario ?? "").trim();
+      if (!usuario) throw new Error("Indica el nombre del analista que confirma");
+      return {
+        ejecucion_id: String(input.ejecucion_id),
+        candidato_id: String(input.candidato_id),
+        usuario,
+        comentario: input.comentario ? String(input.comentario).trim() : null,
+      };
+    },
+  )
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    const db = getDb();
+
+    const fila = unwrap(
+      await db
+        .from("resultados")
+        .select("score_deterministico, score_semantico, score_final")
+        .eq("ejecucion_id", data.ejecucion_id)
+        .eq("candidato_id", data.candidato_id)
+        .maybeSingle(),
+    );
+    if (!fila) throw new Error("El cargo elegido no es un candidato de esta homologación");
+
+    return unwrap(
+      await db
+        .from("decisiones")
+        .upsert(
+          {
+            ejecucion_id: data.ejecucion_id,
+            candidato_id: data.candidato_id,
+            decision: "CONFIRMADA",
+            usuario: data.usuario,
+            comentario: data.comentario,
+            fecha: new Date().toISOString(),
+            scores_utilizados: {
+              score_deterministico: fila.score_deterministico,
+              score_semantico: fila.score_semantico,
+              score_final: fila.score_final,
+            },
+          },
+          { onConflict: "ejecucion_id" },
+        )
+        .select("id, candidato_id, usuario, comentario, fecha, scores_utilizados")
+        .single(),
+    );
   });
