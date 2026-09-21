@@ -292,3 +292,16 @@
   .danger-head { grid-template-columns: 22px minmax(0,1fr); }
   .danger-head > button { grid-column: 1 / -1; justify-self: start; }
 }
+
+/* Benchmark salarial (posterior a la decisión del analista) */
+.benchmark-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.benchmark-grid dt { font-size: 12px; color: hsl(var(--muted-foreground)); }
+.benchmark-grid dd { font-weight: 600; }
+.benchmark-table th, .benchmark-table td { text-align: left; }
+@media (max-width: 620px) {
+  .benchmark-grid { grid-template-columns: 1fr; }
+  .benchmark-table thead { display: none; }
+  .benchmark-table tr { display: grid; gap: 2px; padding: 8px 0; border-bottom: 1px solid hsl(var(--border)); }
+  .benchmark-table td { border: 0; padding: 0; }
+  .benchmark-table td::before { content: attr(data-label) ": "; color: hsl(var(--muted-foreground)); font-size: 12px; }
+}
