@@ -567,6 +567,17 @@ export const guardarDecision = createServerFn({ method: "POST" })
     );
     if (!fila) throw new Error("El cargo elegido no es un candidato de esta homologación");
 
+    // Si existe preselección, el definitivo debe estar entre los preseleccionados.
+    const preseleccion =
+      unwrap(
+        await db
+          .from("decision_preseleccion")
+          .select("candidato_id")
+          .eq("ejecucion_id", data.ejecucion_id),
+      ) ?? [];
+    if (preseleccion.length && !preseleccion.some((p) => p.candidato_id === data.candidato_id))
+      throw new Error("El cargo definitivo debe estar entre los candidatos preseleccionados");
+
     return unwrap(
       await db
         .from("decisiones")
