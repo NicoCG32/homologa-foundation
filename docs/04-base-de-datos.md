@@ -65,6 +65,11 @@ ponderación del score final híbrido (debe sumar 100).
 `tamano_empresa` (tamaño elegido para el benchmark, nullable), `fecha`.
 Una decisión por ejecución; no modifica ningún score.
 
+### `decision_preseleccion`
+`id`, `ejecucion_id` → `ejecuciones`, `candidato_id` → `cargos`, `scores_utilizados` (jsonb),
+`created_at`. Único por `(ejecucion_id, candidato_id)`. Candidatos preseleccionados por el analista
+antes de la decisión definitiva; no modifica ningún score.
+
 
 ### `analisis_semanticos`
 `id`, `ejecucion_id`, `estado` (`OK`/`ERROR`), `modelo`, `prompt_version`, `candidatos_enviados`,
