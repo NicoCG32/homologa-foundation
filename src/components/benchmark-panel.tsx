@@ -92,20 +92,16 @@ export function BenchmarkPanel({
   });
 
   const banda = tamano ? bandas.find((b) => b.tipo_empresa === tamano) : undefined;
-  const actual = num(sueldoInterno);
-
   const filas: { etiqueta: string; corta: string; v: number | string | null | undefined }[] = [
-    { etiqueta: "Remuneración actual", corta: "Actual", v: sueldoInterno },
     { etiqueta: "P25", corta: "P25", v: banda?.p25 ?? null },
     { etiqueta: "P50 (mediana)", corta: "P50", v: banda?.p50 ?? null },
     { etiqueta: "P75", corta: "P75", v: banda?.p75 ?? null },
-    { etiqueta: "Promedio", corta: "Prom.", v: banda?.promedio ?? null },
+    { etiqueta: "Promedio/PP", corta: "PP", v: banda?.promedio ?? null },
   ];
 
   const datosGrafico = filas.map((fila) => ({
     indicador: fila.corta,
     valor: num(fila.v),
-    actual: fila.corta === "Actual",
   }));
 
   return (
@@ -168,7 +164,7 @@ export function BenchmarkPanel({
                   />
                   <Bar dataKey="valor" radius={[5, 5, 0, 0]} maxBarSize={64}>
                     {datosGrafico.map((dato) => (
-                      <Cell key={dato.indicador} fill={dato.actual ? "var(--primary)" : "var(--chart-2)"} />
+                      <Cell key={dato.indicador} fill="var(--chart-2)" />
                     ))}
                     <LabelList dataKey="valor" position="top" formatter={(v: number) => valorExactoGrafico(v)} className="benchmark-chart-label" />
                   </Bar>
@@ -177,7 +173,6 @@ export function BenchmarkPanel({
             </div>
             <div className="benchmark-chart-boxes" aria-hidden="true">
               {datosGrafico.map((dato) => <span key={dato.indicador}>{dato.indicador}</span>)}
-              <strong>Empresa</strong>
               <strong>Encuesta</strong>
             </div>
           </div>
@@ -187,24 +182,15 @@ export function BenchmarkPanel({
               <tr>
                 <th>Indicador</th>
                 <th>Valor</th>
-                <th>Diferencia con la remuneración actual</th>
               </tr>
             </thead>
             <tbody>
-              {filas.map((f) => {
-                const v = num(f.v);
-                const esActual = f.corta === "Actual";
-                const dif = !esActual && actual != null && v != null ? actual - v : null;
-                return (
-                  <tr key={f.etiqueta} className={esActual ? "is-current" : undefined}>
-                    <td data-label="Indicador">{f.etiqueta}</td>
-                    <td data-label="Valor">{valor(f.v)}</td>
-                    <td data-label="Diferencia">
-                      {esActual ? "Referencia" : dif == null ? ND : `${dif > 0 ? "+" : ""}${formatSueldo(dif)}`}
-                    </td>
-                  </tr>
-                );
-              })}
+              {filas.map((f) => (
+                <tr key={f.etiqueta}>
+                  <td data-label="Indicador">{f.etiqueta}</td>
+                  <td data-label="Valor">{valor(f.v)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
