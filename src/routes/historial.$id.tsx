@@ -198,12 +198,6 @@ function EjecucionDetalle() {
                 · score semántico {validada.score_semantico} · confianza {validada.confianza}
               </p>
               <p className="text-muted-foreground">{validada.explicacion_breve}</p>
-              <p className="text-muted-foreground">
-                Similitudes: {validada.similitudes.length ? validada.similitudes.join(", ") : "ninguna"}
-              </p>
-              <p className="text-muted-foreground">
-                Diferencias: {validada.diferencias.length ? validada.diferencias.join(", ") : "ninguna"}
-              </p>
               <p className="text-xs text-muted-foreground">
                 Modelo {analisis.modelo} · prompt {analisis.prompt_version}
               </p>

@@ -310,12 +310,6 @@ function NuevaHomologacion() {
                       </strong>{" "}
                       — score semántico {s.score_semantico}
                     </p>
-                    <p className="text-muted-foreground">
-                      Similitudes: {s.similitudes.length ? s.similitudes.join(", ") : "ninguna"}
-                    </p>
-                    <p className="text-muted-foreground">
-                      Diferencias: {s.diferencias.length ? s.diferencias.join(", ") : "ninguna"}
-                    </p>
                     <p className="text-muted-foreground">{s.explicacion_breve}</p>
                   </li>
                 ))}
