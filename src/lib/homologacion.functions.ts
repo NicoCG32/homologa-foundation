@@ -51,6 +51,15 @@ export const getEjecucion = createServerFn({ method: "GET" })
         .eq("ejecucion_id", data.id)
         .maybeSingle(),
     );
+    // Preselección múltiple del analista (vacía en decisiones anteriores a esta etapa).
+    const preseleccion =
+      unwrap(
+        await getDb()
+          .from("decision_preseleccion")
+          .select("candidato_id, scores_utilizados, created_at, cargos:candidato_id(id, nombre, empresas(nombre))")
+          .eq("ejecucion_id", data.id)
+          .order("created_at", { ascending: true }),
+      ) ?? [];
     // El benchmark salarial sólo existe después de la selección del analista.
     const bandas = decision
       ? unwrap(
@@ -60,7 +69,112 @@ export const getEjecucion = createServerFn({ method: "GET" })
             .eq("cargo_id", decision.candidato_id),
         )
       : [];
-    return { ejecucion, resultados, analisis, decision, bandas };
+    return { ejecucion, resultados, analisis, decision, bandas, preseleccion };
+  });
+
+/** Preseleccionados de una ejecución con sus scores y bandas de mercado (sólo informativo). */
+export const getPreseleccion = createServerFn({ method: "GET" })
+  .inputValidator((input: { ejecucion_id: string }) => {
+    if (!input?.ejecucion_id) throw new Error("Falta la ejecución");
+    return { ejecucion_id: String(input.ejecucion_id) };
+  })
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    const db = getDb();
+    const filas =
+      unwrap(
+        await db
+          .from("decision_preseleccion")
+          .select("candidato_id, created_at, cargos:candidato_id(id, nombre, empresas(nombre))")
+          .eq("ejecucion_id", data.ejecucion_id)
+          .order("created_at", { ascending: true }),
+      ) ?? [];
+    if (!filas.length) return [];
+    const ids = filas.map((f) => f.candidato_id);
+    const resultados =
+      unwrap(
+        await db
+          .from("resultados")
+          .select("candidato_id, score_deterministico, score_semantico, score_final")
+          .eq("ejecucion_id", data.ejecucion_id)
+          .in("candidato_id", ids),
+      ) ?? [];
+    const bandas =
+      unwrap(
+        await db
+          .from("bandas_salariales")
+          .select("cargo_id, tipo_empresa, p25, p50, p75, promedio, fuente, anio")
+          .in("cargo_id", ids),
+      ) ?? [];
+    return filas.map((f) => {
+      const r = resultados.find((x) => x.candidato_id === f.candidato_id);
+      return {
+        id: f.candidato_id,
+        nombre: f.cargos?.nombre ?? f.candidato_id,
+        empresa: f.cargos?.empresas?.nombre ?? null,
+        score_deterministico: r?.score_deterministico ?? null,
+        score_semantico: r?.score_semantico ?? null,
+        score_final: r?.score_final ?? null,
+        bandas: bandas.filter((b) => b.cargo_id === f.candidato_id),
+      };
+    });
+  });
+
+/**
+ * Guarda la preselección múltiple del analista (N candidatos).
+ * Reemplaza la preselección anterior mientras no exista decisión definitiva.
+ * No modifica ningún score; sólo guarda una copia de los scores del momento.
+ */
+export const guardarPreseleccion = createServerFn({ method: "POST" })
+  .inputValidator((input: { ejecucion_id: string; candidato_ids: string[] }) => {
+    if (!input?.ejecucion_id) throw new Error("Falta la ejecución");
+    const ids = Array.from(
+      new Set((Array.isArray(input.candidato_ids) ? input.candidato_ids : []).map(String).filter(Boolean)),
+    );
+    if (!ids.length) throw new Error("Marca al menos un candidato");
+    return { ejecucion_id: String(input.ejecucion_id), candidato_ids: ids };
+  })
+  .handler(async ({ data }) => {
+    const { getDb, unwrap } = await import("./supabase-public.server");
+    const db = getDb();
+    const decision = unwrap(
+      await db.from("decisiones").select("id").eq("ejecucion_id", data.ejecucion_id).maybeSingle(),
+    );
+    if (decision) throw new Error("La decisión definitiva ya fue registrada para esta homologación");
+
+    const resultados =
+      unwrap(
+        await db
+          .from("resultados")
+          .select("candidato_id, score_deterministico, score_semantico, score_final")
+          .eq("ejecucion_id", data.ejecucion_id)
+          .in("candidato_id", data.candidato_ids),
+      ) ?? [];
+    if (resultados.length !== data.candidato_ids.length)
+      throw new Error("Algún cargo marcado no es candidato de esta homologación");
+
+    const { error: delError } = await db
+      .from("decision_preseleccion")
+      .delete()
+      .eq("ejecucion_id", data.ejecucion_id);
+    if (delError) throw new Error(delError.message);
+
+    const { error } = await db.from("decision_preseleccion").insert(
+      data.candidato_ids.map((id) => {
+        const r = resultados.find((x) => x.candidato_id === id)!;
+        return {
+          ejecucion_id: data.ejecucion_id,
+          candidato_id: id,
+          scores_utilizados: {
+            score_deterministico: r.score_deterministico,
+            score_semantico: r.score_semantico,
+            score_final: r.score_final,
+          },
+        };
+      }),
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true as const, total: data.candidato_ids.length };
   });
 
 /** Guarda el tamaño de empresa elegido para ver el benchmark. No toca scores. */
