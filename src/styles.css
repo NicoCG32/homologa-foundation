@@ -302,11 +302,10 @@
 .benchmark-chart h3 { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
 .benchmark-chart-plot { height: 238px; }
 .benchmark-chart-label { fill: var(--foreground); font-size: 10px; font-weight: 700; }
-.benchmark-chart-boxes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-left: 56px; border-top: 1px solid var(--border); border-left: 1px solid var(--border); color: var(--muted-foreground); }
+.benchmark-chart-boxes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-left: 56px; border-top: 1px solid var(--border); border-left: 1px solid var(--border); color: var(--muted-foreground); }
 .benchmark-chart-boxes span { min-width: 0; padding: 9px 3px; border-right: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: 600; }
 .benchmark-chart-boxes strong { padding: 8px 3px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); text-align: center; font-size: 11px; font-weight: 600; }
-.benchmark-chart-boxes strong:first-of-type { grid-column: 1; }
-.benchmark-chart-boxes strong:last-of-type { grid-column: 2 / 6; }
+.benchmark-chart-boxes strong:last-of-type { grid-column: 1 / 5; }
 .benchmark-table { font-variant-numeric: tabular-nums; }
 .benchmark-table th, .benchmark-table td { text-align: left; }
 .benchmark-table th:nth-child(n+2), .benchmark-table td:nth-child(n+2) { text-align: right; }
