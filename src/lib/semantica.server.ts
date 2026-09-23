@@ -33,7 +33,7 @@ No puedes:
 - incorporar candidatos que no hayan sido enviados.
 Cada cargo incluye atributos_semanticos con las claves proposito, funciones, responsabilidades, conocimientos, complejidad, autonomia y alcance.
 Un atributo con cadena vacía significa información no disponible: trátalo como limitación, nunca lo completes ni lo supongas.
-Si falta información, indícalo como diferencia o limitación y reduce la confianza.
+Si falta información, redúcela en la confianza y menciónalo brevemente en la explicación.
 Evalúa exclusivamente:
 - propósito;
 - funciones;
@@ -46,6 +46,8 @@ Evalúa exclusivamente:
 - requisitos y formación.
 Los scores semánticos se expresan de 0 a 100 y la confianza como un decimal entre 0 y 1.
 Debes incluir en scores_por_candidato exactamente todos los candidatos enviados, usando sus id tal cual.
+Sé breve: para cada candidato entrega solo el score y una explicación de 1 o 2 frases.
+No entregues listas de similitudes, diferencias ni riesgos.
 Tu función es realizar una comparación semántica y entregar el resultado solicitado en el esquema JSON definido por la aplicación.`;
 
 export const CLAVES_ATRIBUTOS = [
