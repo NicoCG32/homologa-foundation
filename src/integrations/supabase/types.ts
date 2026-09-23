@@ -224,6 +224,45 @@ export type Database = {
         }
         Relationships: []
       }
+      decision_preseleccion: {
+        Row: {
+          candidato_id: string
+          created_at: string
+          ejecucion_id: string
+          id: string
+          scores_utilizados: Json
+        }
+        Insert: {
+          candidato_id: string
+          created_at?: string
+          ejecucion_id: string
+          id?: string
+          scores_utilizados?: Json
+        }
+        Update: {
+          candidato_id?: string
+          created_at?: string
+          ejecucion_id?: string
+          id?: string
+          scores_utilizados?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_preseleccion_candidato_id_fkey"
+            columns: ["candidato_id"]
+            isOneToOne: false
+            referencedRelation: "cargos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_preseleccion_ejecucion_id_fkey"
+            columns: ["ejecucion_id"]
+            isOneToOne: false
+            referencedRelation: "ejecuciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decisiones: {
         Row: {
           candidato_id: string

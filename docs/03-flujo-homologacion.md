@@ -63,12 +63,19 @@ homologación sigue siendo utilizable.
 
 ## Decisión del analista y benchmark
 
-Tras el análisis IA, el analista confirma un único cargo de referencia. Se guarda en `decisiones`:
-candidato, decisión, comentario, nombre del analista, fecha y los scores vigentes al decidir. La
-decisión no modifica ningún score.
+Tras el análisis IA la decisión (`DecisionForm`) tiene dos etapas:
 
-`getEjecucion` sólo devuelve bandas salariales cuando existe decisión: el benchmark no se muestra
-antes de la selección.
+1. **Preselección múltiple** — `guardarPreseleccion` guarda N candidatos en `decision_preseleccion`
+   (con copia de sus scores). Se puede rehacer mientras no exista decisión definitiva. El candidato
+   sugerido por Gemini sólo se etiqueta.
+2. **Selección final** — `getPreseleccion` devuelve los preseleccionados con sus scores y bandas; se
+   muestran apilados para el tamaño elegido (sólo informativo). El analista elige uno y
+   `guardarDecision` lo registra en `decisiones` (una fila por ejecución): candidato, decisión,
+   comentario, analista, fecha, tamaño y scores vigentes. Si hay preselección, el definitivo debe
+   pertenecer a ella; las decisiones antiguas sin preselección siguen siendo válidas.
+
+Ninguna etapa modifica scores. `getEjecucion` sólo devuelve las bandas del benchmark final cuando
+existe decisión, y devuelve `preseleccion` para mostrarla en el historial.
 
 ### Benchmark por tamaño de empresa
 

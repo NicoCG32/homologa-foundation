@@ -71,11 +71,19 @@ inventa un score semántico ni un score final, y el score determinístico se con
 
 ## La decisión del analista
 
-Después del análisis IA, el analista confirma **un único** cargo de referencia. Se guardan el
-candidato elegido, la decisión, el comentario, la fecha, el nombre del analista y los scores vigentes
-en ese momento. La decisión **no modifica ningún score**.
+La decisión ocurre en dos etapas:
 
-La comparación salarial (benchmark) sólo aparece **después** de esa confirmación.
+1. **Preselección**: el analista marca **varios** candidatos (N), viendo Score motor, Score Gemini y
+   Score final de cada uno. La sugerencia de la IA es sólo una etiqueta; nunca se marca sola. La
+   preselección queda guardada para la homologación.
+2. **Selección final**: se muestran sólo los preseleccionados, uno bajo otro, con sus datos de
+   mercado (P25, P50, P75, promedio, fuente y año) para el tamaño de empresa elegido. El analista
+   confirma **un único** cargo definitivo.
+
+Se guardan el candidato definitivo, la decisión, el comentario, la fecha, el nombre del analista, el
+tamaño de empresa y los scores vigentes en ese momento. Ninguna etapa **modifica ningún score**.
+
+El benchmark gráfico final sólo aparece **después** de confirmar, y sólo para el cargo definitivo.
 
 ## Pestañas
 

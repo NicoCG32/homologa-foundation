@@ -10,3 +10,4 @@
 - [x] Tamaño de empresa opcional con aviso en Empresas
 - [x] Documentar el proyecto en docs/ y renovar el README
 - [x] Incorporar tabla y gráfico comparativo al benchmark salarial
+- [x] Decisión en dos etapas: preselección múltiple y selección final única
