@@ -33,7 +33,7 @@ No puedes:
 - incorporar candidatos que no hayan sido enviados.
 Cada cargo incluye atributos_semanticos con las claves proposito, funciones, responsabilidades, conocimientos, complejidad, autonomia y alcance.
 Un atributo con cadena vacía significa información no disponible: trátalo como limitación, nunca lo completes ni lo supongas.
-Si falta información, indícalo como diferencia o limitación y reduce la confianza.
+Si falta información, redúcela en la confianza y menciónalo brevemente en la explicación.
 Evalúa exclusivamente:
 - propósito;
 - funciones;
@@ -46,6 +46,8 @@ Evalúa exclusivamente:
 - requisitos y formación.
 Los scores semánticos se expresan de 0 a 100 y la confianza como un decimal entre 0 y 1.
 Debes incluir en scores_por_candidato exactamente todos los candidatos enviados, usando sus id tal cual.
+Sé breve: para cada candidato entrega solo el score y una explicación de 1 o 2 frases.
+No entregues listas de similitudes, diferencias ni riesgos.
 Tu función es realizar una comparación semántica y entregar el resultado solicitado en el esquema JSON definido por la aplicación.`;
 
 export const CLAVES_ATRIBUTOS = [
@@ -99,8 +101,6 @@ export type AnalisisSemantico = {
   scores_por_candidato: ScorePorCandidato[];
 };
 
-const listaTexto = { type: "array", items: { type: "string" } } as const;
-
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
@@ -113,9 +113,7 @@ const RESPONSE_SCHEMA = {
       description: "número entero entre 0 y 100 del candidato recomendado",
     },
     confianza: { type: "number", description: "número decimal entre 0 y 1 (por ejemplo 0.75)" },
-    similitudes: listaTexto,
-    diferencias: listaTexto,
-    explicacion_breve: { type: "string" },
+    explicacion_breve: { type: "string", description: "1 o 2 frases, máximo 40 palabras" },
     scores_por_candidato: {
       type: "array",
       items: {
@@ -123,17 +121,9 @@ const RESPONSE_SCHEMA = {
         properties: {
           candidato_id: { type: "string", description: "id exacto del candidato enviado" },
           score_semantico: { type: "number", description: "número entero entre 0 y 100" },
-          similitudes: listaTexto,
-          diferencias: listaTexto,
-          explicacion_breve: { type: "string" },
+          explicacion_breve: { type: "string", description: "1 o 2 frases, máximo 40 palabras" },
         },
-        required: [
-          "candidato_id",
-          "score_semantico",
-          "similitudes",
-          "diferencias",
-          "explicacion_breve",
-        ],
+        required: ["candidato_id", "score_semantico", "explicacion_breve"],
       },
     },
   },
@@ -141,8 +131,6 @@ const RESPONSE_SCHEMA = {
     "candidato_recomendado_id",
     "score_semantico",
     "confianza",
-    "similitudes",
-    "diferencias",
     "explicacion_breve",
     "scores_por_candidato",
   ],
