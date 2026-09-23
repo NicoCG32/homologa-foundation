@@ -20,7 +20,9 @@ export const getEjecucion = createServerFn({ method: "GET" })
     const ejecucion = unwrap(
       await getDb()
         .from("ejecuciones")
-        .select("id, fecha, estado, criterios_usados, cargos(id, nombre, descripcion, sueldo, empresas(nombre))")
+        .select(
+          "id, fecha, estado, criterios_usados, cargos(id, nombre, codigo_cargo, nombre_area, nombre_subarea, nivel_jerarquico, descripcion, sueldo, empresas(nombre))",
+        )
         .eq("id", data.id)
         .maybeSingle(),
     );
