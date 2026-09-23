@@ -145,7 +145,18 @@ function EjecucionDetalle() {
       </section>
 
       <section className="rounded-lg border p-4 text-sm">
-        <h2 className="mb-2 text-lg font-medium">Decisión del analista</h2>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-medium">Decisión del analista</h2>
+          {decision && (
+            <button
+              type="button"
+              className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+              onClick={exportar}
+            >
+              Exportar resultados
+            </button>
+          )}
+        </div>
         {decision ? (
           <div className="space-y-1">
             <p>
