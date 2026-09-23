@@ -57,6 +57,13 @@
       "when": 1790028397569,
       "tag": "0007_benchmark_fuente_anio_y_tamano_decision",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790187304034,
+      "tag": "0008_decision_preseleccion",
+      "breakpoints": true
     }
   ]
 }
