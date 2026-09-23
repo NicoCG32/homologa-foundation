@@ -60,6 +60,111 @@ function EjecucionDetalle() {
     explicacion_breve: string;
   } | null;
 
+  // Exportación a Excel: sólo lee datos ya persistidos, nunca recalcula ni llama a la IA.
+  async function exportar() {
+    if (!decision) return;
+    const XLSX = await import("xlsx");
+    const bandas = data?.bandas ?? [];
+    const banda = decision.tamano_empresa
+      ? bandas.find((b) => b.tipo_empresa === decision.tamano_empresa)
+      : undefined;
+    const base = {
+      "Cargo interno · código": cargo?.codigo_cargo ?? "",
+      "Cargo interno · nombre": cargo?.nombre ?? "",
+      "Cargo interno · empresa": cargo?.empresas?.nombre ?? "",
+      "Cargo interno · área": cargo?.nombre_area ?? "",
+      "Cargo interno · subárea": cargo?.nombre_subarea ?? "",
+      "Cargo interno · nivel": cargo?.nivel_jerarquico ?? "",
+    };
+    const decisionCols = {
+      "Decisión · analista": decision.usuario ?? "",
+      "Decisión · fecha": decision.fecha ? formatFecha(decision.fecha) : "",
+      "Decisión · comentario": decision.comentario ?? "",
+    };
+    const iaCols = {
+      "Análisis IA · confianza": validada?.confianza ?? "",
+      "Análisis IA · modelo": analisis?.modelo ?? "",
+      "Análisis IA · explicación": validada?.explicacion_breve ?? "",
+    };
+    const benchCols = {
+      "Benchmark · P25": banda?.p25 ?? "",
+      "Benchmark · P50": banda?.p50 ?? "",
+      "Benchmark · P75": banda?.p75 ?? "",
+      "Benchmark · Promedio": banda?.promedio ?? "",
+      "Benchmark · fuente": banda?.fuente ?? "",
+      "Benchmark · año": banda?.anio ?? "",
+      "Benchmark · tamaño": decision.tamano_empresa ?? "",
+    };
+
+    type Fila = {
+      candidato_id: string;
+      nombre: string;
+      codigo: string;
+      empresa: string;
+      scores: {
+        score_deterministico?: number | null;
+        score_semantico?: number | null;
+        score_final?: number | null;
+      };
+    };
+    const desdeResultado = (id: string) => resultados.find((r) => r.candidato_id === id);
+    const filas: Fila[] = preseleccion.length
+      ? preseleccion.map((p) => {
+          const r = desdeResultado(p.candidato_id);
+          const s = (p.scores_utilizados ?? {}) as Fila["scores"];
+          return {
+            candidato_id: p.candidato_id,
+            nombre: p.cargos?.nombre ?? r?.cargos?.nombre ?? "",
+            codigo: p.cargos?.codigo_cargo ?? r?.cargos?.codigo_cargo ?? "",
+            empresa: p.cargos?.empresas?.nombre ?? r?.cargos?.empresas?.nombre ?? "",
+            scores: {
+              score_deterministico: s.score_deterministico ?? r?.score_deterministico ?? null,
+              score_semantico: s.score_semantico ?? r?.score_semantico ?? null,
+              score_final: s.score_final ?? r?.score_final ?? null,
+            },
+          };
+        })
+      : [
+          {
+            candidato_id: decision.candidato_id,
+            nombre: decision.cargos?.nombre ?? "",
+            codigo: decision.cargos?.codigo_cargo ?? "",
+            empresa: decision.cargos?.empresas?.nombre ?? "",
+            scores: {
+              score_deterministico: scoresDecision?.score_deterministico ?? null,
+              score_semantico: scoresDecision?.score_semantico ?? null,
+              score_final: scoresDecision?.score_final ?? null,
+            },
+          },
+        ];
+
+    const rows = filas.map((f) => ({
+      ...base,
+      "Candidato · código": f.codigo,
+      "Candidato · nombre": f.nombre,
+      "Candidato · empresa": f.empresa,
+      "Candidato · selección":
+        f.candidato_id === decision.candidato_id ? "Definitivo" : "Preseleccionado",
+      "Score motor": f.scores.score_deterministico ?? "",
+      "Score Gemini": f.scores.score_semantico ?? "",
+      "Score final": f.scores.score_final ?? "",
+      ...decisionCols,
+      ...iaCols,
+      ...benchCols,
+    }));
+
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, XLSX.utils.json_to_sheet(rows), "RESULTADOS");
+    const nombre = (cargo?.nombre ?? "homologacion")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^A-Za-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 60) || "cargo";
+    const fecha = new Date(ejecucion.fecha ?? Date.now()).toISOString().slice(0, 10);
+    XLSX.writeFile(libro, `homologacion_${nombre}_${fecha}.xlsx`);
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <Link to="/historial" className="text-sm text-muted-foreground hover:underline">
