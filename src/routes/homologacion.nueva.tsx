@@ -327,6 +327,12 @@ function NuevaHomologacion() {
                 id: p.cargo.id,
                 nombre: p.cargo.nombre,
                 empresa: p.cargo.empresa_nombre,
+                score_deterministico: p.score,
+                score_semantico:
+                  semOk?.analisis.scores_por_candidato.find((s) => s.candidato_id === p.cargo.id)
+                    ?.score_semantico ?? null,
+                score_final:
+                  semOk?.finales.find((f) => f.candidato_id === p.cargo.id)?.score_final ?? null,
               }))}
               sugerido={semOk?.analisis.candidato_recomendado_id ?? null}
             />

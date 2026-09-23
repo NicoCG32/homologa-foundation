@@ -43,6 +43,7 @@ function EjecucionDetalle() {
   const sueldoInterno = cargo?.sueldo != null ? Number(cargo.sueldo) : null;
   const analisis = data.analisis;
   const decision = data.decision;
+  const preseleccion = data.preseleccion ?? [];
   const scoresDecision = (decision?.scores_utilizados ?? null) as {
     score_deterministico: number | null;
     score_semantico: number | null;
@@ -163,6 +164,36 @@ function EjecucionDetalle() {
                 : `${scoresDecision.score_semantico}%`}{" "}
               · final {pct(scoresDecision?.score_final)}
             </p>
+            {preseleccion.length > 0 && (
+              <div className="mt-3">
+                <p className="mb-1 font-medium">Candidatos preseleccionados</p>
+                <ul className="space-y-1">
+                  {preseleccion.map((p) => {
+                    const s = (p.scores_utilizados ?? {}) as {
+                      score_deterministico?: number | null;
+                      score_semantico?: number | null;
+                      score_final?: number | null;
+                    };
+                    const definitivo = p.candidato_id === decision.candidato_id;
+                    return (
+                      <li
+                        key={p.candidato_id}
+                        className={`border-b py-1 ${definitivo ? "font-semibold text-primary" : ""}`}
+                      >
+                        {p.cargos?.nombre ?? p.candidato_id}
+                        {p.cargos?.empresas?.nombre ? ` — ${p.cargos.empresas.nombre}` : ""}
+                        {definitivo ? " · Definitivo" : ""}
+                        <div className="text-xs font-normal text-muted-foreground">
+                          Motor {pct(s.score_deterministico)} · Gemini{" "}
+                          {s.score_semantico == null ? "—" : `${s.score_semantico}%`} · Final{" "}
+                          {pct(s.score_final)}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           <DecisionForm
@@ -171,6 +202,9 @@ function EjecucionDetalle() {
               id: r.candidato_id,
               nombre: r.cargos?.nombre ?? r.candidato_id,
               empresa: r.cargos?.empresas?.nombre ?? null,
+              score_deterministico: r.score_deterministico,
+              score_semantico: r.score_semantico,
+              score_final: r.score_final,
             }))}
             sugerido={validada?.candidato_recomendado_id ?? null}
           />
