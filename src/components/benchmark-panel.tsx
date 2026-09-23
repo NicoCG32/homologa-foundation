@@ -54,6 +54,13 @@ function etiquetaGrafico(v: number) {
   return formatSueldo(v);
 }
 
+function valorExactoGrafico(v: number) {
+  return new Intl.NumberFormat("es-CL", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(v);
+}
+
 /**
  * Benchmark salarial posterior a la decisión del analista.
  * Muestra un único tamaño de empresa; nunca estima ni interpola valores.
@@ -147,25 +154,32 @@ export function BenchmarkPanel({
         <div className="benchmark-comparison">
           <div className="benchmark-chart" aria-label="Gráfico comparativo de remuneración y mercado">
             <h3>Comparación visual</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={datosGrafico} margin={{ top: 28, right: 8, left: 2, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="var(--border)" />
-                <XAxis dataKey="indicador" axisLine={false} tickLine={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
-                <YAxis axisLine={false} tickLine={false} width={54} tickFormatter={etiquetaGrafico} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} />
-                <Tooltip
-                  cursor={{ fill: "var(--muted)" }}
-                  formatter={(v) => [v == null ? ND : formatSueldo(Number(v)), "Remuneración"]}
-                  labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-                  contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6 }}
-                />
-                <Bar dataKey="valor" radius={[5, 5, 0, 0]} maxBarSize={64}>
-                  {datosGrafico.map((dato) => (
-                    <Cell key={dato.indicador} fill={dato.actual ? "var(--primary)" : "var(--chart-2)"} />
-                  ))}
-                  <LabelList dataKey="valor" position="top" formatter={(v: number) => etiquetaGrafico(v)} className="benchmark-chart-label" />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="benchmark-chart-plot">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={datosGrafico} margin={{ top: 28, right: 8, left: 2, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="var(--border)" />
+                  <XAxis dataKey="indicador" axisLine={false} tickLine={false} tick={false} height={1} />
+                  <YAxis axisLine={false} tickLine={false} width={54} tickFormatter={etiquetaGrafico} tick={{ fill: "var(--muted-foreground)", fontSize: 10 }} />
+                  <Tooltip
+                    cursor={{ fill: "var(--muted)" }}
+                    formatter={(v) => [v == null ? ND : valorExactoGrafico(Number(v)), "Remuneración"]}
+                    labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6 }}
+                  />
+                  <Bar dataKey="valor" radius={[5, 5, 0, 0]} maxBarSize={64}>
+                    {datosGrafico.map((dato) => (
+                      <Cell key={dato.indicador} fill={dato.actual ? "var(--primary)" : "var(--chart-2)"} />
+                    ))}
+                    <LabelList dataKey="valor" position="top" formatter={(v: number) => valorExactoGrafico(v)} className="benchmark-chart-label" />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="benchmark-chart-boxes" aria-hidden="true">
+              {datosGrafico.map((dato) => <span key={dato.indicador}>{dato.indicador}</span>)}
+              <strong>Empresa</strong>
+              <strong>Encuesta</strong>
+            </div>
           </div>
 
           <table className="benchmark-table w-full">
