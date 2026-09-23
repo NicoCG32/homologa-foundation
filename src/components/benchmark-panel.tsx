@@ -99,13 +99,10 @@ export function BenchmarkPanel({
     { etiqueta: "Promedio/PP", corta: "PP", v: banda?.promedio ?? null },
   ];
 
-  const datosGrafico = [
-    { indicador: "Empresa Ficticia", valor: num(sueldoInterno) },
-    ...filas.map((fila) => ({
-      indicador: fila.corta,
-      valor: num(fila.v),
-    })),
-  ];
+  const datosGrafico = filas.map((fila) => ({
+    indicador: fila.corta,
+    valor: num(fila.v),
+  }));
 
   return (
     <div className="space-y-3 text-sm">
@@ -117,7 +114,6 @@ export function BenchmarkPanel({
           <dd>{banda?.fuente?.trim() ? banda.fuente : ND}</dd>
         </div>
         <div><dt>Año</dt><dd>{banda?.anio ?? ND}</dd></div>
-        <div><dt>Remuneración actual</dt><dd>{valor(sueldoInterno)}</dd></div>
       </dl>
 
       <label className="block">
@@ -167,7 +163,7 @@ export function BenchmarkPanel({
                   />
                   <Bar dataKey="valor" radius={[5, 5, 0, 0]} maxBarSize={64}>
                     {datosGrafico.map((dato) => (
-                      <Cell key={dato.indicador} fill={dato.indicador === "Empresa Ficticia" ? "var(--primary)" : "var(--chart-2)"} />
+                      <Cell key={dato.indicador} fill="var(--chart-2)" />
                     ))}
                     <LabelList dataKey="valor" position="top" formatter={(v: number) => valorExactoGrafico(v)} className="benchmark-chart-label" />
                   </Bar>
