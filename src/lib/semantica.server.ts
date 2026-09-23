@@ -256,22 +256,30 @@ export async function analizarConGemini(interno: CargoSemantico, candidatos: Car
   const { GoogleGenAI } = await import("@google/genai");
   const ai = new GoogleGenAI({ apiKey });
 
+  const { conReintentos, ReintentosAgotadosError } = await import("./gemini-retry.server");
   let respuesta: { text?: string | undefined };
   try {
-    respuesta = await ai.models.generateContent({
-      model: MODELO_SEMANTICO,
-      contents: [
-        "Los scores semánticos deben ser números enteros en escala 0 a 100 (por ejemplo 82), nunca decimales entre 0 y 1. La confianza sí es un decimal entre 0 y 1.",
-        JSON.stringify(payload),
-      ].join("\n\n"),
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA as unknown as Record<string, unknown>,
-        temperature: 0,
-      },
-    });
+    respuesta = await conReintentos(() =>
+      ai.models.generateContent({
+        model: MODELO_SEMANTICO,
+        contents: [
+          "Los scores semánticos deben ser números enteros en escala 0 a 100 (por ejemplo 82), nunca decimales entre 0 y 1. La confianza sí es un decimal entre 0 y 1.",
+          JSON.stringify(payload),
+        ].join("\n\n"),
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA as unknown as Record<string, unknown>,
+          temperature: 0,
+        },
+      }),
+    );
   } catch (e) {
+    if (e instanceof ReintentosAgotadosError) {
+      throw new SemanticoError(
+        "Gemini se encuentra temporalmente con alta demanda (503). Los resultados determinísticos se conservan intactos.",
+      );
+    }
     const msg = e instanceof Error ? e.message : "Error desconocido";
     throw new SemanticoError(`Gemini no respondió correctamente: ${msg}`);
   }

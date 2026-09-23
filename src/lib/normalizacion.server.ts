@@ -163,13 +163,12 @@ export async function normalizarLote(entradas: EntradaNorm[]): Promise<Map<strin
   const { GoogleGenAI } = await import("@google/genai");
   const ai = new GoogleGenAI({ apiKey });
 
-  // El servicio puede estar momentáneamente saturado (503): se reintenta con espera breve.
-  let respuesta: { text?: string | undefined } | null = null;
-  let ultimo = "";
-  for (let intento = 0; intento < 3 && !respuesta; intento++) {
-    if (intento) await new Promise((r) => setTimeout(r, 1500 * intento));
-    try {
-      respuesta = await ai.models.generateContent({
+  // El servicio puede estar momentáneamente saturado (503/429): reintentos con backoff.
+  const { conReintentos } = await import("./gemini-retry.server");
+  let respuesta: { text?: string | undefined };
+  try {
+    respuesta = await conReintentos(() =>
+      ai.models.generateContent({
         model: MODELO_NORMALIZACION,
         contents: JSON.stringify({ entradas: payload }),
         config: {
@@ -178,14 +177,10 @@ export async function normalizarLote(entradas: EntradaNorm[]): Promise<Map<strin
           responseSchema: SCHEMA as unknown as Record<string, unknown>,
           temperature: 0,
         },
-      });
-    } catch (e) {
-      ultimo = e instanceof Error ? e.message : "error desconocido";
-      const transitorio = /503|UNAVAILABLE|429|overload/i.test(ultimo);
-      if (!transitorio) break;
-    }
-  }
-  if (!respuesta) {
+      }),
+    );
+  } catch (e) {
+    const ultimo = e instanceof Error ? e.message : "error desconocido";
     throw new NormalizacionError(`La normalización no pudo ejecutarse: ${ultimo}`);
   }
 
