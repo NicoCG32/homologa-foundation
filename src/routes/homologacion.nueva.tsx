@@ -95,8 +95,20 @@ function NuevaHomologacion() {
     onSuccess: (r) => {
       if (!r.ok) setSemError(r.error);
     },
-    onError: (e: Error) => setSemError(e.message),
+    onError: () =>
+      setSemError(
+        "El análisis IA no pudo completarse. Los resultados determinísticos se conservan intactos; intenta nuevamente.",
+      ),
   });
+  const [semLento, setSemLento] = useState(false);
+  useEffect(() => {
+    if (!sem.isPending) {
+      setSemLento(false);
+      return;
+    }
+    const t = setTimeout(() => setSemLento(true), 3000);
+    return () => clearTimeout(t);
+  }, [sem.isPending]);
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
@@ -267,6 +279,13 @@ function NuevaHomologacion() {
           >
             {sem.isPending ? "Analizando…" : "Continuar con análisis IA"}
           </Button>
+          {sem.isPending && (
+            <p className="mt-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+              {semLento
+                ? "Consultando motor de respaldo para asegurar la respuesta…"
+                : "Analizando compatibilidad de candidatos…"}
+            </p>
+          )}
           {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
           {semOk && (
             <div className="mt-4 space-y-3 text-sm">

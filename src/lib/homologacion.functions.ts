@@ -490,7 +490,7 @@ export const analizarSemantica = createServerFn({ method: "POST" })
 
     await db.from("analisis_semanticos").insert({
       ejecucion_id: data.ejecucion_id,
-      modelo: semantica.MODELO_SEMANTICO,
+      modelo: resultado.modelo,
       prompt_version: semantica.PROMPT_VERSION,
       estado: "OK",
       candidatos_enviados: candidatos.map((c) => c.id),

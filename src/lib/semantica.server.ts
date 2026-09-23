@@ -257,15 +257,17 @@ export async function analizarConGemini(interno: CargoSemantico, candidatos: Car
   const ai = new GoogleGenAI({ apiKey });
 
   const { conReintentos, ReintentosAgotadosError } = await import("./gemini-retry.server");
-  let respuesta: { text?: string | undefined };
+  const contents = [
+    "Los scores semánticos deben ser números enteros en escala 0 a 100 (por ejemplo 82), nunca decimales entre 0 y 1. La confianza sí es un decimal entre 0 y 1.",
+    JSON.stringify(payload),
+  ].join("\n\n");
+  let cruda: string;
+  let modelo = MODELO_SEMANTICO;
   try {
-    respuesta = await conReintentos(() =>
+    const respuesta = await conReintentos(() =>
       ai.models.generateContent({
         model: MODELO_SEMANTICO,
-        contents: [
-          "Los scores semánticos deben ser números enteros en escala 0 a 100 (por ejemplo 82), nunca decimales entre 0 y 1. La confianza sí es un decimal entre 0 y 1.",
-          JSON.stringify(payload),
-        ].join("\n\n"),
+        contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
           responseMimeType: "application/json",
@@ -274,23 +276,35 @@ export async function analizarConGemini(interno: CargoSemantico, candidatos: Car
         },
       }),
     );
+    cruda = respuesta.text ?? "";
   } catch (e) {
-    if (e instanceof ReintentosAgotadosError) {
+    if (!(e instanceof ReintentosAgotadosError)) {
+      const msg = e instanceof Error ? e.message : "Error desconocido";
+      throw new SemanticoError(`Gemini no respondió correctamente: ${msg}`);
+    }
+    // Respaldo: Groq con las mismas instrucciones, contenido y esquema.
+    const groq = await import("./groq.server");
+    try {
+      cruda = await groq.generarJsonConGroq({
+        systemInstruction: SYSTEM_INSTRUCTION,
+        contents,
+        schema: RESPONSE_SCHEMA,
+      });
+      modelo = groq.ID_MODELO_GROQ;
+    } catch (eg) {
+      console.error("Respaldo Groq falló:", eg);
       throw new SemanticoError(
-        "Gemini se encuentra temporalmente con alta demanda (503). Los resultados determinísticos se conservan intactos.",
+        "El análisis IA no está disponible en este momento. Los resultados determinísticos se conservan intactos; intenta nuevamente en unos minutos.",
       );
     }
-    const msg = e instanceof Error ? e.message : "Error desconocido";
-    throw new SemanticoError(`Gemini no respondió correctamente: ${msg}`);
   }
 
-  const cruda = respuesta.text ?? "";
   let parsed: unknown;
   try {
     parsed = JSON.parse(cruda);
   } catch {
-    throw new SemanticoError("La respuesta de Gemini no es JSON válido");
+    throw new SemanticoError("La respuesta del análisis IA no es JSON válido");
   }
 
-  return { cruda, validada: validarAnalisis(parsed, candidatos), payload };
+  return { cruda, validada: validarAnalisis(parsed, candidatos), payload, modelo };
 }
