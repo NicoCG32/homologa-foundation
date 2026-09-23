@@ -163,14 +163,15 @@ export async function normalizarLote(entradas: EntradaNorm[]): Promise<Map<strin
   const { GoogleGenAI } = await import("@google/genai");
   const ai = new GoogleGenAI({ apiKey });
 
-  // El servicio puede estar momentáneamente saturado (503/429): reintentos con backoff.
-  const { conReintentos } = await import("./gemini-retry.server");
-  let respuesta: { text?: string | undefined };
+  // El servicio puede estar momentáneamente saturado (503/429): reintentos con backoff y respaldo Groq.
+  const { conReintentos, ReintentosAgotadosError } = await import("./gemini-retry.server");
+  const contents = JSON.stringify({ entradas: payload });
+  let texto: string;
   try {
-    respuesta = await conReintentos(() =>
+    const respuesta = await conReintentos(() =>
       ai.models.generateContent({
         model: MODELO_NORMALIZACION,
-        contents: JSON.stringify({ entradas: payload }),
+        contents,
         config: {
           systemInstruction: SYSTEM_NORMALIZACION,
           responseMimeType: "application/json",
@@ -179,15 +180,28 @@ export async function normalizarLote(entradas: EntradaNorm[]): Promise<Map<strin
         },
       }),
     );
+    texto = respuesta.text ?? "";
   } catch (e) {
-    const ultimo = e instanceof Error ? e.message : "error desconocido";
-    throw new NormalizacionError(`La normalización no pudo ejecutarse: ${ultimo}`);
+    if (!(e instanceof ReintentosAgotadosError)) {
+      const ultimo = e instanceof Error ? e.message : "error desconocido";
+      throw new NormalizacionError(`La normalización no pudo ejecutarse: ${ultimo}`);
+    }
+    try {
+      const groq = await import("./groq.server");
+      texto = await groq.generarJsonConGroq({
+        systemInstruction: SYSTEM_NORMALIZACION,
+        contents,
+        schema: SCHEMA,
+      });
+    } catch (eg) {
+      const ultimo = eg instanceof Error ? eg.message : "error desconocido";
+      throw new NormalizacionError(`La normalización no pudo ejecutarse: ${ultimo}`);
+    }
   }
-
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(respuesta.text ?? "");
+    parsed = JSON.parse(texto);
   } catch {
     throw new NormalizacionError("La normalización no devolvió JSON válido");
   }
