@@ -1,6 +1,7 @@
 /** Proveedor de respaldo (Groq) para cuando Gemini no está disponible. */
 
-export const MODELO_GROQ = "llama-3.3-70b-versatile";
+// llama-3.3-70b-versatile no está disponible en esta cuenta de Groq.
+export const MODELO_GROQ = "openai/gpt-oss-120b";
 export const ID_MODELO_GROQ = `groq/${MODELO_GROQ}`;
 
 export class GroqError extends Error {}
