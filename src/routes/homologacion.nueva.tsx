@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DecisionForm } from "@/components/decision-form";
 import { ScoreChip } from "@/components/score-chip";
+import { VistaEspejo } from "@/components/vista-espejo";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
@@ -577,50 +578,3 @@ function NuevaHomologacion() {
   );
 }
 
-type CargoEspejo = {
-  nombre: string;
-  codigo_cargo: string | null;
-  empresa_nombre: string | null;
-  nombre_area: string | null;
-  nombre_subarea: string | null;
-  nivel_jerarquico: string | null;
-  requisitos_formacion: string | null;
-  experiencia_requerida: string | null;
-  descripcion: string | null;
-};
-
-function VistaEspejo({ interno, candidato }: { interno: CargoEspejo; candidato: CargoEspejo }) {
-  const filas: { etiqueta: string; a: string | null; b: string | null }[] = [
-    { etiqueta: "Cargo", a: `${interno.codigo_cargo ? `${interno.codigo_cargo} · ` : ""}${interno.nombre}`, b: `${candidato.codigo_cargo ? `${candidato.codigo_cargo} · ` : ""}${candidato.nombre}` },
-    { etiqueta: "Empresa", a: interno.empresa_nombre, b: candidato.empresa_nombre },
-    { etiqueta: "Área", a: interno.nombre_area, b: candidato.nombre_area },
-    { etiqueta: "Subárea", a: interno.nombre_subarea, b: candidato.nombre_subarea },
-    { etiqueta: "Nivel", a: interno.nivel_jerarquico, b: candidato.nivel_jerarquico },
-    { etiqueta: "Formación", a: interno.requisitos_formacion, b: candidato.requisitos_formacion },
-    { etiqueta: "Experiencia", a: interno.experiencia_requerida, b: candidato.experiencia_requerida },
-    { etiqueta: "Descripción", a: interno.descripcion, b: candidato.descripcion },
-  ];
-  const igual = (a: string | null, b: string | null) =>
-    !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
-
-  return (
-    <div className="espejo">
-      {filas.map((f) => (
-        <div className="espejo-row" key={f.etiqueta}>
-          <span className="espejo-label">
-            {f.etiqueta}
-            {igual(f.a, f.b) && <em>coincide</em>}
-          </span>
-          <div className="espejo-cell">
-            <small>Cargo interno</small>
-            {f.a || "—"}
-          </div>
-          <div className="espejo-cell">
-            <small>Candidato de referencia</small>
-            {f.b || "—"}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
