@@ -82,9 +82,9 @@ export function DecisionForm({
   sugerido?: string | null;
   onSaved?: () => void;
   /** Ficha del cargo interno evaluado, para la vista espejo. */
-  interno?: CargoEspejo;
+  interno?: CargoEspejo | undefined;
   /** Fichas de los candidatos, indexadas por id de cargo. */
-  fichas?: Record<string, CargoEspejo>;
+  fichas?: Record<string, CargoEspejo> | undefined;
 }) {
   const getPre = useServerFn(getPreseleccion);
   const guardarPre = useServerFn(guardarPreseleccion);

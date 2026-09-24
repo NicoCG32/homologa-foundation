@@ -26,7 +26,7 @@ export function VistaEspejo({
   candidato: CargoEspejo;
   etiquetaB?: string;
 }) {
-  const filas: { etiqueta: string; a?: string | null; b?: string | null }[] = [
+  const filas: { etiqueta: string; a?: string | null | undefined; b?: string | null | undefined }[] = [
     {
       etiqueta: "Cargo",
       a: `${interno.codigo_cargo ? `${interno.codigo_cargo} · ` : ""}${interno.nombre}`,
