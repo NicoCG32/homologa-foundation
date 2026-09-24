@@ -256,7 +256,7 @@ function NuevaHomologacion() {
             </div>
           )}
 
-          <Button type="submit" disabled={mut.isPending || faltantes.length > 0} size="lg">
+          <Button type="submit" disabled={mut.isPending || !cargoId || faltantes.length > 0} size="lg">
             {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
           </Button>
           {error && <p className="text-sm text-destructive">{error}</p>}
