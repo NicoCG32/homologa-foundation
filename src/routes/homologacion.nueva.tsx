@@ -305,32 +305,60 @@ function NuevaHomologacion() {
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
               <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score semántico</span><span>Score final</span></div>
-                {res.preseleccionados.map((p, i) => (
-                  <div key={p.cargo.id} className="score-row">
-                    <div>
-                      <strong>
-                        {i + 1}. {p.cargo.nombre}
-                    </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
-                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{(() => { const f = semOk?.finales.find((item) => item.candidato_id === p.cargo.id)?.score_final; return f == null ? "Pendiente" : pct(f); })()}</span>
-                    <div className="score-detail">
-                    <p className="text-muted-foreground">
-                      Coincidencias:{" "}
-                      {p.coincidencias.length
-                        ? p.coincidencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
-                        : "ninguna"}
-                    </p>
-                    <p className="text-muted-foreground">
-                      Diferencias:{" "}
-                      {p.diferencias.length
-                        ? p.diferencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
-                        : "ninguna"}
-                    </p>
+                {res.preseleccionados.map((p, i) => {
+                  const s = semOk?.analisis.scores_por_candidato.find(
+                    (item) => item.candidato_id === p.cargo.id,
+                  )?.score_semantico;
+                  const f = semOk?.finales.find(
+                    (item) => item.candidato_id === p.cargo.id,
+                  )?.score_final;
+                  return (
+                    <div key={p.cargo.id} className="score-row">
+                      <div>
+                        <strong>
+                          {i + 1}. {p.cargo.nombre}
+                        </strong>
+                        <small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
+                      </div>
+                      <span>
+                        <ScoreChip valor={p.score * 100} texto={pct(p.score)} label="Score motor" />
+                      </span>
+                      <span>
+                        <ScoreChip
+                          valor={s ?? null}
+                          texto={s == null ? "Pendiente" : `${s}%`}
+                          label="Score semántico"
+                        />
+                      </span>
+                      <span>
+                        <ScoreChip
+                          valor={f == null ? null : f * 100}
+                          texto={f == null ? "Pendiente" : pct(f)}
+                          label="Score final"
+                        />
+                      </span>
+                      <details className="score-detail">
+                        <summary>Ver desglose de coincidencias y diferencias</summary>
+                        <p className="text-muted-foreground">
+                          Coincidencias:{" "}
+                          {p.coincidencias.length
+                            ? p.coincidencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
+                            : "ninguna"}
+                        </p>
+                        <p className="text-muted-foreground">
+                          Diferencias:{" "}
+                          {p.diferencias.length
+                            ? p.diferencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
+                            : "ninguna"}
+                        </p>
+                      </details>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
+
 
           {res.preseleccionados.length > 0 && (
             <section className="rounded-lg border p-4">
