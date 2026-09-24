@@ -170,10 +170,10 @@ function NuevaHomologacion() {
         ))}
       </ol>
 
-      {res && paso > 1 && (
+      {res && (
         <aside className="cargo-context" aria-label="Cargo en evaluación">
           <div>
-            <span>Cargo en evaluación</span>
+            <span>Cargo en evaluación · paso {paso} de {PASOS.length}</span>
             <strong>
               {res.cargo.codigo_cargo ? `${res.cargo.codigo_cargo} · ` : ""}
               {res.cargo.nombre}
@@ -181,12 +181,14 @@ function NuevaHomologacion() {
             <small>
               {res.cargo.empresa_nombre ?? "Sin empresa"}
               {res.cargo.nombre_area ? ` · ${res.cargo.nombre_area}` : ""}
+              {res.cargo.nombre_subarea ? ` · ${res.cargo.nombre_subarea}` : ""}
               {res.cargo.nivel_jerarquico ? ` · Nivel ${res.cargo.nivel_jerarquico}` : ""}
             </small>
           </div>
           {res.cargo.descripcion && <p>{res.cargo.descripcion}</p>}
         </aside>
       )}
+
 
 
       {paso === 1 && (
@@ -392,11 +394,10 @@ function NuevaHomologacion() {
           </Button>
           {sem.isPending && (
             <p className="mt-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-              {semLento
-                ? "Consultando motor de respaldo para asegurar la respuesta…"
-                : "Analizando compatibilidad de candidatos…"}
+              {MENSAJES_ESPERA[semEtapa] || MENSAJES_ESPERA[1]}
             </p>
           )}
+
           {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
           {semOk && (
             <div className="mt-4 space-y-3 text-sm">
