@@ -353,6 +353,7 @@ function EjecucionDetalle() {
               score_final: r.score_final,
             }))}
             sugerido={validada?.candidato_recomendado_id ?? null}
+            sueldoInterno={cargo?.sueldo ?? null}
             interno={
               cargo
                 ? {

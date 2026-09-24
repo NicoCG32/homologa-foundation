@@ -574,3 +574,29 @@
 @media (prefers-reduced-motion: reduce) {
   .bienvenida, .bienvenida-sale, .bienvenida-cta { animation: none; }
 }
+
+/* Remuneración real y brechas: referencia visual para el analista */
+.remuneracion-real {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklch, var(--primary) 35%, var(--border));
+  background: color-mix(in oklch, var(--primary) 7%, var(--card));
+}
+.remuneracion-real span { color: var(--muted-foreground); font-size: 0.8rem; }
+.remuneracion-real strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; color: var(--foreground); }
+.remuneracion-real small { color: var(--muted-foreground); }
+.brecha { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.brecha-pos { color: color-mix(in oklch, var(--chart-2) 70%, var(--foreground)); }
+.brecha-neg { color: color-mix(in oklch, oklch(0.65 0.13 70) 70%, var(--foreground)); }
+.brecha-nd { color: var(--muted-foreground); font-weight: 400; }
+.brecha-tabla-wrap { display: grid; gap: 8px; margin-top: 12px; overflow-x: auto; }
+.brecha-tabla td, .brecha-tabla th { padding: 6px 8px; }
+.brecha-tabla td:not(:first-child), .brecha-tabla th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 620px) {
+  .brecha-tabla thead { display: none; }
+  .brecha-tabla tr { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .brecha-tabla td { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; text-align: right !important; }
+  .brecha-tabla td::before { content: attr(data-label); color: var(--muted-foreground); text-align: left; font-weight: 400; }
+}

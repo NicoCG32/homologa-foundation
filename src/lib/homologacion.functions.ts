@@ -376,9 +376,16 @@ export const ejecutarHomologacion = createServerFn({ method: "POST" })
 
       await db.from("ejecuciones").update({ estado: "COMPLETADA" }).eq("id", ejecucion.id);
 
+      // Remuneración real: sólo referencia visual para el analista. Se consulta
+      // después del motor y nunca participa en scores ni en la IA.
+      const sueldoRow = unwrap(
+        await db.from("cargos").select("sueldo").eq("id", interno.id).maybeSingle(),
+      ) as { sueldo: number | string | null } | null;
+
       return {
         ejecucion_id: ejecucion.id,
         cargo: toMotor(interno),
+        sueldo_interno: sueldoRow?.sueldo ?? null,
         aviso_normalizacion: avisoNormalizacion,
         ...motor,
       };

@@ -21,10 +21,16 @@ export function VistaEspejo({
   interno,
   candidato,
   etiquetaB = "Candidato de referencia",
+  remuneracionA,
+  remuneracionB,
 }: {
   interno: CargoEspejo;
   candidato: CargoEspejo;
   etiquetaB?: string;
+  /** Referencia visual: remuneración real del cargo interno. */
+  remuneracionA?: string | undefined;
+  /** Referencia visual: valor de mercado del candidato. */
+  remuneracionB?: string | undefined;
 }) {
   const filas: { etiqueta: string; a?: string | null | undefined; b?: string | null | undefined }[] = [
     {
@@ -40,6 +46,9 @@ export function VistaEspejo({
     { etiqueta: "Experiencia", a: interno.experiencia_requerida, b: candidato.experiencia_requerida },
     { etiqueta: "Descripción", a: interno.descripcion, b: candidato.descripcion },
   ];
+  if (remuneracionA !== undefined || remuneracionB !== undefined) {
+    filas.push({ etiqueta: "Remuneración", a: remuneracionA, b: remuneracionB });
+  }
 
   return (
     <div className="espejo">
