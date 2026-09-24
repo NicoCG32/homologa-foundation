@@ -37,6 +37,36 @@ function sem100(v: number | string | null | undefined) {
 function monto(v: number | string | null | undefined) {
   return v == null || v === "" ? ND : formatSueldo(v);
 }
+function num(v: number | string | null | undefined) {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Diferencia Empresa − Encuesta; nunca estima si falta un dato. */
+export function Brecha({
+  empresa,
+  encuesta,
+}: {
+  empresa: number | string | null | undefined;
+  encuesta: number | string | null | undefined;
+}) {
+  const e = num(empresa);
+  const m = num(encuesta);
+  if (e == null) return <span className="brecha brecha-nd">Sin remuneración informada</span>;
+  if (m == null || m === 0) return <span className="brecha brecha-nd">{ND}</span>;
+  const d = e - m;
+  const p = (d / m) * 100;
+  const signo = d > 0 ? "+" : d < 0 ? "−" : "";
+  const cls = d > 0 ? "brecha-pos" : d < 0 ? "brecha-neg" : "";
+  return (
+    <span className={`brecha ${cls}`}>
+      {signo}
+      {formatSueldo(Math.abs(d))} ({signo}
+      {Math.abs(p).toFixed(1)}%)
+    </span>
+  );
+}
 
 function Scores({ c }: { c: CandidatoDecision }) {
   return (
@@ -76,6 +106,7 @@ export function DecisionForm({
   onSaved,
   interno,
   fichas,
+  sueldoInterno,
 }: {
   ejecucionId: string;
   candidatos: CandidatoDecision[];
@@ -85,6 +116,8 @@ export function DecisionForm({
   interno?: CargoEspejo | undefined;
   /** Fichas de los candidatos, indexadas por id de cargo. */
   fichas?: Record<string, CargoEspejo> | undefined;
+  /** Remuneración real del cargo interno: sólo referencia visual. */
+  sueldoInterno?: number | string | null | undefined;
 }) {
   const getPre = useServerFn(getPreseleccion);
   const guardarPre = useServerFn(guardarPreseleccion);
@@ -236,6 +269,14 @@ export function DecisionForm({
     >
       <p className="font-medium">2. Compara los preseleccionados y elige el cargo definitivo</p>
 
+      <div className="remuneracion-real" role="note">
+        <span>Remuneración real de la empresa</span>
+        <strong>{num(sueldoInterno) == null ? "No informada" : formatSueldo(sueldoInterno)}</strong>
+        <small>
+          Referencia para tu decisión. No participa en ningún puntaje del motor ni de la IA.
+        </small>
+      </div>
+
       <label className="block">
         <span>Tamaño de empresa para el benchmark</span>
         <select
@@ -309,6 +350,10 @@ export function DecisionForm({
                   <div><dt>P50</dt><dd>{monto(banda?.p50)}</dd></div>
                   <div><dt>P75</dt><dd>{monto(banda?.p75)}</dd></div>
                   <div><dt>Promedio</dt><dd>{monto(banda?.promedio)}</dd></div>
+                  <div>
+                    <dt>Empresa vs P50</dt>
+                    <dd><Brecha empresa={sueldoInterno} encuesta={banda?.p50} /></dd>
+                  </div>
                   <div><dt>Fuente</dt><dd>{banda?.fuente?.trim() ? banda.fuente : ND}</dd></div>
                   <div><dt>Año</dt><dd>{banda?.anio ?? ND}</dd></div>
                 </dl>
@@ -326,7 +371,25 @@ export function DecisionForm({
               ? "Contraste del contenido del cargo que elegiste como definitivo."
               : "Se muestra el primer preseleccionado; marca otro para compararlo."}
           </p>
-          <VistaEspejo interno={interno} candidato={fichaSel} />
+          <VistaEspejo
+            interno={interno}
+            candidato={fichaSel}
+            remuneracionA={num(sueldoInterno) == null ? "No informada" : formatSueldo(sueldoInterno)}
+            remuneracionB={(() => {
+              if (!tamano) return "Selecciona un tamaño de empresa";
+              const b = preseleccion
+                .find((p) => p.id === idEspejo)
+                ?.bandas.find((x) => x.tipo_empresa === tamano);
+              if (num(b?.p50) != null) {
+                const rango =
+                  num(b?.p25) != null && num(b?.p75) != null
+                    ? ` (rango ${formatSueldo(b!.p25)} – ${formatSueldo(b!.p75)})`
+                    : "";
+                return `P50 ${formatSueldo(b!.p50)}${rango}`;
+              }
+              return ND;
+            })()}
+          />
         </section>
       )}
 
