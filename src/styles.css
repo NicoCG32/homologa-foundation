@@ -97,6 +97,15 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  /* Identidad Espejo: prismas y reflejo */
+  --logo-1: oklch(0.42 0.16 256);
+  --logo-2: oklch(0.62 0.15 200);
+  --logo-3: oklch(0.70 0.13 181);
+  --logo-axis: oklch(0.99 0 0 / 65%);
+  --logo-shine: oklch(0.99 0 0);
+  --logo-edge: oklch(0.45 0.12 240 / 55%);
+  --amb-1: oklch(0.62 0.15 255 / 12%);
+  --amb-2: oklch(0.72 0.13 185 / 12%);
 }
 
 .dark {
@@ -132,6 +141,14 @@
   --sidebar-accent-foreground: oklch(0.96 0.012 240);
   --sidebar-border: oklch(0.38 0.045 250);
   --sidebar-ring: oklch(0.75 0.14 195);
+  --logo-1: oklch(0.66 0.17 258);
+  --logo-2: oklch(0.78 0.13 196);
+  --logo-3: oklch(0.85 0.12 188);
+  --logo-axis: oklch(0.92 0.06 195 / 75%);
+  --logo-shine: oklch(0.97 0.03 195);
+  --logo-edge: oklch(0.85 0.09 195 / 45%);
+  --amb-1: oklch(0.62 0.17 258 / 20%);
+  --amb-2: oklch(0.78 0.13 196 / 16%);
 }
 
 
@@ -465,3 +482,37 @@
   .cargo-option .estado-chip { justify-self: start; }
   .data-main .estado-chip { margin: 6px 0 0; display: inline-block; }
 }
+
+/* ---- Identidad visual: logotipo, prismas y gradientes ambientales ---- */
+.logo-espejo { display: block; width: 100%; height: 100%; }
+.brand-mark { width: 42px; height: 42px; flex: 0 0 42px; filter: drop-shadow(0 4px 12px oklch(0.72 0.13 190 / 35%)); }
+.dark .brand-mark { filter: drop-shadow(0 0 10px oklch(0.78 0.13 196 / 45%)); }
+.brand-mark-sm { width: 26px; height: 26px; flex: 0 0 26px; }
+
+/* Fondo atmosférico con halos suaves */
+.app-workspace {
+  background-image:
+    radial-gradient(760px 420px at 88% -8%, var(--amb-1), transparent 70%),
+    radial-gradient(620px 380px at -6% 105%, var(--amb-2), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Portada: ilustración de prismas de cristal */
+.home-intro { background: linear-gradient(125deg, color-mix(in oklch, var(--card) 92%, transparent), color-mix(in oklch, var(--accent) 72%, transparent)); backdrop-filter: blur(12px); }
+.home-logo-wrap { width: min(100%, 360px); aspect-ratio: auto; padding: 0; border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; }
+.home-hero-art { display: block; width: 100%; height: auto; filter: drop-shadow(0 18px 40px oklch(0.35 0.12 250 / 22%)); }
+.dark .home-hero-art { filter: drop-shadow(0 0 28px oklch(0.70 0.14 200 / 28%)); }
+
+/* Superficies de cristal técnico */
+.quick-grid a, .avance-card, .cargo-context {
+  border: 1px solid color-mix(in oklab, var(--primary) 16%, var(--border));
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 860px) {
+  .mobile-brand { display: flex !important; align-items: center; gap: 8px; }
+  .mobile-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .home-logo-wrap { grid-row: 1; width: min(100%, 230px); justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) { .quick-grid a:hover { transform: none; } }

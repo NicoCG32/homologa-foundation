@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, BriefcaseBusiness, Building2, History, Search, Settings2 } from "lucide-react";
-import logoAsset from "@/assets/espejo-homologa-logo.jpg.asset.json";
+import { EspejoPrismas } from "@/components/logo-espejo";
 import { listCargos } from "@/lib/cargos.functions";
 import { listHomologados } from "@/lib/homologacion.functions";
 
@@ -51,7 +51,7 @@ function Index() {
           </Link>
         </div>
         <div className="home-logo-wrap" aria-hidden="true">
-          <img src={logoAsset.url} alt="" />
+          <EspejoPrismas className="home-hero-art" />
         </div>
       </section>
 

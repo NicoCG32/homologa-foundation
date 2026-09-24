@@ -12,7 +12,7 @@ import { BookMarked, Building2, ClipboardList, History, Home, Settings2, Sparkle
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import logoAsset from "../assets/espejo-homologa-logo.jpg.asset.json";
+import { LogoEspejo } from "@/components/logo-espejo";
 import { TEMA_SCRIPT, ThemeToggle } from "../components/theme-toggle";
 
 
@@ -145,7 +145,7 @@ function RootComponent() {
       <div className="app-frame">
         <aside className="app-sidebar">
           <Link to="/" className="brand-lockup" aria-label="Espejo: Homologa — Inicio">
-            <img src={logoAsset.url} alt="Logo oficial de Espejo: Homologa" />
+            <LogoEspejo className="brand-mark" title="Espejo: Homologa" />
             <span><strong>Espejo:</strong> Homologa</span>
           </Link>
           <nav className="sidebar-nav" aria-label="Navegación principal">
@@ -174,7 +174,7 @@ function RootComponent() {
         </aside>
         <div className="app-workspace">
           <header className="workspace-header">
-            <Link to="/" className="mobile-brand">Espejo: <strong>Homologa</strong></Link>
+            <Link to="/" className="mobile-brand"><LogoEspejo className="brand-mark-sm" /> <span>Espejo: <strong>Homologa</strong></span></Link>
             <div className="header-theme"><ThemeToggle /></div>
           </header>
 
