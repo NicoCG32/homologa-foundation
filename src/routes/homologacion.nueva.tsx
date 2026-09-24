@@ -316,6 +316,34 @@ function NuevaHomologacion() {
             )}
           </section>
 
+          {res.preseleccionados.length > 0 && (
+            <section className="rounded-lg border p-4">
+              <h2 className="mb-2 font-medium"><Columns2 /> Vista espejo: cargo interno frente al candidato</h2>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Elige un candidato para comparar su contenido con el cargo que estás evaluando.
+              </p>
+              <div className="filter-chips" role="group" aria-label="Candidatos a comparar">
+                {res.preseleccionados.map((p, i) => (
+                  <button
+                    type="button"
+                    key={p.cargo.id}
+                    aria-pressed={(espejoId || res.preseleccionados[0]!.cargo.id) === p.cargo.id}
+                    onClick={() => setEspejoId(p.cargo.id)}
+                  >
+                    {i + 1}. {p.cargo.codigo_cargo || p.cargo.nombre}
+                  </button>
+                ))}
+              </div>
+              {(() => {
+                const sel =
+                  res.preseleccionados.find((p) => p.cargo.id === espejoId) ??
+                  res.preseleccionados[0]!;
+                return <VistaEspejo interno={res.cargo} candidato={sel.cargo} />;
+              })()}
+            </section>
+          )}
+
+
           <section className="rounded-lg border p-4">
             <h2 className="mb-2 font-medium"><Users /> Candidatos no compatibles</h2>
             {!res.descartados.length ? (
