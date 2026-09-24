@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -32,6 +32,8 @@ import {
 } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { importarDiccionario, listDiccionario } from "@/lib/diccionario.functions";
+import { listHomologados } from "@/lib/homologacion.functions";
+
 
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -99,6 +101,16 @@ function CargosPage() {
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<"" | "PENDIENTE" | "HOMOLOGADO">("");
+
+  const listH = useServerFn(listHomologados);
+  const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
+  const mapaHomologados = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const h of homologados.data ?? []) m.set(h.cargo_id, h.ejecucion_id);
+    return m;
+  }, [homologados.data]);
+
 
   const invalidate = () => qc.invalidateQueries();
 
@@ -296,12 +308,20 @@ function CargosPage() {
 
   const filtrados = useMemo(
     () =>
-      (cargos.data ?? []).filter(
-        (c) =>
-          (!filtroEmpresa || c.empresa_id === filtroEmpresa) && (!filtroTipo || c.tipo === filtroTipo),
-      ),
-    [cargos.data, filtroEmpresa, filtroTipo],
+      (cargos.data ?? []).filter((c) => {
+        if (filtroEmpresa && c.empresa_id !== filtroEmpresa) return false;
+        if (filtroTipo && c.tipo !== filtroTipo) return false;
+        if (filtroEstado) {
+          if (c.tipo !== "INTERNO") return false;
+          const hecho = mapaHomologados.has(c.id);
+          if (filtroEstado === "HOMOLOGADO" && !hecho) return false;
+          if (filtroEstado === "PENDIENTE" && hecho) return false;
+        }
+        return true;
+      }),
+    [cargos.data, filtroEmpresa, filtroTipo, filtroEstado, mapaHomologados],
   );
+
 
   const sinEmpresas = !empresas.isLoading && !empresas.data?.length;
 
@@ -593,7 +613,22 @@ function CargosPage() {
           <option value="INTERNO">Interno</option>
           <option value="REFERENCIA">Referencia</option>
         </select>
+        <div className="filter-chips" role="group" aria-label="Estado de homologación">
+          {([["", "Todos"], ["PENDIENTE", "Pendientes"], ["HOMOLOGADO", "Homologados"]] as const).map(
+            ([valor, texto]) => (
+              <button
+                type="button"
+                key={texto}
+                aria-pressed={filtroEstado === valor}
+                onClick={() => setFiltroEstado(valor)}
+              >
+                {texto}
+              </button>
+            ),
+          )}
+        </div>
       </div>
+
 
       {cargos.isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
@@ -610,8 +645,26 @@ function CargosPage() {
               <div key={c.id} className="data-group">
                 <div className="data-row">
                   <span data-label="Código" className="data-code">{c.codigo_cargo || "—"}</span>
-                  <span data-label="Cargo" className="data-main">{c.nombre}</span>
+                  <span data-label="Cargo" className="data-main">
+                    {c.nombre}
+                    {c.tipo === "INTERNO" && (
+                      mapaHomologados.has(c.id) ? (
+                        <Link
+                          className="estado-chip ok"
+                          to="/historial/$id"
+                          params={{ id: mapaHomologados.get(c.id)! }}
+                        >
+                          Homologado
+                        </Link>
+                      ) : (
+                        <Link className="estado-chip pend" to="/homologacion/nueva">
+                          Pendiente
+                        </Link>
+                      )
+                    )}
+                  </span>
                   <span data-label="Empresa">{c.empresas?.nombre ?? "—"}</span>
+
                   <span data-label="Tipo">{c.tipo === "INTERNO" ? "Interno" : "Referencia"}</span>
                   <span data-label="Área">{c.nombre_area || "—"}</span>
                   <span data-label="Sueldo">{formatSueldo(c.sueldo)}</span>

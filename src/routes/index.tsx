@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
 import logoAsset from "@/assets/espejo-homologa-logo.jpg.asset.json";
+import { listCargos } from "@/lib/cargos.functions";
+import { listHomologados } from "@/lib/homologacion.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +28,17 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const listC = useServerFn(listCargos);
+  const listH = useServerFn(listHomologados);
+  const cargos = useQuery({ queryKey: ["cargos"], queryFn: () => listC() });
+  const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
+
+  const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
+  const hechos = new Set((homologados.data ?? []).map((h) => h.cargo_id));
+  const completados = internos.filter((c) => hechos.has(c.id)).length;
+  const pendientes = internos.length - completados;
+  const avance = internos.length ? Math.round((completados / internos.length) * 100) : 0;
+
   return (
     <div className="home-page">
       <section className="home-intro">
@@ -37,6 +52,37 @@ function Index() {
         </div>
         <div className="home-logo-wrap" aria-hidden="true">
           <img src={logoAsset.url} alt="" />
+        </div>
+      </section>
+
+      <section className="avance-panel" aria-label="Avance del catálogo">
+        <div className="avance-grid">
+          <article className="avance-card">
+            <span>Cargos internos</span>
+            <strong>{cargos.isLoading ? "—" : internos.length}</strong>
+            <small>En el catálogo de tu empresa</small>
+          </article>
+          <article className="avance-card">
+            <span>Ya homologados</span>
+            <strong>{cargos.isLoading ? "—" : completados}</strong>
+            <small>Con decisión registrada</small>
+          </article>
+          <article className="avance-card">
+            <span>Pendientes</span>
+            <strong>{cargos.isLoading ? "—" : Math.max(0, pendientes)}</strong>
+            <small>Aún sin equivalencia elegida</small>
+          </article>
+        </div>
+        <div className="avance-bar" aria-hidden="true">
+          <i style={{ width: `${avance}%` }} />
+        </div>
+        <div className="avance-foot">
+          <p>{internos.length ? `${avance}% del catálogo interno ya tiene una equivalencia decidida.` : "Aún no hay cargos internos cargados."}</p>
+          {pendientes > 0 && (
+            <Link to="/homologacion/nueva" className="primary-action">
+              Homologar el siguiente pendiente <ArrowRight aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </section>
 

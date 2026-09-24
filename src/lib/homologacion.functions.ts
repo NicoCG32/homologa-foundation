@@ -605,3 +605,16 @@ export const guardarDecision = createServerFn({ method: "POST" })
         .single(),
     );
   });
+
+/** Cargos internos con decisión registrada, para mostrar su estado en el catálogo. */
+export const listHomologados = createServerFn({ method: "GET" }).handler(async () => {
+  const { getDb, unwrap } = await import("./supabase-public.server");
+  const decisiones = unwrap(await getDb().from("decisiones").select("ejecucion_id")) ?? [];
+  const ids = decisiones.map((d) => d.ejecucion_id).filter(Boolean) as string[];
+  if (!ids.length) return [] as { cargo_id: string; ejecucion_id: string; fecha: string | null }[];
+  const ejecuciones =
+    unwrap(await getDb().from("ejecuciones").select("id, cargo_id, fecha").in("id", ids)) ?? [];
+  return ejecuciones
+    .filter((e) => e.cargo_id)
+    .map((e) => ({ cargo_id: e.cargo_id as string, ejecucion_id: e.id, fecha: e.fecha ?? null }));
+});

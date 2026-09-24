@@ -6,12 +6,13 @@ import { useEffect, useState } from "react";
 import { listCargos } from "@/lib/cargos.functions";
 import { listCriterios } from "@/lib/criterios.functions";
 import { PesosEditor, pesosIniciales } from "@/components/pesos-editor";
-import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
+import { analizarSemantica, ejecutarHomologacion, listHomologados } from "@/lib/homologacion.functions";
 import {
   ArrowLeft,
   ArrowRight,
   Bot,
   CheckCircle2,
+  Columns2,
   Flag,
   Search,
   ShieldCheck,
@@ -53,15 +54,30 @@ function NuevaHomologacion() {
   const criterios = useQuery({ queryKey: ["criterios"], queryFn: () => listCr() });
 
   const [cargoId, setCargoId] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [espejoId, setEspejoId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [semError, setSemError] = useState<string | null>(null);
   const [pesos, setPesos] = useState<Record<string, number>>({});
   const [paso, setPaso] = useState(1);
 
+  const listH = useServerFn(listHomologados);
+  const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
+  const hechos = new Set((homologados.data ?? []).map((h) => h.cargo_id));
+
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
+  const q = busqueda.trim().toLowerCase();
+  const internosFiltrados = !q
+    ? internos
+    : internos.filter((c) =>
+        [c.codigo_cargo, c.nombre, c.empresas?.nombre, c.nombre_area, c.nombre_subarea]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
+      );
   const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
   const activos = criterios.data ?? [];
   const totalPesos = activos.reduce((s, c) => s + Number(pesos[c.id] ?? 0), 0);
+
 
   const faltantes: { texto: string; to: "/cargos" | "/criterios"; pestana: string }[] = [];
   if (!cargos.isLoading && !internos.length)
@@ -168,21 +184,56 @@ function NuevaHomologacion() {
             mut.mutate();
           }}
         >
-          <label className="block text-sm">
-            <span>Cargo interno</span>
-            <div className="select-with-icon"><Search aria-hidden="true" /><select
-              value={cargoId}
-              onChange={(e) => setCargoId(e.target.value)}
-              required
-            >
-              <option value="">Selecciona…</option>
-              {internos.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}{c.nombre} — Interno · {c.empresas?.nombre ?? "sin empresa"}
-                </option>
-              ))}
-            </select></div>
-          </label>
+          <div className="cargo-picker">
+            <label className="block text-sm" htmlFor="buscar-cargo">
+              <span>Cargo interno</span>
+            </label>
+            <div className="select-with-icon">
+              <Search aria-hidden="true" />
+              <input
+                id="buscar-cargo"
+                type="search"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Busca por código, nombre, empresa o área…"
+              />
+            </div>
+            {!internosFiltrados.length ? (
+              <p className="text-sm text-muted-foreground">No hay cargos internos que coincidan.</p>
+            ) : (
+              <div className="cargo-picker-list" role="listbox" aria-label="Cargos internos">
+                {internosFiltrados.slice(0, 30).map((c) => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    className="cargo-option"
+                    aria-pressed={cargoId === c.id}
+                    onClick={() => setCargoId(c.id)}
+                  >
+                    <span>
+                      <strong>
+                        {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
+                        {c.nombre}
+                      </strong>
+                      <small>
+                        {c.empresas?.nombre ?? "Sin empresa"}
+                        {c.nombre_area ? ` · ${c.nombre_area}` : ""}
+                      </small>
+                    </span>
+                    <span className={`estado-chip ${hechos.has(c.id) ? "ok" : "pend"}`}>
+                      {hechos.has(c.id) ? "Homologado" : "Pendiente"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {internosFiltrados.length > 30 && (
+              <p className="text-xs text-muted-foreground">
+                Se muestran los primeros 30 resultados; afina la búsqueda para ver otros.
+              </p>
+            )}
+          </div>
+
 
           <details className="criteria-summary"><summary>Ajustar ponderación de esta homologación</summary><div>
             {criterios.isLoading
@@ -206,7 +257,7 @@ function NuevaHomologacion() {
             </div>
           )}
 
-          <Button type="submit" disabled={mut.isPending || faltantes.length > 0} size="lg">
+          <Button type="submit" disabled={mut.isPending || !cargoId || faltantes.length > 0} size="lg">
             {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
           </Button>
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -265,6 +316,34 @@ function NuevaHomologacion() {
               </div>
             )}
           </section>
+
+          {res.preseleccionados.length > 0 && (
+            <section className="rounded-lg border p-4">
+              <h2 className="mb-2 font-medium"><Columns2 /> Vista espejo: cargo interno frente al candidato</h2>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Elige un candidato para comparar su contenido con el cargo que estás evaluando.
+              </p>
+              <div className="filter-chips" role="group" aria-label="Candidatos a comparar">
+                {res.preseleccionados.map((p, i) => (
+                  <button
+                    type="button"
+                    key={p.cargo.id}
+                    aria-pressed={(espejoId || res.preseleccionados[0]!.cargo.id) === p.cargo.id}
+                    onClick={() => setEspejoId(p.cargo.id)}
+                  >
+                    {i + 1}. {p.cargo.codigo_cargo || p.cargo.nombre}
+                  </button>
+                ))}
+              </div>
+              {(() => {
+                const sel =
+                  res.preseleccionados.find((p) => p.cargo.id === espejoId) ??
+                  res.preseleccionados[0]!;
+                return <VistaEspejo interno={res.cargo} candidato={sel.cargo} />;
+              })()}
+            </section>
+          )}
+
 
           <section className="rounded-lg border p-4">
             <h2 className="mb-2 font-medium"><Users /> Candidatos no compatibles</h2>
@@ -396,6 +475,54 @@ function NuevaHomologacion() {
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+type CargoEspejo = {
+  nombre: string;
+  codigo_cargo: string | null;
+  empresa_nombre: string | null;
+  nombre_area: string | null;
+  nombre_subarea: string | null;
+  nivel_jerarquico: string | null;
+  requisitos_formacion: string | null;
+  experiencia_requerida: string | null;
+  descripcion: string | null;
+};
+
+function VistaEspejo({ interno, candidato }: { interno: CargoEspejo; candidato: CargoEspejo }) {
+  const filas: { etiqueta: string; a: string | null; b: string | null }[] = [
+    { etiqueta: "Cargo", a: `${interno.codigo_cargo ? `${interno.codigo_cargo} · ` : ""}${interno.nombre}`, b: `${candidato.codigo_cargo ? `${candidato.codigo_cargo} · ` : ""}${candidato.nombre}` },
+    { etiqueta: "Empresa", a: interno.empresa_nombre, b: candidato.empresa_nombre },
+    { etiqueta: "Área", a: interno.nombre_area, b: candidato.nombre_area },
+    { etiqueta: "Subárea", a: interno.nombre_subarea, b: candidato.nombre_subarea },
+    { etiqueta: "Nivel", a: interno.nivel_jerarquico, b: candidato.nivel_jerarquico },
+    { etiqueta: "Formación", a: interno.requisitos_formacion, b: candidato.requisitos_formacion },
+    { etiqueta: "Experiencia", a: interno.experiencia_requerida, b: candidato.experiencia_requerida },
+    { etiqueta: "Descripción", a: interno.descripcion, b: candidato.descripcion },
+  ];
+  const igual = (a: string | null, b: string | null) =>
+    !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
+
+  return (
+    <div className="espejo">
+      {filas.map((f) => (
+        <div className="espejo-row" key={f.etiqueta}>
+          <span className="espejo-label">
+            {f.etiqueta}
+            {igual(f.a, f.b) && <em>coincide</em>}
+          </span>
+          <div className="espejo-cell">
+            <small>Cargo interno</small>
+            {f.a || "—"}
+          </div>
+          <div className="espejo-cell">
+            <small>Candidato de referencia</small>
+            {f.b || "—"}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
