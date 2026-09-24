@@ -21,7 +21,7 @@ export function ThemeToggle() {
   useEffect(() => {
     if (!listo) return;
     document.documentElement.classList.toggle("dark", tema === "oscuro");
-    document.documentElement.dataset.tema = tema;
+    document.documentElement.dataset["tema"] = tema;
     localStorage.setItem("espejo-tema", tema);
   }, [tema, listo]);
 
