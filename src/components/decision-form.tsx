@@ -234,9 +234,11 @@ export function DecisionForm({
       </label>
 
       <div className="space-y-3">
+        {(() => null)()}
         {preseleccion.map((c) => {
           const banda = tamano ? c.bandas.find((b) => b.tipo_empresa === tamano) : undefined;
           const elegido = candidatoId === c.id;
+          const mejor = mejorId === c.id;
           return (
             <label
               key={c.id}
@@ -251,18 +253,33 @@ export function DecisionForm({
                   onChange={() => setCandidatoId(c.id)}
                   required
                 />
-                <div className="grid">
+                <div className="grid gap-1">
                   <strong>{c.nombre}</strong>
                   <small className="text-muted-foreground">
                     {c.empresa ?? "sin empresa"}
                     {c.id === sugerido ? " · Sugerido por la IA" : ""}
                   </small>
-                  <small className="text-muted-foreground">
-                    Score motor {pct(c.score_deterministico)} · Score semántico{" "}
-                    {semantico(c.score_semantico)} · Score final {pct(c.score_final)}
-                  </small>
+                  {mejor && <span className="mejor-afinidad">Mayor afinidad metodológica</span>}
+                  <div className="score-chips">
+                    <ScoreChip
+                      valor={a100(c.score_deterministico)}
+                      texto={`Motor ${pct(c.score_deterministico)}`}
+                      label="Score motor"
+                    />
+                    <ScoreChip
+                      valor={sem100(c.score_semantico)}
+                      texto={`Semántico ${semantico(c.score_semantico)}`}
+                      label="Score semántico"
+                    />
+                    <ScoreChip
+                      valor={a100(c.score_final)}
+                      texto={`Final ${pct(c.score_final)}`}
+                      label="Score final"
+                    />
+                  </div>
                 </div>
               </div>
+
               {!tamano ? (
                 <p className="mt-2 text-muted-foreground">
                   Selecciona un tamaño de empresa para ver sus datos de mercado.
