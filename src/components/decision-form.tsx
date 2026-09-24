@@ -291,9 +291,10 @@ export function DecisionForm({
       </p>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={() => setEtapa(1)}>
+        <Button type="button" variant="outline" disabled={mut.isPending} onClick={() => setEtapa(1)}>
           Volver a la preselección
         </Button>
+
         <Button type="submit" disabled={mut.isPending || !candidatoId}>
           {mut.isPending ? "Guardando…" : "Confirmar homologación"}
         </Button>
