@@ -613,7 +613,22 @@ function CargosPage() {
           <option value="INTERNO">Interno</option>
           <option value="REFERENCIA">Referencia</option>
         </select>
+        <div className="filter-chips" role="group" aria-label="Estado de homologación">
+          {([["", "Todos"], ["PENDIENTE", "Pendientes"], ["HOMOLOGADO", "Homologados"]] as const).map(
+            ([valor, texto]) => (
+              <button
+                type="button"
+                key={texto}
+                aria-pressed={filtroEstado === valor}
+                onClick={() => setFiltroEstado(valor)}
+              >
+                {texto}
+              </button>
+            ),
+          )}
+        </div>
       </div>
+
 
       {cargos.isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
