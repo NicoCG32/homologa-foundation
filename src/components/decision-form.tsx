@@ -108,6 +108,10 @@ export function DecisionForm({
   const [etapa, setEtapa] = useState<1 | 2>(1);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
   const [candidatoId, setCandidatoId] = useState("");
+  // Ficha mostrada en la vista espejo: el definitivo marcado o, si no hay, el primer preseleccionado.
+  const idEspejo = candidatoId || preseleccion[0]?.id || "";
+  const fichaSel = idEspejo ? fichas?.[idEspejo] : undefined;
+
   const [tamano, setTamano] = useState<Tamano | "">("");
   const [usuario, setUsuario] = useState("");
   const [comentario, setComentario] = useState("");
