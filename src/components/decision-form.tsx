@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getPreseleccion, guardarDecision, guardarPreseleccion } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { ScoreChip, a100 } from "@/components/score-chip";
 
 export type CandidatoDecision = {
   id: string;
@@ -29,6 +30,9 @@ function pct(v: number | string | null | undefined) {
 function semantico(v: number | string | null | undefined) {
   return v == null || v === "" ? "Pendiente" : `${Number(v)}%`;
 }
+function sem100(v: number | string | null | undefined) {
+  return v == null || v === "" ? null : Number(v);
+}
 function monto(v: number | string | null | undefined) {
   return v == null || v === "" ? ND : formatSueldo(v);
 }
@@ -36,12 +40,27 @@ function monto(v: number | string | null | undefined) {
 function Scores({ c }: { c: CandidatoDecision }) {
   return (
     <>
-      <span data-label="Score motor">{pct(c.score_deterministico)}</span>
-      <span data-label="Score semántico">{semantico(c.score_semantico)}</span>
-      <span data-label="Score final">{pct(c.score_final)}</span>
+      <span data-label="Score motor">
+        <ScoreChip
+          valor={a100(c.score_deterministico)}
+          texto={pct(c.score_deterministico)}
+          label="Score motor"
+        />
+      </span>
+      <span data-label="Score semántico">
+        <ScoreChip
+          valor={sem100(c.score_semantico)}
+          texto={semantico(c.score_semantico)}
+          label="Score semántico"
+        />
+      </span>
+      <span data-label="Score final">
+        <ScoreChip valor={a100(c.score_final)} texto={pct(c.score_final)} label="Score final" />
+      </span>
     </>
   );
 }
+
 
 /**
  * Decisión del analista en dos etapas:
