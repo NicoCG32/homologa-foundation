@@ -13,6 +13,8 @@ import { BookMarked, Building2, ClipboardList, History, Home, Settings2, Sparkle
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import logoAsset from "../assets/espejo-homologa-logo.jpg.asset.json";
+import { TEMA_SCRIPT, ThemeToggle } from "../components/theme-toggle";
+
 
 function NotFoundComponent() {
   return (
@@ -113,6 +115,7 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="es">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: TEMA_SCRIPT }} />
       </head>
       <body>
         {children}
@@ -122,15 +125,17 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+
 const NAV = [
   { to: "/", label: "Inicio", icon: Home, group: "principal" },
   { to: "/homologacion/nueva", label: "Seleccionar cargo", icon: Sparkles, group: "principal" },
+  { to: "/criterios", label: "Criterios y pesos", icon: Settings2, group: "principal" },
   { to: "/historial", label: "Historial", icon: History, group: "principal" },
   { to: "/cargos", label: "Cargos", icon: ClipboardList, group: "gestión" },
   { to: "/empresas", label: "Empresas", icon: Building2, group: "gestión" },
-  { to: "/criterios", label: "Criterios", icon: Settings2, group: "gestión" },
   { to: "/diccionario", label: "Diccionario", icon: BookMarked, group: "gestión" },
 ] as const;
+
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
