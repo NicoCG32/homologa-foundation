@@ -143,6 +143,31 @@ function NuevaHomologacion() {
   const semOk = sem.data && sem.data.ok ? sem.data : null;
   const maxPaso = res ? PASOS.length : 1;
 
+  // Cápsula de contexto: activa desde que el analista elige el cargo, no sólo tras ejecutar.
+  const elegido = internos.find((c) => c.id === cargoId);
+  const ctx = res
+    ? {
+        codigo: res.cargo.codigo_cargo,
+        nombre: res.cargo.nombre,
+        empresa: res.cargo.empresa_nombre,
+        area: res.cargo.nombre_area,
+        subarea: res.cargo.nombre_subarea,
+        nivel: res.cargo.nivel_jerarquico,
+        descripcion: res.cargo.descripcion,
+      }
+    : elegido
+      ? {
+          codigo: elegido.codigo_cargo,
+          nombre: elegido.nombre,
+          empresa: elegido.empresas?.nombre ?? null,
+          area: elegido.nombre_area,
+          subarea: elegido.nombre_subarea,
+          nivel: elegido.nivel_jerarquico,
+          descripcion: elegido.descripcion,
+        }
+      : null;
+
+
   return (
     <div className="process-page">
       <div className="page-heading">
