@@ -174,7 +174,7 @@ function RootComponent() {
         </aside>
         <div className="app-workspace">
           <header className="workspace-header">
-            <Link to="/" className="mobile-brand">Espejo: <strong>Homologa</strong></Link>
+            <Link to="/" className="mobile-brand"><LogoEspejo className="brand-mark-sm" /> <span>Espejo: <strong>Homologa</strong></span></Link>
             <div className="header-theme"><ThemeToggle /></div>
           </header>
 
