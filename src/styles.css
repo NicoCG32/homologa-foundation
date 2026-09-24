@@ -482,3 +482,37 @@
   .cargo-option .estado-chip { justify-self: start; }
   .data-main .estado-chip { margin: 6px 0 0; display: inline-block; }
 }
+
+/* ---- Identidad visual: logotipo, prismas y gradientes ambientales ---- */
+.logo-espejo { display: block; width: 100%; height: 100%; }
+.brand-mark { width: 42px; height: 42px; flex: 0 0 42px; filter: drop-shadow(0 4px 12px oklch(0.72 0.13 190 / 35%)); }
+.dark .brand-mark { filter: drop-shadow(0 0 10px oklch(0.78 0.13 196 / 45%)); }
+.brand-mark-sm { width: 26px; height: 26px; flex: 0 0 26px; }
+
+/* Fondo atmosférico con halos suaves */
+.app-workspace {
+  background-image:
+    radial-gradient(760px 420px at 88% -8%, var(--amb-1), transparent 70%),
+    radial-gradient(620px 380px at -6% 105%, var(--amb-2), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Portada: ilustración de prismas de cristal */
+.home-intro { background: linear-gradient(125deg, color-mix(in oklch, var(--card) 92%, transparent), color-mix(in oklch, var(--accent) 72%, transparent)); backdrop-filter: blur(12px); }
+.home-logo-wrap { width: min(100%, 360px); aspect-ratio: auto; padding: 0; border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; }
+.home-hero-art { display: block; width: 100%; height: auto; filter: drop-shadow(0 18px 40px oklch(0.35 0.12 250 / 22%)); }
+.dark .home-hero-art { filter: drop-shadow(0 0 28px oklch(0.70 0.14 200 / 28%)); }
+
+/* Superficies de cristal técnico */
+.quick-grid a, .avance-card, .cargo-context {
+  border: 1px solid color-mix(in oklab, var(--primary) 16%, var(--border));
+  background: color-mix(in oklch, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+@media (max-width: 860px) {
+  .mobile-brand { display: flex !important; align-items: center; gap: 8px; }
+  .mobile-brand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .home-logo-wrap { grid-row: 1; width: min(100%, 230px); justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) { .quick-grid a:hover { transform: none; } }
