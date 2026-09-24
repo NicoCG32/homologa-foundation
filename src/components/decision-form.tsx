@@ -6,6 +6,7 @@ import { getPreseleccion, guardarDecision, guardarPreseleccion } from "@/lib/hom
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ScoreChip, a100 } from "@/components/score-chip";
+import { VistaEspejo, type CargoEspejo } from "@/components/vista-espejo";
 
 export type CandidatoDecision = {
   id: string;
@@ -73,16 +74,23 @@ export function DecisionForm({
   candidatos,
   sugerido,
   onSaved,
+  interno,
+  fichas,
 }: {
   ejecucionId: string;
   candidatos: CandidatoDecision[];
   sugerido?: string | null;
   onSaved?: () => void;
+  /** Ficha del cargo interno evaluado, para la vista espejo. */
+  interno?: CargoEspejo;
+  /** Fichas de los candidatos, indexadas por id de cargo. */
+  fichas?: Record<string, CargoEspejo>;
 }) {
   const getPre = useServerFn(getPreseleccion);
   const guardarPre = useServerFn(guardarPreseleccion);
   const guardar = useServerFn(guardarDecision);
   const qc = useQueryClient();
+
 
   const pre = useQuery({
     queryKey: ["preseleccion", ejecucionId],
@@ -305,6 +313,19 @@ export function DecisionForm({
           );
         })}
       </div>
+
+      {interno && fichaSel && (
+        <section className="espejo-block">
+          <h3>Vista espejo: cargo interno frente al candidato</h3>
+          <p className="text-muted-foreground">
+            {candidatoId
+              ? "Contraste del contenido del cargo que elegiste como definitivo."
+              : "Se muestra el primer preseleccionado; marca otro para compararlo."}
+          </p>
+          <VistaEspejo interno={interno} candidato={fichaSel} />
+        </section>
+      )}
+
 
       <label className="block">
         <span>Analista que confirma</span>
