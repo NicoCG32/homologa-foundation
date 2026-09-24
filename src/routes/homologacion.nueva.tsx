@@ -116,15 +116,28 @@ function NuevaHomologacion() {
         "El análisis IA no pudo completarse. Los resultados determinísticos se conservan intactos; intenta nuevamente.",
       ),
   });
-  const [semLento, setSemLento] = useState(false);
+  const [semEtapa, setSemEtapa] = useState(0);
+  const semLento = semEtapa >= 2;
   useEffect(() => {
     if (!sem.isPending) {
-      setSemLento(false);
+      setSemEtapa(0);
       return;
     }
-    const t = setTimeout(() => setSemLento(true), 3000);
-    return () => clearTimeout(t);
+    setSemEtapa(1);
+    const t2 = setTimeout(() => setSemEtapa(2), 3000);
+    const t3 = setTimeout(() => setSemEtapa(3), 9000);
+    return () => {
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [sem.isPending]);
+  const MENSAJES_ESPERA = [
+    "",
+    "Paso 1 de 3: preparando la comparación de contenido de los cargos preseleccionados…",
+    "Paso 2 de 3: comparando misión, formación y experiencia. Esto puede tardar unos segundos.",
+    "Paso 3 de 3: el primer motor está saturado; consultando el motor de respaldo para no perder tu avance.",
+  ];
+
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
@@ -157,10 +170,10 @@ function NuevaHomologacion() {
         ))}
       </ol>
 
-      {res && paso > 1 && (
+      {res && (
         <aside className="cargo-context" aria-label="Cargo en evaluación">
           <div>
-            <span>Cargo en evaluación</span>
+            <span>Cargo en evaluación · paso {paso} de {PASOS.length}</span>
             <strong>
               {res.cargo.codigo_cargo ? `${res.cargo.codigo_cargo} · ` : ""}
               {res.cargo.nombre}
@@ -168,12 +181,14 @@ function NuevaHomologacion() {
             <small>
               {res.cargo.empresa_nombre ?? "Sin empresa"}
               {res.cargo.nombre_area ? ` · ${res.cargo.nombre_area}` : ""}
+              {res.cargo.nombre_subarea ? ` · ${res.cargo.nombre_subarea}` : ""}
               {res.cargo.nivel_jerarquico ? ` · Nivel ${res.cargo.nivel_jerarquico}` : ""}
             </small>
           </div>
           {res.cargo.descripcion && <p>{res.cargo.descripcion}</p>}
         </aside>
       )}
+
 
 
       {paso === 1 && (
@@ -379,11 +394,10 @@ function NuevaHomologacion() {
           </Button>
           {sem.isPending && (
             <p className="mt-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-              {semLento
-                ? "Consultando motor de respaldo para asegurar la respuesta…"
-                : "Analizando compatibilidad de candidatos…"}
+              {MENSAJES_ESPERA[semEtapa] || MENSAJES_ESPERA[1]}
             </p>
           )}
+
           {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
           {semOk && (
             <div className="mt-4 space-y-3 text-sm">

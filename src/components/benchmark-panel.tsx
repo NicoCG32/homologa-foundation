@@ -138,14 +138,22 @@ export function BenchmarkPanel({
 
       {!tamano ? (
         <p className="text-muted-foreground">
-          Selecciona un tamaño de empresa para ver el benchmark correspondiente.
+          Elige el tamaño de empresa para ver la referencia de mercado del cargo confirmado.
         </p>
       ) : !banda ? (
-        <p className="text-muted-foreground">
-          No hay datos de mercado para el tamaño {TAMANOS.find((t) => t.valor === tamano)?.etiqueta}:{" "}
-          {ND}.
-        </p>
+        <div className="rounded-md border border-dashed p-3 text-muted-foreground">
+          <p>
+            Sin banda de mercado para empresa{" "}
+            {TAMANOS.find((t) => t.valor === tamano)?.etiqueta.toLowerCase()}.
+          </p>
+          <p className="mt-1">
+            La encuesta cargada no reporta valores para este cargo en ese tamaño de empresa, por lo
+            que no se muestra ningún dato: nunca estimamos ni interpolamos cifras. Prueba con otro
+            tamaño o carga una encuesta que incluya este cargo.
+          </p>
+        </div>
       ) : (
+
         <div className="benchmark-comparison">
           <div className="benchmark-chart" aria-label="Gráfico comparativo de remuneración y mercado">
             <h3>Comparación visual</h3>
