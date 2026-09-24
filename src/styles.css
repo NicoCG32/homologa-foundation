@@ -212,7 +212,7 @@
 .workspace-content > div:not(.home-page):not(.process-page) { width: 100%; max-width: 980px; }
 .workspace-content h1 { color: var(--foreground); font-family: var(--font-display); font-weight: 800; }
 .workspace-content form { border-color: var(--border); border-radius: 8px; background: var(--card); box-shadow: 0 10px 32px oklch(0.3 0.08 250 / 5%); }
-.workspace-content input, .workspace-content select, .workspace-content textarea { border-color: var(--input); border-radius: 6px; background: oklch(0.99 0.005 240); }
+.workspace-content input, .workspace-content select, .workspace-content textarea { border-color: var(--input); border-radius: 6px; color: var(--foreground); background: var(--card); }
 .workspace-content table { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--card); border-collapse: separate; border-spacing: 0; }.workspace-content th { padding: 12px 14px; background: var(--muted); font-size: 11px; font-weight: 600; }.workspace-content td { padding: 12px 14px; }
 
 /* Tablet */
