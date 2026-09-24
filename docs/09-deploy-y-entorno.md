@@ -25,6 +25,7 @@ Gestionadas por la plataforma; no se editan a mano.
 | `VITE_SUPABASE_*` | cliente | Configuración pública del cliente generado |
 | `GEMINI_API_KEY` | servidor (secreto) | Análisis semántico |
 | `GEMINI_MODEL` | servidor (opcional) | Modelo a usar; por defecto `gemini-3.6-flash` |
+| `GROQ_API_KEY` | servidor (secreto) | Proveedor de respaldo del análisis y la normalización |
 
 Las variables de servidor se leen **dentro** del handler de cada server function, nunca en el
 ámbito del módulo.

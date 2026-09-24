@@ -13,8 +13,8 @@ salidas. **El sueldo no participa.**
 | `subarea` | Igualdad de código; si falta, similitud del nombre |
 | `codigo_cargo` | Igualdad exacta normalizada |
 | `nivel_jerarquico` | Igualdad de código; si no, similitud textual |
-| `experiencia` | Similitud de la experiencia requerida |
-| `requisitos` | Similitud de requisitos / formación |
+| `experiencia` | Solape de rangos de años y coincidencia de áreas sobre la ficha normalizada; si no hay ficha, similitud del texto original |
+| `requisitos` | Nivel, áreas y carreras de la ficha normalizada; si no hay ficha, similitud del texto original |
 | `tipo_empresa` | Mismo tamaño = 1 · adyacente = 0,5 · extremos = 0 |
 
 Normalización: minúsculas, sin tildes, sin signos, descartando palabras de ≤ 2 letras.
