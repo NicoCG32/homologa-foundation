@@ -4,7 +4,7 @@ import { Moon, Sun } from "lucide-react";
 type Tema = "claro" | "oscuro";
 
 /** Script que aplica el tema antes del primer pintado, evitando parpadeo. */
-export const TEMA_SCRIPT = `(function(){try{var t=localStorage.getItem("espejo-tema");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"oscuro":"claro";}document.documentElement.classList.toggle("dark",t==="oscuro");document.documentElement.dataset.tema=t;}catch(e){}})();`;
+export const TEMA_SCRIPT = `(function(){try{var t=localStorage.getItem("espejo-tema");if(!t){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"oscuro":"claro";}document.documentElement.classList.toggle("dark",t==="oscuro");}catch(e){}})();`;
 
 export function ThemeToggle() {
   const [tema, setTema] = useState<Tema>("claro");
@@ -21,7 +21,6 @@ export function ThemeToggle() {
   useEffect(() => {
     if (!listo) return;
     document.documentElement.classList.toggle("dark", tema === "oscuro");
-    document.documentElement.dataset["tema"] = tema;
     localStorage.setItem("espejo-tema", tema);
   }, [tema, listo]);
 
