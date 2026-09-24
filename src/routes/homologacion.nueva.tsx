@@ -487,20 +487,21 @@ function NuevaHomologacion() {
           <Button
             type="button"
             variant="outline"
-            disabled={paso === 1}
+            disabled={paso === 1 || sem.isPending}
             onClick={() => setPaso((p) => Math.max(1, p - 1))}
           >
             <ArrowLeft /> Atrás
           </Button>
           <Button
             type="button"
-            disabled={paso === PASOS.length}
+            disabled={paso === PASOS.length || sem.isPending}
             onClick={() => setPaso((p) => Math.min(PASOS.length, p + 1))}
           >
             Siguiente <ArrowRight />
           </Button>
         </div>
       )}
+
     </div>
   );
 }
