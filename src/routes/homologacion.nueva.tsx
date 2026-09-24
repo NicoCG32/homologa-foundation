@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { listCargos } from "@/lib/cargos.functions";
 import { listCriterios } from "@/lib/criterios.functions";
 import { PesosEditor, pesosIniciales } from "@/components/pesos-editor";
-import { analizarSemantica, ejecutarHomologacion } from "@/lib/homologacion.functions";
+import { analizarSemantica, ejecutarHomologacion, listHomologados } from "@/lib/homologacion.functions";
 import {
   ArrowLeft,
   ArrowRight,
@@ -53,15 +53,30 @@ function NuevaHomologacion() {
   const criterios = useQuery({ queryKey: ["criterios"], queryFn: () => listCr() });
 
   const [cargoId, setCargoId] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [espejoId, setEspejoId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [semError, setSemError] = useState<string | null>(null);
   const [pesos, setPesos] = useState<Record<string, number>>({});
   const [paso, setPaso] = useState(1);
 
+  const listH = useServerFn(listHomologados);
+  const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
+  const hechos = new Set((homologados.data ?? []).map((h) => h.cargo_id));
+
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
+  const q = busqueda.trim().toLowerCase();
+  const internosFiltrados = !q
+    ? internos
+    : internos.filter((c) =>
+        [c.codigo_cargo, c.nombre, c.empresas?.nombre, c.nombre_area, c.nombre_subarea]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q)),
+      );
   const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
   const activos = criterios.data ?? [];
   const totalPesos = activos.reduce((s, c) => s + Number(pesos[c.id] ?? 0), 0);
+
 
   const faltantes: { texto: string; to: "/cargos" | "/criterios"; pestana: string }[] = [];
   if (!cargos.isLoading && !internos.length)
