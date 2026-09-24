@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, BriefcaseBusiness, Building2, History, Search, Settings2 } from "lucide-react";
 import { EspejoPrismas } from "@/components/logo-espejo";
+import { Bienvenida } from "@/components/bienvenida";
 import { listCargos } from "@/lib/cargos.functions";
 import { listHomologados } from "@/lib/homologacion.functions";
 
@@ -41,6 +42,7 @@ function Index() {
 
   return (
     <div className="home-page">
+      <Bienvenida />
       <section className="home-intro">
         <div>
           <p className="eyebrow">Bienvenido a Espejo: Homologa</p>

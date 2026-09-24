@@ -516,3 +516,61 @@
   .home-logo-wrap { grid-row: 1; width: min(100%, 230px); justify-self: center; }
 }
 @media (prefers-reduced-motion: reduce) { .quick-grid a:hover { transform: none; } }
+
+/* Pantalla de bienvenida */
+.bienvenida {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  cursor: pointer;
+  background:
+    radial-gradient(900px 520px at 80% -10%, var(--amb-1), transparent 70%),
+    radial-gradient(700px 460px at -5% 110%, var(--amb-2), transparent 70%),
+    var(--background);
+  animation: bienvenida-entra .45s ease both;
+}
+.bienvenida-sale { animation: bienvenida-salida .4s ease forwards; }
+@keyframes bienvenida-entra { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bienvenida-salida { to { opacity: 0; visibility: hidden; } }
+.bienvenida-card {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  max-width: 520px;
+  width: 100%;
+  padding: 34px 28px;
+  text-align: center;
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--card) 90%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px oklch(0.3 0.08 250 / 14%);
+}
+.bienvenida-logo {
+  width: min(100%, 320px);
+  height: auto;
+  border-radius: 10px;
+  mix-blend-mode: multiply;
+}
+.dark .bienvenida-logo { mix-blend-mode: normal; filter: drop-shadow(0 0 24px oklch(0.70 0.14 200 / 30%)); }
+.bienvenida-lema { margin: 0; color: var(--muted-foreground); font-size: .95rem; line-height: 1.5; }
+.bienvenida-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 22px; border-radius: 999px;
+  font-weight: 600; letter-spacing: .01em;
+  color: var(--primary-foreground);
+  background: linear-gradient(120deg, var(--primary), color-mix(in oklch, var(--primary) 45%, oklch(0.70 0.14 196)));
+  box-shadow: 0 10px 26px oklch(0.4 0.12 250 / 25%);
+  animation: bienvenida-pulso 2.4s ease-in-out infinite;
+}
+@keyframes bienvenida-pulso { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (max-width: 620px) {
+  .bienvenida-card { padding: 26px 18px; }
+  .bienvenida-logo { width: min(100%, 240px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bienvenida, .bienvenida-sale, .bienvenida-cta { animation: none; }
+}
