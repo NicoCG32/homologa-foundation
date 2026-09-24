@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getPreseleccion, guardarDecision, guardarPreseleccion } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { ScoreChip, a100 } from "@/components/score-chip";
 
 export type CandidatoDecision = {
   id: string;
@@ -29,6 +30,9 @@ function pct(v: number | string | null | undefined) {
 function semantico(v: number | string | null | undefined) {
   return v == null || v === "" ? "Pendiente" : `${Number(v)}%`;
 }
+function sem100(v: number | string | null | undefined) {
+  return v == null || v === "" ? null : Number(v);
+}
 function monto(v: number | string | null | undefined) {
   return v == null || v === "" ? ND : formatSueldo(v);
 }
@@ -36,12 +40,27 @@ function monto(v: number | string | null | undefined) {
 function Scores({ c }: { c: CandidatoDecision }) {
   return (
     <>
-      <span data-label="Score motor">{pct(c.score_deterministico)}</span>
-      <span data-label="Score semántico">{semantico(c.score_semantico)}</span>
-      <span data-label="Score final">{pct(c.score_final)}</span>
+      <span data-label="Score motor">
+        <ScoreChip
+          valor={a100(c.score_deterministico)}
+          texto={pct(c.score_deterministico)}
+          label="Score motor"
+        />
+      </span>
+      <span data-label="Score semántico">
+        <ScoreChip
+          valor={sem100(c.score_semantico)}
+          texto={semantico(c.score_semantico)}
+          label="Score semántico"
+        />
+      </span>
+      <span data-label="Score final">
+        <ScoreChip valor={a100(c.score_final)} texto={pct(c.score_final)} label="Score final" />
+      </span>
     </>
   );
 }
+
 
 /**
  * Decisión del analista en dos etapas:
@@ -70,6 +89,13 @@ export function DecisionForm({
     queryFn: () => getPre({ data: { ejecucion_id: ejecucionId } }),
   });
   const preseleccion = pre.data ?? [];
+  // Referencia visual: el candidato con mayor score final persistido. No selecciona por el analista.
+  const mejorId = preseleccion.reduce<{ id: string; v: number } | null>((mejor, c) => {
+    const v = a100(c.score_final);
+    if (v == null) return mejor;
+    return !mejor || v > mejor.v ? { id: c.id, v } : mejor;
+  }, null)?.id;
+
 
   const [etapa, setEtapa] = useState<1 | 2>(1);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
@@ -218,6 +244,7 @@ export function DecisionForm({
         {preseleccion.map((c) => {
           const banda = tamano ? c.bandas.find((b) => b.tipo_empresa === tamano) : undefined;
           const elegido = candidatoId === c.id;
+          const mejor = mejorId === c.id;
           return (
             <label
               key={c.id}
@@ -232,18 +259,33 @@ export function DecisionForm({
                   onChange={() => setCandidatoId(c.id)}
                   required
                 />
-                <div className="grid">
+                <div className="grid gap-1">
                   <strong>{c.nombre}</strong>
                   <small className="text-muted-foreground">
                     {c.empresa ?? "sin empresa"}
                     {c.id === sugerido ? " · Sugerido por la IA" : ""}
                   </small>
-                  <small className="text-muted-foreground">
-                    Score motor {pct(c.score_deterministico)} · Score semántico{" "}
-                    {semantico(c.score_semantico)} · Score final {pct(c.score_final)}
-                  </small>
+                  {mejor && <span className="mejor-afinidad">Mayor afinidad metodológica</span>}
+                  <div className="score-chips">
+                    <ScoreChip
+                      valor={a100(c.score_deterministico)}
+                      texto={`Motor ${pct(c.score_deterministico)}`}
+                      label="Score motor"
+                    />
+                    <ScoreChip
+                      valor={sem100(c.score_semantico)}
+                      texto={`Semántico ${semantico(c.score_semantico)}`}
+                      label="Score semántico"
+                    />
+                    <ScoreChip
+                      valor={a100(c.score_final)}
+                      texto={`Final ${pct(c.score_final)}`}
+                      label="Score final"
+                    />
+                  </div>
                 </div>
               </div>
+
               {!tamano ? (
                 <p className="mt-2 text-muted-foreground">
                   Selecciona un tamaño de empresa para ver sus datos de mercado.

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecisionForm } from "@/components/decision-form";
+import { ScoreChip } from "@/components/score-chip";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
@@ -143,6 +144,31 @@ function NuevaHomologacion() {
   const semOk = sem.data && sem.data.ok ? sem.data : null;
   const maxPaso = res ? PASOS.length : 1;
 
+  // Cápsula de contexto: activa desde que el analista elige el cargo, no sólo tras ejecutar.
+  const elegido = internos.find((c) => c.id === cargoId);
+  const ctx = res
+    ? {
+        codigo: res.cargo.codigo_cargo,
+        nombre: res.cargo.nombre,
+        empresa: res.cargo.empresa_nombre,
+        area: res.cargo.nombre_area,
+        subarea: res.cargo.nombre_subarea,
+        nivel: res.cargo.nivel_jerarquico,
+        descripcion: res.cargo.descripcion,
+      }
+    : elegido
+      ? {
+          codigo: elegido.codigo_cargo,
+          nombre: elegido.nombre,
+          empresa: elegido.empresas?.nombre ?? null,
+          area: elegido.nombre_area,
+          subarea: elegido.nombre_subarea,
+          nivel: elegido.nivel_jerarquico,
+          descripcion: elegido.descripcion,
+        }
+      : null;
+
+
   return (
     <div className="process-page">
       <div className="page-heading">
@@ -170,24 +196,37 @@ function NuevaHomologacion() {
         ))}
       </ol>
 
-      {res && (
+      {ctx && (
         <aside className="cargo-context" aria-label="Cargo en evaluación">
           <div>
-            <span>Cargo en evaluación · paso {paso} de {PASOS.length}</span>
+            <span>
+              Cargo en evaluación · paso {paso} de {PASOS.length}: {PASOS[paso - 1]}
+            </span>
             <strong>
-              {res.cargo.codigo_cargo ? `${res.cargo.codigo_cargo} · ` : ""}
-              {res.cargo.nombre}
+              {ctx.codigo ? `${ctx.codigo} · ` : ""}
+              {ctx.nombre}
             </strong>
             <small>
-              {res.cargo.empresa_nombre ?? "Sin empresa"}
-              {res.cargo.nombre_area ? ` · ${res.cargo.nombre_area}` : ""}
-              {res.cargo.nombre_subarea ? ` · ${res.cargo.nombre_subarea}` : ""}
-              {res.cargo.nivel_jerarquico ? ` · Nivel ${res.cargo.nivel_jerarquico}` : ""}
+              {ctx.empresa ?? "Sin empresa"}
+              {ctx.area ? ` · ${ctx.area}` : ""}
+              {ctx.subarea ? ` · ${ctx.subarea}` : ""}
+              {ctx.nivel ? ` · Nivel ${ctx.nivel}` : ""}
             </small>
           </div>
-          {res.cargo.descripcion && <p>{res.cargo.descripcion}</p>}
+          {ctx.descripcion && <p>{ctx.descripcion}</p>}
+          <div
+            className="cargo-context-bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round((paso / PASOS.length) * 100)}
+            aria-label="Avance de la homologación"
+          >
+            <i style={{ width: `${(paso / PASOS.length) * 100}%` }} />
+          </div>
         </aside>
       )}
+
 
 
 
@@ -305,32 +344,60 @@ function NuevaHomologacion() {
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
               <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score semántico</span><span>Score final</span></div>
-                {res.preseleccionados.map((p, i) => (
-                  <div key={p.cargo.id} className="score-row">
-                    <div>
-                      <strong>
-                        {i + 1}. {p.cargo.nombre}
-                    </strong><small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
-                    </div><span>{pct(p.score)}</span><span>{(() => { const s = semOk?.analisis.scores_por_candidato.find((item) => item.candidato_id === p.cargo.id)?.score_semantico; return s == null ? "Pendiente" : `${s}%`; })()}</span><span>{(() => { const f = semOk?.finales.find((item) => item.candidato_id === p.cargo.id)?.score_final; return f == null ? "Pendiente" : pct(f); })()}</span>
-                    <div className="score-detail">
-                    <p className="text-muted-foreground">
-                      Coincidencias:{" "}
-                      {p.coincidencias.length
-                        ? p.coincidencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
-                        : "ninguna"}
-                    </p>
-                    <p className="text-muted-foreground">
-                      Diferencias:{" "}
-                      {p.diferencias.length
-                        ? p.diferencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
-                        : "ninguna"}
-                    </p>
+                {res.preseleccionados.map((p, i) => {
+                  const s = semOk?.analisis.scores_por_candidato.find(
+                    (item) => item.candidato_id === p.cargo.id,
+                  )?.score_semantico;
+                  const f = semOk?.finales.find(
+                    (item) => item.candidato_id === p.cargo.id,
+                  )?.score_final;
+                  return (
+                    <div key={p.cargo.id} className="score-row">
+                      <div>
+                        <strong>
+                          {i + 1}. {p.cargo.nombre}
+                        </strong>
+                        <small>{p.cargo.empresa_nombre ?? "sin empresa"}</small>
+                      </div>
+                      <span>
+                        <ScoreChip valor={p.score * 100} texto={pct(p.score)} label="Score motor" />
+                      </span>
+                      <span>
+                        <ScoreChip
+                          valor={s ?? null}
+                          texto={s == null ? "Pendiente" : `${s}%`}
+                          label="Score semántico"
+                        />
+                      </span>
+                      <span>
+                        <ScoreChip
+                          valor={f == null ? null : f * 100}
+                          texto={f == null ? "Pendiente" : pct(f)}
+                          label="Score final"
+                        />
+                      </span>
+                      <details className="score-detail">
+                        <summary>Ver desglose de coincidencias y diferencias</summary>
+                        <p className="text-muted-foreground">
+                          Coincidencias:{" "}
+                          {p.coincidencias.length
+                            ? p.coincidencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
+                            : "ninguna"}
+                        </p>
+                        <p className="text-muted-foreground">
+                          Diferencias:{" "}
+                          {p.diferencias.length
+                            ? p.diferencias.map((c) => `${c.criterio} (${c.detalle})`).join(", ")
+                            : "ninguna"}
+                        </p>
+                      </details>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
+
 
           {res.preseleccionados.length > 0 && (
             <section className="rounded-lg border p-4">
@@ -360,8 +427,11 @@ function NuevaHomologacion() {
           )}
 
 
-          <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium"><Users /> Candidatos no compatibles</h2>
+          <details className="panel-colapsable rounded-lg border p-4">
+            <summary>
+              <Users aria-hidden="true" /> Candidatos no compatibles ({res.descartados.length}) —
+              revisar motivos
+            </summary>
             {!res.descartados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
@@ -374,7 +444,8 @@ function NuevaHomologacion() {
                 ))}
               </ul>
             )}
-          </section>
+          </details>
+
         </div>
       )}
 
