@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecisionForm } from "@/components/decision-form";
+import { ScoreChip } from "@/components/score-chip";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
