@@ -317,6 +317,39 @@ function EjecucionDetalle() {
               score_final: r.score_final,
             }))}
             sugerido={validada?.candidato_recomendado_id ?? null}
+            interno={
+              cargo
+                ? {
+                    nombre: cargo.nombre,
+                    codigo_cargo: cargo.codigo_cargo,
+                    empresa_nombre: cargo.empresas?.nombre ?? null,
+                    nombre_area: cargo.nombre_area,
+                    nombre_subarea: cargo.nombre_subarea,
+                    nivel_jerarquico: cargo.nivel_jerarquico,
+                    requisitos_formacion: cargo.requisitos_formacion,
+                    experiencia_requerida: cargo.experiencia_requerida,
+                    descripcion: cargo.descripcion,
+                  }
+                : undefined
+            }
+            fichas={Object.fromEntries(
+              resultados
+                .filter((r) => r.cargos)
+                .map((r) => [
+                  r.candidato_id,
+                  {
+                    nombre: r.cargos!.nombre,
+                    codigo_cargo: r.cargos!.codigo_cargo,
+                    empresa_nombre: r.cargos!.empresas?.nombre ?? null,
+                    nombre_area: r.cargos!.nombre_area,
+                    nombre_subarea: r.cargos!.nombre_subarea,
+                    nivel_jerarquico: r.cargos!.nivel_jerarquico,
+                    requisitos_formacion: r.cargos!.requisitos_formacion,
+                    experiencia_requerida: r.cargos!.experiencia_requerida,
+                    descripcion: r.cargos!.descripcion,
+                  },
+                ]),
+            )}
           />
         )}
       </section>

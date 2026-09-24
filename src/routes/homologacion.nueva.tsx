@@ -544,6 +544,8 @@ function NuevaHomologacion() {
                   semOk?.finales.find((f) => f.candidato_id === p.cargo.id)?.score_final ?? null,
               }))}
               sugerido={semOk?.analisis.candidato_recomendado_id ?? null}
+              interno={res.cargo}
+              fichas={Object.fromEntries(res.preseleccionados.map((p) => [p.cargo.id, p.cargo]))}
             />
           </div>
           <p className="mt-3 text-sm">
