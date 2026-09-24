@@ -141,6 +141,14 @@
   --sidebar-accent-foreground: oklch(0.96 0.012 240);
   --sidebar-border: oklch(0.38 0.045 250);
   --sidebar-ring: oklch(0.75 0.14 195);
+  --logo-1: oklch(0.66 0.17 258);
+  --logo-2: oklch(0.78 0.13 196);
+  --logo-3: oklch(0.85 0.12 188);
+  --logo-axis: oklch(0.92 0.06 195 / 75%);
+  --logo-shine: oklch(0.97 0.03 195);
+  --logo-edge: oklch(0.85 0.09 195 / 45%);
+  --amb-1: oklch(0.62 0.17 258 / 20%);
+  --amb-2: oklch(0.78 0.13 196 / 16%);
 }
 
 
