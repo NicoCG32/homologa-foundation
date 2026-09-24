@@ -234,7 +234,6 @@ export function DecisionForm({
       </label>
 
       <div className="space-y-3">
-        {(() => null)()}
         {preseleccion.map((c) => {
           const banda = tamano ? c.bandas.find((b) => b.tipo_empresa === tamano) : undefined;
           const elegido = candidatoId === c.id;
