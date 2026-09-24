@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -32,6 +32,8 @@ import {
 } from "@/lib/cargos-import";
 import { listEmpresas } from "@/lib/empresas.functions";
 import { importarDiccionario, listDiccionario } from "@/lib/diccionario.functions";
+import { listHomologados } from "@/lib/homologacion.functions";
+
 
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -99,6 +101,16 @@ function CargosPage() {
 
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<"" | "PENDIENTE" | "HOMOLOGADO">("");
+
+  const listH = useServerFn(listHomologados);
+  const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
+  const mapaHomologados = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const h of homologados.data ?? []) m.set(h.cargo_id, h.ejecucion_id);
+    return m;
+  }, [homologados.data]);
+
 
   const invalidate = () => qc.invalidateQueries();
 
