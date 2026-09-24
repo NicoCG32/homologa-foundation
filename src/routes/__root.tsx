@@ -168,11 +168,16 @@ function RootComponent() {
               );
             })}
           </nav>
+          <div className="sidebar-footer">
+            <ThemeToggle />
+          </div>
         </aside>
         <div className="app-workspace">
           <header className="workspace-header">
             <Link to="/" className="mobile-brand">Espejo: <strong>Homologa</strong></Link>
+            <div className="header-theme"><ThemeToggle /></div>
           </header>
+
           <main className="workspace-content">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
