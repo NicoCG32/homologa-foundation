@@ -146,7 +146,7 @@ function EjecucionDetalle() {
       "Candidato · selección":
         f.candidato_id === decision.candidato_id ? "Definitivo" : "Preseleccionado",
       "Score motor": f.scores.score_deterministico ?? "",
-      "Score Gemini": f.scores.score_semantico ?? "",
+      "Score semántico": f.scores.score_semantico ?? "",
       "Score final": f.scores.score_final ?? "",
       ...decisionCols,
       ...iaCols,
