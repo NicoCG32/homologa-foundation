@@ -184,22 +184,56 @@ export function BenchmarkPanel({
             </div>
           </div>
 
-          <table className="benchmark-table w-full">
+        </div>
+      )}
+
+      {tamano && banda && (
+        <div className="brecha-tabla-wrap">
+          <h3 className="font-medium">Diferencias frente a la remuneración de la empresa</h3>
+          <table className="benchmark-table brecha-tabla w-full">
             <thead className="text-left text-muted-foreground">
               <tr>
-                <th>Indicador</th>
-                <th>Valor</th>
+                <th>Estadígrafo</th>
+                <th>Valor encuesta</th>
+                <th>Remuneración empresa</th>
+                <th>Diferencia ($)</th>
+                <th>Brecha (%)</th>
               </tr>
             </thead>
             <tbody>
-              {filas.map((f) => (
-                <tr key={f.etiqueta}>
-                  <td data-label="Indicador">{f.etiqueta}</td>
-                  <td data-label="Valor">{valor(f.v)}</td>
-                </tr>
-              ))}
+              {filas.map((f) => {
+                const e = num(sueldoInterno);
+                const m = num(f.v);
+                const d = e != null && m != null ? e - m : null;
+                const p = d != null && m ? (d / m) * 100 : null;
+                const signo = (x: number) => (x > 0 ? "+" : x < 0 ? "−" : "");
+                const cls = d == null ? "brecha-nd" : d > 0 ? "brecha-pos" : d < 0 ? "brecha-neg" : "";
+                return (
+                  <tr key={f.etiqueta}>
+                    <td data-label="Estadígrafo">{f.etiqueta}</td>
+                    <td data-label="Valor encuesta">{valor(f.v)}</td>
+                    <td data-label="Remuneración empresa">
+                      {e == null ? "No informada" : formatSueldo(e)}
+                    </td>
+                    <td data-label="Diferencia ($)">
+                      <span className={`brecha ${cls}`}>
+                        {d == null ? ND : `${signo(d)}${formatSueldo(Math.abs(d))}`}
+                      </span>
+                    </td>
+                    <td data-label="Brecha (%)">
+                      <span className={`brecha ${cls}`}>
+                        {p == null ? ND : `${signo(p)}${Math.abs(p).toFixed(1)}%`}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+          <p className="text-xs text-muted-foreground">
+            Diferencia = Empresa − Encuesta. Brecha = (Empresa − Encuesta) / Encuesta × 100. Un valor
+            positivo indica que la empresa paga sobre el mercado.
+          </p>
         </div>
       )}
       <p className="text-xs text-muted-foreground">
