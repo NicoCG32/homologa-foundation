@@ -35,6 +35,7 @@ import { importarDiccionario, listDiccionario } from "@/lib/diccionario.function
 
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { ReiniciarDatos } from "@/components/reiniciar-datos";
 
 export const Route = createFileRoute("/cargos")({
   head: () => ({
@@ -640,6 +641,9 @@ function CargosPage() {
           })}
         </div>
       )}
+
+      <ReiniciarDatos />
     </div>
+
   );
 }
