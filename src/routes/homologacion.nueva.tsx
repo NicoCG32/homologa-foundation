@@ -384,21 +384,33 @@ function NuevaHomologacion() {
           <p className="mb-3 text-sm text-muted-foreground">
             La IA revisará únicamente los {res.preseleccionados.length} candidatos preseleccionados y comparará el contenido de cada cargo.
           </p>
-          <Button
-            type="button"
-            disabled={sem.isPending || !res.preseleccionados.length}
-            onClick={() => sem.mutate(res.ejecucion_id)}
-            variant="outline"
-          >
-            {sem.isPending ? "Analizando…" : "Continuar con análisis IA"}
-          </Button>
+          {!semOk ? (
+            <Button
+              type="button"
+              disabled={sem.isPending || !res.preseleccionados.length}
+              onClick={() => sem.mutate(res.ejecucion_id)}
+              variant="outline"
+            >
+              {sem.isPending ? "Analizando…" : "Continuar con análisis IA"}
+            </Button>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm font-medium text-muted-foreground">
+                ✓ Análisis completado. Se realiza una sola vez por homologación.
+              </p>
+              <Button type="button" onClick={() => setPaso(5)}>
+                Continuar a la decisión <ArrowRight />
+              </Button>
+            </div>
+          )}
           {sem.isPending && (
             <p className="mt-2 text-sm text-muted-foreground" role="status" aria-live="polite">
               {MENSAJES_ESPERA[semEtapa] || MENSAJES_ESPERA[1]}
             </p>
           )}
 
-          {semError && <p className="mt-2 text-sm text-destructive">{semError}</p>}
+          {semError && !semOk && <p className="mt-2 text-sm text-destructive">{semError}</p>}
+
           {semOk && (
             <div className="mt-4 space-y-3 text-sm">
               <p>
