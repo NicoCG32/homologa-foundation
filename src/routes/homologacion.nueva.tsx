@@ -388,8 +388,11 @@ function NuevaHomologacion() {
           )}
 
 
-          <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium"><Users /> Candidatos no compatibles</h2>
+          <details className="panel-colapsable rounded-lg border p-4">
+            <summary>
+              <Users aria-hidden="true" /> Candidatos no compatibles ({res.descartados.length}) —
+              revisar motivos
+            </summary>
             {!res.descartados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
@@ -402,7 +405,8 @@ function NuevaHomologacion() {
                 ))}
               </ul>
             )}
-          </section>
+          </details>
+
         </div>
       )}
 
