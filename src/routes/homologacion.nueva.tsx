@@ -170,24 +170,37 @@ function NuevaHomologacion() {
         ))}
       </ol>
 
-      {res && (
+      {ctx && (
         <aside className="cargo-context" aria-label="Cargo en evaluación">
           <div>
-            <span>Cargo en evaluación · paso {paso} de {PASOS.length}</span>
+            <span>
+              Cargo en evaluación · paso {paso} de {PASOS.length}: {PASOS[paso - 1]}
+            </span>
             <strong>
-              {res.cargo.codigo_cargo ? `${res.cargo.codigo_cargo} · ` : ""}
-              {res.cargo.nombre}
+              {ctx.codigo ? `${ctx.codigo} · ` : ""}
+              {ctx.nombre}
             </strong>
             <small>
-              {res.cargo.empresa_nombre ?? "Sin empresa"}
-              {res.cargo.nombre_area ? ` · ${res.cargo.nombre_area}` : ""}
-              {res.cargo.nombre_subarea ? ` · ${res.cargo.nombre_subarea}` : ""}
-              {res.cargo.nivel_jerarquico ? ` · Nivel ${res.cargo.nivel_jerarquico}` : ""}
+              {ctx.empresa ?? "Sin empresa"}
+              {ctx.area ? ` · ${ctx.area}` : ""}
+              {ctx.subarea ? ` · ${ctx.subarea}` : ""}
+              {ctx.nivel ? ` · Nivel ${ctx.nivel}` : ""}
             </small>
           </div>
-          {res.cargo.descripcion && <p>{res.cargo.descripcion}</p>}
+          {ctx.descripcion && <p>{ctx.descripcion}</p>}
+          <div
+            className="cargo-context-bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round((paso / PASOS.length) * 100)}
+            aria-label="Avance de la homologación"
+          >
+            <i style={{ width: `${(paso / PASOS.length) * 100}%` }} />
+          </div>
         </aside>
       )}
+
 
 
 
