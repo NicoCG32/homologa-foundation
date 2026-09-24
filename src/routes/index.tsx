@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, BriefcaseBusiness, Building2, History, Search } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, History, Search, Settings2 } from "lucide-react";
 import logoAsset from "@/assets/espejo-homologa-logo.jpg.asset.json";
 import { listCargos } from "@/lib/cargos.functions";
 import { listHomologados } from "@/lib/homologacion.functions";
@@ -87,10 +87,14 @@ function Index() {
       </section>
 
       <section className="quick-grid" aria-label="Accesos rápidos">
+        <Link to="/criterios" className="quick-featured">
+          <Settings2 /><span><strong>Criterios y pesos</strong><small>Ajusta cuánto pesa cada columna y guarda tus combinaciones.</small></span><ArrowRight />
+        </Link>
         <Link to="/cargos"><BriefcaseBusiness /><span><strong>Cargos</strong><small>Revisa y administra los cargos disponibles.</small></span><ArrowRight /></Link>
         <Link to="/historial"><History /><span><strong>Historial</strong><small>Consulta homologaciones y resultados anteriores.</small></span><ArrowRight /></Link>
         <Link to="/empresas"><Building2 /><span><strong>Empresas</strong><small>Mantén actualizada la información de empresas.</small></span><ArrowRight /></Link>
       </section>
+
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { getEjecucion } from "@/lib/homologacion.functions";
 import { formatFecha, formatSueldo } from "@/lib/format";
 import { DecisionForm } from "@/components/decision-form";
 import { BenchmarkPanel } from "@/components/benchmark-panel";
+import { VistaEspejo } from "@/components/vista-espejo";
 
 
 function pct(v: number | null | undefined) {
@@ -304,7 +305,42 @@ function EjecucionDetalle() {
                 </ul>
               </div>
             )}
+            {(() => {
+              const def = resultados.find((r) => r.candidato_id === decision.candidato_id)?.cargos;
+              if (!cargo || !def) return null;
+              return (
+                <section className="espejo-block">
+                  <h3>Vista espejo: cargo interno frente al cargo homologado</h3>
+                  <VistaEspejo
+                    etiquetaB="Cargo homologado"
+                    interno={{
+                      nombre: cargo.nombre,
+                      codigo_cargo: cargo.codigo_cargo,
+                      empresa_nombre: cargo.empresas?.nombre ?? null,
+                      nombre_area: cargo.nombre_area,
+                      nombre_subarea: cargo.nombre_subarea,
+                      nivel_jerarquico: cargo.nivel_jerarquico,
+                      requisitos_formacion: cargo.requisitos_formacion,
+                      experiencia_requerida: cargo.experiencia_requerida,
+                      descripcion: cargo.descripcion,
+                    }}
+                    candidato={{
+                      nombre: def.nombre,
+                      codigo_cargo: def.codigo_cargo,
+                      empresa_nombre: def.empresas?.nombre ?? null,
+                      nombre_area: def.nombre_area,
+                      nombre_subarea: def.nombre_subarea,
+                      nivel_jerarquico: def.nivel_jerarquico,
+                      requisitos_formacion: def.requisitos_formacion,
+                      experiencia_requerida: def.experiencia_requerida,
+                      descripcion: def.descripcion,
+                    }}
+                  />
+                </section>
+              );
+            })()}
           </div>
+
         ) : (
           <DecisionForm
             ejecucionId={id}
@@ -317,6 +353,39 @@ function EjecucionDetalle() {
               score_final: r.score_final,
             }))}
             sugerido={validada?.candidato_recomendado_id ?? null}
+            interno={
+              cargo
+                ? {
+                    nombre: cargo.nombre,
+                    codigo_cargo: cargo.codigo_cargo,
+                    empresa_nombre: cargo.empresas?.nombre ?? null,
+                    nombre_area: cargo.nombre_area,
+                    nombre_subarea: cargo.nombre_subarea,
+                    nivel_jerarquico: cargo.nivel_jerarquico,
+                    requisitos_formacion: cargo.requisitos_formacion,
+                    experiencia_requerida: cargo.experiencia_requerida,
+                    descripcion: cargo.descripcion,
+                  }
+                : undefined
+            }
+            fichas={Object.fromEntries(
+              resultados
+                .filter((r) => r.cargos)
+                .map((r) => [
+                  r.candidato_id,
+                  {
+                    nombre: r.cargos!.nombre,
+                    codigo_cargo: r.cargos!.codigo_cargo,
+                    empresa_nombre: r.cargos!.empresas?.nombre ?? null,
+                    nombre_area: r.cargos!.nombre_area,
+                    nombre_subarea: r.cargos!.nombre_subarea,
+                    nivel_jerarquico: r.cargos!.nivel_jerarquico,
+                    requisitos_formacion: r.cargos!.requisitos_formacion,
+                    experiencia_requerida: r.cargos!.experiencia_requerida,
+                    descripcion: r.cargos!.descripcion,
+                  },
+                ]),
+            )}
           />
         )}
       </section>

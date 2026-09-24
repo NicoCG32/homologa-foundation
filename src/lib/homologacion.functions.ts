@@ -21,7 +21,7 @@ export const getEjecucion = createServerFn({ method: "GET" })
       await getDb()
         .from("ejecuciones")
         .select(
-          "id, fecha, estado, criterios_usados, cargos(id, nombre, codigo_cargo, nombre_area, nombre_subarea, nivel_jerarquico, descripcion, sueldo, empresas(nombre))",
+          "id, fecha, estado, criterios_usados, cargos(id, nombre, codigo_cargo, nombre_area, nombre_subarea, nivel_jerarquico, requisitos_formacion, experiencia_requerida, descripcion, sueldo, empresas(nombre))",
         )
         .eq("id", data.id)
         .maybeSingle(),
@@ -30,7 +30,7 @@ export const getEjecucion = createServerFn({ method: "GET" })
       await getDb()
         .from("resultados")
         .select(
-          "id, candidato_id, score_deterministico, score_semantico, score_final, cargos:candidato_id(id, nombre, codigo_cargo, sueldo, empresas(nombre))",
+          "id, candidato_id, score_deterministico, score_semantico, score_final, cargos:candidato_id(id, nombre, codigo_cargo, nombre_area, nombre_subarea, nivel_jerarquico, requisitos_formacion, experiencia_requerida, descripcion, sueldo, empresas(nombre))",
         )
         .eq("ejecucion_id", data.id)
         .order("score_final", { ascending: false, nullsFirst: false }),

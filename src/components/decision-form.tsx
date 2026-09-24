@@ -6,6 +6,7 @@ import { getPreseleccion, guardarDecision, guardarPreseleccion } from "@/lib/hom
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ScoreChip, a100 } from "@/components/score-chip";
+import { VistaEspejo, type CargoEspejo } from "@/components/vista-espejo";
 
 export type CandidatoDecision = {
   id: string;
@@ -73,16 +74,23 @@ export function DecisionForm({
   candidatos,
   sugerido,
   onSaved,
+  interno,
+  fichas,
 }: {
   ejecucionId: string;
   candidatos: CandidatoDecision[];
   sugerido?: string | null;
   onSaved?: () => void;
+  /** Ficha del cargo interno evaluado, para la vista espejo. */
+  interno?: CargoEspejo | undefined;
+  /** Fichas de los candidatos, indexadas por id de cargo. */
+  fichas?: Record<string, CargoEspejo> | undefined;
 }) {
   const getPre = useServerFn(getPreseleccion);
   const guardarPre = useServerFn(guardarPreseleccion);
   const guardar = useServerFn(guardarDecision);
   const qc = useQueryClient();
+
 
   const pre = useQuery({
     queryKey: ["preseleccion", ejecucionId],
@@ -100,6 +108,10 @@ export function DecisionForm({
   const [etapa, setEtapa] = useState<1 | 2>(1);
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
   const [candidatoId, setCandidatoId] = useState("");
+  // Ficha mostrada en la vista espejo: el definitivo marcado o, si no hay, el primer preseleccionado.
+  const idEspejo = candidatoId || preseleccion[0]?.id || "";
+  const fichaSel = idEspejo ? fichas?.[idEspejo] : undefined;
+
   const [tamano, setTamano] = useState<Tamano | "">("");
   const [usuario, setUsuario] = useState("");
   const [comentario, setComentario] = useState("");
@@ -305,6 +317,19 @@ export function DecisionForm({
           );
         })}
       </div>
+
+      {interno && fichaSel && (
+        <section className="espejo-block">
+          <h3>Vista espejo: cargo interno frente al candidato</h3>
+          <p className="text-muted-foreground">
+            {candidatoId
+              ? "Contraste del contenido del cargo que elegiste como definitivo."
+              : "Se muestra el primer preseleccionado; marca otro para compararlo."}
+          </p>
+          <VistaEspejo interno={interno} candidato={fichaSel} />
+        </section>
+      )}
+
 
       <label className="block">
         <span>Analista que confirma</span>
