@@ -345,3 +345,61 @@
   .benchmark-table td::before { content: none; }
   .benchmark-table th:nth-child(3), .benchmark-table td:nth-child(3) { max-width: 105px; }
 }
+
+/* Panel de avance del catálogo (Inicio) */
+.avance-panel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); box-shadow: 0 8px 25px oklch(0.3 0.08 250 / 5%); }
+.avance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.avance-card { display: grid; gap: 4px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); }
+.avance-card span { color: var(--muted-foreground); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.avance-card strong { font: 800 30px var(--font-display); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.avance-card small { color: var(--muted-foreground); font-size: 11px; }
+.avance-bar { height: 8px; border-radius: 999px; background: var(--muted); overflow: hidden; }
+.avance-bar i { display: block; height: 100%; background: var(--primary); transition: width 300ms ease; }
+.avance-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.avance-foot p { color: var(--muted-foreground); font-size: 12px; }
+
+/* Selector de cargo con búsqueda */
+.cargo-picker { display: grid; gap: 10px; }
+.cargo-picker-list { display: grid; gap: 8px; max-height: 330px; overflow-y: auto; padding-right: 4px; }
+.cargo-option { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; text-align: left; padding: 11px 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+.cargo-option:hover { border-color: color-mix(in oklab, var(--primary) 45%, var(--border)); }
+.cargo-option[aria-pressed="true"] { border-color: var(--primary); background: var(--secondary); }
+.cargo-option > span:first-child { display: grid; gap: 3px; min-width: 0; }
+.cargo-option strong { font-size: 13px; overflow-wrap: anywhere; }
+.cargo-option small { color: var(--muted-foreground); font-size: 11px; overflow-wrap: anywhere; }
+
+/* Estado de homologación */
+.estado-chip { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.data-main .estado-chip { margin-left: 8px; }
+.estado-chip.ok { color: var(--primary); background: var(--secondary); }
+.estado-chip.pend { color: var(--muted-foreground); background: var(--muted); }
+
+/* Filtros rápidos */
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chips button { padding: 7px 13px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); color: var(--muted-foreground); font-size: 12px; font-weight: 600; }
+.filter-chips button[aria-pressed="true"] { border-color: var(--primary); color: var(--primary); background: var(--secondary); }
+
+/* Vista espejo */
+.espejo { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card); margin-top: 14px; }
+.espejo-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.espejo-row:last-child { border-bottom: 0; }
+.espejo-row:nth-child(odd) { background: color-mix(in oklab, var(--muted) 45%, transparent); }
+.espejo-label { display: grid; gap: 4px; color: var(--muted-foreground); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.espejo-label em { justify-self: start; padding: 2px 7px; border-radius: 999px; color: var(--primary); background: var(--secondary); font-style: normal; font-size: 9px; }
+.espejo-cell { display: grid; gap: 3px; min-width: 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.espejo-cell small { color: var(--muted-foreground); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+
+@media (max-width: 1024px) {
+  .espejo-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .espejo-label { grid-column: 1 / -1; }
+}
+@media (max-width: 620px) {
+  .avance-grid { grid-template-columns: 1fr; }
+  .avance-card strong { font-size: 26px; }
+  .avance-foot .primary-action { width: 100%; justify-content: center; }
+  .espejo-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .cargo-picker-list { max-height: 280px; }
+  .cargo-option { grid-template-columns: minmax(0, 1fr); }
+  .cargo-option .estado-chip { justify-self: start; }
+  .data-main .estado-chip { margin: 6px 0 0; display: inline-block; }
+}
