@@ -146,7 +146,7 @@ function EjecucionDetalle() {
       "Candidato · selección":
         f.candidato_id === decision.candidato_id ? "Definitivo" : "Preseleccionado",
       "Score motor": f.scores.score_deterministico ?? "",
-      "Score Gemini": f.scores.score_semantico ?? "",
+      "Score semántico": f.scores.score_semantico ?? "",
       "Score final": f.scores.score_final ?? "",
       ...decisionCols,
       ...iaCols,
@@ -216,7 +216,7 @@ function EjecucionDetalle() {
               <tr>
                 <th className="border-b py-2">Candidato</th>
                 <th className="border-b py-2">Score motor</th>
-                <th className="border-b py-2">Score Gemini</th>
+                <th className="border-b py-2">Score semántico</th>
                 <th className="border-b py-2">Score final</th>
               </tr>
             </thead>
@@ -294,7 +294,7 @@ function EjecucionDetalle() {
                         {p.cargos?.empresas?.nombre ? ` — ${p.cargos.empresas.nombre}` : ""}
                         {definitivo ? " · Definitivo" : ""}
                         <div className="text-xs font-normal text-muted-foreground">
-                          Motor {pct(s.score_deterministico)} · Gemini{" "}
+                          Motor {pct(s.score_deterministico)} · Semántico{" "}
                           {s.score_semantico == null ? "—" : `${s.score_semantico}%`} · Final{" "}
                           {pct(s.score_final)}
                         </div>

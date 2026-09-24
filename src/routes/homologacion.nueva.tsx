@@ -141,6 +141,25 @@ function NuevaHomologacion() {
         ))}
       </ol>
 
+      {res && paso > 1 && (
+        <aside className="cargo-context" aria-label="Cargo en evaluación">
+          <div>
+            <span>Cargo en evaluación</span>
+            <strong>
+              {res.cargo.codigo_cargo ? `${res.cargo.codigo_cargo} · ` : ""}
+              {res.cargo.nombre}
+            </strong>
+            <small>
+              {res.cargo.empresa_nombre ?? "Sin empresa"}
+              {res.cargo.nombre_area ? ` · ${res.cargo.nombre_area}` : ""}
+              {res.cargo.nivel_jerarquico ? ` · Nivel ${res.cargo.nivel_jerarquico}` : ""}
+            </small>
+          </div>
+          {res.cargo.descripcion && <p>{res.cargo.descripcion}</p>}
+        </aside>
+      )}
+
+
       {paso === 1 && (
         <form
           className="selection-panel"
@@ -219,7 +238,7 @@ function NuevaHomologacion() {
             {!res.preseleccionados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
-              <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score Gemini</span><span>Score final</span></div>
+              <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score semántico</span><span>Score final</span></div>
                 {res.preseleccionados.map((p, i) => (
                   <div key={p.cargo.id} className="score-row">
                     <div>

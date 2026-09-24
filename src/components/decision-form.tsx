@@ -37,7 +37,7 @@ function Scores({ c }: { c: CandidatoDecision }) {
   return (
     <>
       <span data-label="Score motor">{pct(c.score_deterministico)}</span>
-      <span data-label="Score Gemini">{semantico(c.score_semantico)}</span>
+      <span data-label="Score semántico">{semantico(c.score_semantico)}</span>
       <span data-label="Score final">{pct(c.score_final)}</span>
     </>
   );
@@ -152,7 +152,7 @@ export function DecisionForm({
           <div className="score-row score-head">
             <span>Candidato</span>
             <span>Score motor</span>
-            <span>Score Gemini</span>
+            <span>Score semántico</span>
             <span>Score final</span>
           </div>
           {candidatos.map((c) => (
@@ -239,7 +239,7 @@ export function DecisionForm({
                     {c.id === sugerido ? " · Sugerido por la IA" : ""}
                   </small>
                   <small className="text-muted-foreground">
-                    Score motor {pct(c.score_deterministico)} · Score Gemini{" "}
+                    Score motor {pct(c.score_deterministico)} · Score semántico{" "}
                     {semantico(c.score_semantico)} · Score final {pct(c.score_final)}
                   </small>
                 </div>

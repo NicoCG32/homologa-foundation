@@ -4,7 +4,6 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -133,12 +132,8 @@ const NAV = [
   { to: "/diccionario", label: "Diccionario", icon: BookMarked, group: "gestión" },
 ] as const;
 
-const JOURNEY = ["Cargo", "Revisión", "Candidatos", "Análisis IA", "Decisión"];
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isProcess = pathname.startsWith("/homologacion") || pathname.startsWith("/historial/");
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -168,22 +163,10 @@ function RootComponent() {
               );
             })}
           </nav>
-          <div className="sidebar-note">
-            <span>Decisión asistida</span>
-            <p>La recomendación orienta. La decisión final siempre es tuya.</p>
-          </div>
         </aside>
         <div className="app-workspace">
           <header className="workspace-header">
             <Link to="/" className="mobile-brand">Espejo: <strong>Homologa</strong></Link>
-            {isProcess ? (
-              <ol className="journey" aria-label="Etapas de la homologación">
-                {JOURNEY.map((step, index) => <li key={step} className={index === 0 ? "current" : ""}><span>{index + 1}</span>{step}</li>)}
-              </ol>
-            ) : (
-              <p>Inteligencia para encontrar equivalencias entre cargos</p>
-            )}
-            <div className="user-mark" aria-label="Perfil">PG</div>
           </header>
           <main className="workspace-content">
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -194,3 +177,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
