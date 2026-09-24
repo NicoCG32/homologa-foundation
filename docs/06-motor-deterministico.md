@@ -13,9 +13,8 @@ salidas. **El sueldo no participa.**
 | `subarea` | Igualdad de código; si falta, similitud del nombre |
 | `codigo_cargo` | Igualdad exacta normalizada |
 | `nivel_jerarquico` | Igualdad de código; si no, similitud textual |
-| `experiencia` | Similitud de la experiencia requerida |
-| `requisitos` | Similitud de requisitos / formación |
-| `tipo_empresa` | Mismo tamaño = 1 · adyacente = 0,5 · extremos = 0 |
+| `experiencia` | Solape de rangos de años y coincidencia de áreas sobre la ficha normalizada; si no hay ficha, similitud del texto original |
+| `requisitos` | Nivel, áreas y carreras de la ficha normalizada; si no hay ficha, similitud del texto original |
 
 Normalización: minúsculas, sin tildes, sin signos, descartando palabras de ≤ 2 letras.
 
@@ -40,3 +39,9 @@ Normalización: minúsculas, sin tildes, sin signos, descartando palabras de ≤
 - Cada homologación puede sobrescribirla; los pesos efectivamente aplicados se guardan en
   `ejecuciones.criterios_usados`, de modo que cualquier ejecución del historial es reproducible.
 - Peso 0 ⇒ la columna no se compara.
+
+## Fuera del motor
+
+El **sueldo** y el **tamaño de empresa** no participan en el score ni en la selección de candidatos.
+El tamaño se usa únicamente para elegir qué banda de mercado mostrar en el benchmark, después de la
+decisión.

@@ -37,3 +37,19 @@ También existe borrado individual por fila en el listado de cargos y en empresa
 
 No implementar sin pedido explícito: valorización salarial completa, dashboards, scraping,
 predicción salarial, recomendaciones de aumento ni autenticación de usuarios.
+
+## Diagnóstico de la IA
+
+| Síntoma | Causa habitual |
+|---|---|
+| "Consultando motor de respaldo…" aparece seguido | Gemini está devolviendo 503/429 por cuota o alta demanda; el respaldo Groq responde con el mismo esquema |
+| El análisis falla en ambos proveedores | Faltan `GEMINI_API_KEY` y `GROQ_API_KEY`, o ambos superaron su cuota diaria |
+| Aviso "se comparó el texto original" | La normalización de experiencia y formación no pudo ejecutarse; los scores siguen siendo válidos |
+| El score final aparece "Pendiente" | Aún no hay análisis semántico válido para esa ejecución |
+
+Ver [12 · Resiliencia de la IA](./12-resiliencia-ia.md).
+
+## Qué conserva el reinicio de datos
+
+También se conserva la caché de normalización que vive dentro de los cargos: al borrar los cargos,
+esa caché desaparece con ellos y la siguiente carga vuelve a normalizar.

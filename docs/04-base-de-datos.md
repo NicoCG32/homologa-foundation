@@ -26,6 +26,9 @@ nullable, **informativo**), `atributos_semanticos` (jsonb con 7 claves) y column
 opcionales: `codigo_cargo`, `codigo_area`, `nombre_area`, `codigo_subarea`, `nombre_subarea`,
 `codigo_nivel_jerarquico`, `nivel_jerarquico`, `experiencia_requerida`, `requisitos_formacion`.
 
+La clave `_norm` dentro de `atributos_semanticos` guarda la ficha normalizada de experiencia y
+formación (versión + huella del texto original); ver [11 · Normalización](./11-normalizacion.md).
+
 Índice único parcial **`(empresa_id, tipo, codigo_cargo)` donde `codigo_cargo IS NOT NULL`**:
 un `RRHH-001` interno y un `RRHH-001` de referencia de la misma empresa son registros distintos.
 

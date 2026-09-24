@@ -8,7 +8,8 @@
 | `@tanstack/react-start`, `@tanstack/react-router`, `@tanstack/router-plugin` | Framework full-stack, ruteo por archivos y server functions |
 | `@tanstack/react-query` | Caché y sincronización de datos en la UI |
 | `@supabase/supabase-js` | Cliente PostgreSQL usado sólo en el servidor |
-| `@google/genai` | SDK oficial de Gemini para el análisis semántico |
+| `@google/genai` | SDK oficial de Gemini para la normalización y el análisis semántico |
+| Groq (HTTP, sin SDK) | Proveedor de respaldo cuando Gemini no responde |
 | `xlsx` | Lectura de planillas `.xlsx` y `.csv` |
 | `zod` | Validación de entradas en server functions |
 | `tailwindcss`, `@tailwindcss/vite`, `tailwind-merge`, `clsx`, `class-variance-authority`, `tw-animate-css` | Estilos |

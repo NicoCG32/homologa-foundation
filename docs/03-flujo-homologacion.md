@@ -11,7 +11,9 @@ Cargo  →  Revisión  →  Candidatos  →  Análisis IA  →  Decisión
 2. **Revisión** — se verifican los datos del cargo y, opcionalmente, se ajusta la ponderación
    de esta homologación con los sliders (sin alterar la configuración global).
 3. **Candidatos** — el motor determinístico calcula y ordena los candidatos de referencia.
-4. **Análisis IA** — se envían sólo los preseleccionados a Gemini y se obtiene el score semántico.
+4. **Análisis IA** — se envían sólo los preseleccionados al proveedor de IA (Gemini, con respaldo
+   automático en Groq) y se obtiene el score semántico. Antes de comparar, la experiencia y la
+   formación ya fueron normalizadas; ver [11 · Normalización](./11-normalizacion.md).
 5. **Decisión** — el profesional elige el cargo homologado; queda registrado en el historial.
 
 ### Requisitos previos
