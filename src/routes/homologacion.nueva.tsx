@@ -116,15 +116,28 @@ function NuevaHomologacion() {
         "El análisis IA no pudo completarse. Los resultados determinísticos se conservan intactos; intenta nuevamente.",
       ),
   });
-  const [semLento, setSemLento] = useState(false);
+  const [semEtapa, setSemEtapa] = useState(0);
+  const semLento = semEtapa >= 2;
   useEffect(() => {
     if (!sem.isPending) {
-      setSemLento(false);
+      setSemEtapa(0);
       return;
     }
-    const t = setTimeout(() => setSemLento(true), 3000);
-    return () => clearTimeout(t);
+    setSemEtapa(1);
+    const t2 = setTimeout(() => setSemEtapa(2), 3000);
+    const t3 = setTimeout(() => setSemEtapa(3), 9000);
+    return () => {
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [sem.isPending]);
+  const MENSAJES_ESPERA = [
+    "",
+    "Paso 1 de 3: preparando la comparación de contenido de los cargos preseleccionados…",
+    "Paso 2 de 3: comparando misión, formación y experiencia. Esto puede tardar unos segundos.",
+    "Paso 3 de 3: el primer motor está saturado; consultando el motor de respaldo para no perder tu avance.",
+  ];
+
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
