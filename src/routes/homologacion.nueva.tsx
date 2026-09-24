@@ -168,21 +168,56 @@ function NuevaHomologacion() {
             mut.mutate();
           }}
         >
-          <label className="block text-sm">
-            <span>Cargo interno</span>
-            <div className="select-with-icon"><Search aria-hidden="true" /><select
-              value={cargoId}
-              onChange={(e) => setCargoId(e.target.value)}
-              required
-            >
-              <option value="">Selecciona…</option>
-              {internos.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}{c.nombre} — Interno · {c.empresas?.nombre ?? "sin empresa"}
-                </option>
-              ))}
-            </select></div>
-          </label>
+          <div className="cargo-picker">
+            <label className="block text-sm" htmlFor="buscar-cargo">
+              <span>Cargo interno</span>
+            </label>
+            <div className="select-with-icon">
+              <Search aria-hidden="true" />
+              <input
+                id="buscar-cargo"
+                type="search"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Busca por código, nombre, empresa o área…"
+              />
+            </div>
+            {!internosFiltrados.length ? (
+              <p className="text-sm text-muted-foreground">No hay cargos internos que coincidan.</p>
+            ) : (
+              <div className="cargo-picker-list" role="listbox" aria-label="Cargos internos">
+                {internosFiltrados.slice(0, 30).map((c) => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    className="cargo-option"
+                    aria-pressed={cargoId === c.id}
+                    onClick={() => setCargoId(c.id)}
+                  >
+                    <span>
+                      <strong>
+                        {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
+                        {c.nombre}
+                      </strong>
+                      <small>
+                        {c.empresas?.nombre ?? "Sin empresa"}
+                        {c.nombre_area ? ` · ${c.nombre_area}` : ""}
+                      </small>
+                    </span>
+                    <span className={`estado-chip ${hechos.has(c.id) ? "ok" : "pend"}`}>
+                      {hechos.has(c.id) ? "Homologado" : "Pendiente"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {internosFiltrados.length > 30 && (
+              <p className="text-xs text-muted-foreground">
+                Se muestran los primeros 30 resultados; afina la búsqueda para ver otros.
+              </p>
+            )}
+          </div>
+
 
           <details className="criteria-summary"><summary>Ajustar ponderación de esta homologación</summary><div>
             {criterios.isLoading
