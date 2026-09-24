@@ -308,12 +308,20 @@ function CargosPage() {
 
   const filtrados = useMemo(
     () =>
-      (cargos.data ?? []).filter(
-        (c) =>
-          (!filtroEmpresa || c.empresa_id === filtroEmpresa) && (!filtroTipo || c.tipo === filtroTipo),
-      ),
-    [cargos.data, filtroEmpresa, filtroTipo],
+      (cargos.data ?? []).filter((c) => {
+        if (filtroEmpresa && c.empresa_id !== filtroEmpresa) return false;
+        if (filtroTipo && c.tipo !== filtroTipo) return false;
+        if (filtroEstado) {
+          if (c.tipo !== "INTERNO") return false;
+          const hecho = mapaHomologados.has(c.id);
+          if (filtroEstado === "HOMOLOGADO" && !hecho) return false;
+          if (filtroEstado === "PENDIENTE" && hecho) return false;
+        }
+        return true;
+      }),
+    [cargos.data, filtroEmpresa, filtroTipo, filtroEstado, mapaHomologados],
   );
+
 
   const sinEmpresas = !empresas.isLoading && !empresas.data?.length;
 
