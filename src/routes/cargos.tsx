@@ -645,8 +645,26 @@ function CargosPage() {
               <div key={c.id} className="data-group">
                 <div className="data-row">
                   <span data-label="Código" className="data-code">{c.codigo_cargo || "—"}</span>
-                  <span data-label="Cargo" className="data-main">{c.nombre}</span>
+                  <span data-label="Cargo" className="data-main">
+                    {c.nombre}
+                    {c.tipo === "INTERNO" && (
+                      mapaHomologados.has(c.id) ? (
+                        <Link
+                          className="estado-chip ok"
+                          to="/historial/$id"
+                          params={{ id: mapaHomologados.get(c.id)! }}
+                        >
+                          Homologado
+                        </Link>
+                      ) : (
+                        <Link className="estado-chip pend" to="/homologacion/nueva">
+                          Pendiente
+                        </Link>
+                      )
+                    )}
+                  </span>
                   <span data-label="Empresa">{c.empresas?.nombre ?? "—"}</span>
+
                   <span data-label="Tipo">{c.tipo === "INTERNO" ? "Interno" : "Referencia"}</span>
                   <span data-label="Área">{c.nombre_area || "—"}</span>
                   <span data-label="Sueldo">{formatSueldo(c.sueldo)}</span>
