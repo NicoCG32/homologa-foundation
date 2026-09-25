@@ -244,7 +244,7 @@ export function DecisionForm({
             <span>Score semántico</span>
             <span>Score final</span>
           </div>
-          {candidatos.map((c) => {
+          {ordenados.map((c) => {
             const mejor = mejorEtapa1 === c.id;
             return (
               <label
@@ -318,7 +318,9 @@ export function DecisionForm({
       </label>
 
       <div className="space-y-3">
-        {preseleccion.map((c) => {
+        {ordenarPorPuntaje(preseleccion, (c) =>
+          a100(c.score_final) ?? sem100(c.score_semantico) ?? a100(c.score_deterministico),
+        ).map((c) => {
           const banda = tamano ? c.bandas.find((b) => b.tipo_empresa === tamano) : undefined;
           const elegido = candidatoId === c.id;
           const mejor = mejorId === c.id;
