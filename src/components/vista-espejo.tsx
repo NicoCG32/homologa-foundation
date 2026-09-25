@@ -30,7 +30,7 @@ function Celda({
 }: {
   lado: "a" | "b";
   etiqueta: string;
-  valor?: string | null;
+  valor: string | null | undefined;
   largo: boolean;
 }) {
   const [abierto, setAbierto] = useState(false);
