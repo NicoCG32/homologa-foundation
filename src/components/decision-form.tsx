@@ -68,7 +68,7 @@ export function Brecha({
   );
 }
 
-function Scores({ c }: { c: CandidatoDecision }) {
+function Scores({ c, oro }: { c: CandidatoDecision; oro?: boolean }) {
   return (
     <>
       <span data-label="Score motor">
@@ -86,10 +86,24 @@ function Scores({ c }: { c: CandidatoDecision }) {
         />
       </span>
       <span data-label="Score final">
-        <ScoreChip valor={a100(c.score_final)} texto={pct(c.score_final)} label="Score final" />
+        <ScoreChip
+          valor={a100(c.score_final)}
+          texto={pct(c.score_final)}
+          label="Score final"
+          oro={oro}
+        />
       </span>
     </>
   );
+}
+
+/** Candidato con mayor score final dentro de la lista dada (sólo referencia visual). */
+function mejorDe(lista: { id: string; score_final?: number | string | null }[]) {
+  return lista.reduce<{ id: string; v: number } | null>((mejor, c) => {
+    const v = a100(c.score_final);
+    if (v == null) return mejor;
+    return !mejor || v > mejor.v ? { id: c.id, v } : mejor;
+  }, null)?.id;
 }
 
 
@@ -130,12 +144,9 @@ export function DecisionForm({
     queryFn: () => getPre({ data: { ejecucion_id: ejecucionId } }),
   });
   const preseleccion = pre.data ?? [];
-  // Referencia visual: el candidato con mayor score final persistido. No selecciona por el analista.
-  const mejorId = preseleccion.reduce<{ id: string; v: number } | null>((mejor, c) => {
-    const v = a100(c.score_final);
-    if (v == null) return mejor;
-    return !mejor || v > mejor.v ? { id: c.id, v } : mejor;
-  }, null)?.id;
+  // Referencia visual: el candidato con mayor score final entre los preseleccionados.
+  // Si el mejor global no se preselecciona, la recomendación pasa al mejor de los elegidos.
+  const mejorId = mejorDe(preseleccion);
 
 
   const [etapa, setEtapa] = useState<1 | 2>(1);
@@ -209,7 +220,10 @@ export function DecisionForm({
       </p>
     );
 
-  if (etapa === 1)
+  if (etapa === 1) {
+    // La recomendación se recalcula sobre lo que el analista marca; si no hay marcas, sobre todos.
+    const marcadosArr = candidatos.filter((c) => marcados.has(c.id));
+    const mejorEtapa1 = mejorDe(marcadosArr.length ? marcadosArr : candidatos);
     return (
       <form
         className="space-y-3 text-sm"
@@ -226,31 +240,38 @@ export function DecisionForm({
             <span>Score semántico</span>
             <span>Score final</span>
           </div>
-          {candidatos.map((c) => (
-            <label key={c.id} className="score-row cursor-pointer">
-              <div className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  className="mt-1"
-                  checked={marcados.has(c.id)}
-                  onChange={(e) => {
-                    const next = new Set(marcados);
-                    if (e.target.checked) next.add(c.id);
-                    else next.delete(c.id);
-                    setMarcados(next);
-                  }}
-                />
-                <span className="grid">
-                  <strong>{c.nombre}</strong>
-                  <small>
-                    {c.empresa ?? "sin empresa"}
-                    {c.id === sugerido ? " · Sugerido por la IA" : ""}
-                  </small>
-                </span>
-              </div>
-              <Scores c={c} />
-            </label>
-          ))}
+          {candidatos.map((c) => {
+            const mejor = mejorEtapa1 === c.id;
+            return (
+              <label
+                key={c.id}
+                className={`score-row cursor-pointer${mejor ? " fila-recomendada" : ""}`}
+              >
+                <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={marcados.has(c.id)}
+                    onChange={(e) => {
+                      const next = new Set(marcados);
+                      if (e.target.checked) next.add(c.id);
+                      else next.delete(c.id);
+                      setMarcados(next);
+                    }}
+                  />
+                  <span className="grid">
+                    <strong>{c.nombre}</strong>
+                    <small>
+                      {c.empresa ?? "sin empresa"}
+                      {mejor ? " · Opción recomendada" : ""}
+                      {c.id === sugerido ? " · Sugerido por la IA" : ""}
+                    </small>
+                  </span>
+                </div>
+                <Scores c={c} oro={mejor} />
+              </label>
+            );
+          })}
         </div>
         <Button type="submit" disabled={preMut.isPending || marcados.size === 0}>
           {preMut.isPending ? "Guardando…" : `Guardar preselección (${marcados.size})`}
@@ -258,6 +279,7 @@ export function DecisionForm({
         {error && <p className="text-destructive">{error}</p>}
       </form>
     );
+  }
 
   return (
     <form
@@ -299,7 +321,7 @@ export function DecisionForm({
           return (
             <label
               key={c.id}
-              className={`block cursor-pointer rounded-lg border p-3 ${elegido ? "border-primary" : ""}`}
+              className={`block cursor-pointer rounded-lg border p-3 ${elegido ? "border-primary" : ""}${mejor ? " tarjeta-recomendada" : ""}`}
             >
               <div className="flex items-start gap-2">
                 <input
@@ -316,7 +338,14 @@ export function DecisionForm({
                     {c.empresa ?? "sin empresa"}
                     {c.id === sugerido ? " · Sugerido por la IA" : ""}
                   </small>
-                  {mejor && <span className="mejor-afinidad">Mayor afinidad metodológica</span>}
+                  {mejor && (
+                    <span
+                      className="mejor-afinidad"
+                      title="Mayor score final entre los candidatos que preseleccionaste"
+                    >
+                      ★ Opción recomendada
+                    </span>
+                  )}
                   <div className="score-chips">
                     <ScoreChip
                       valor={a100(c.score_deterministico)}
@@ -332,6 +361,7 @@ export function DecisionForm({
                       valor={a100(c.score_final)}
                       texto={`Final ${pct(c.score_final)}`}
                       label="Score final"
+                      oro={mejor}
                     />
                   </div>
                 </div>
