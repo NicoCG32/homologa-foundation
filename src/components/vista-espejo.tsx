@@ -100,7 +100,7 @@ export function VistaEspejo({
     <details className="espejo-desplegable">
       <summary>
         <span className="espejo-sum-titulo">
-          Comparar en vista espejo: {interno.codigo_cargo || interno.nombre} frente a{" "}
+          Ver detalle de la comparación: {interno.codigo_cargo || interno.nombre} frente a{" "}
           <strong key={identidad} className="espejo-sum-b">
             {candidato.codigo_cargo || candidato.nombre}
           </strong>
