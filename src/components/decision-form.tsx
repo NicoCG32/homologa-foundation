@@ -321,7 +321,7 @@ export function DecisionForm({
           return (
             <label
               key={c.id}
-              className={`block cursor-pointer rounded-lg border p-3 ${elegido ? "border-primary" : ""}`}
+              className={`block cursor-pointer rounded-lg border p-3 ${elegido ? "border-primary" : ""}${mejor ? " tarjeta-recomendada" : ""}`}
             >
               <div className="flex items-start gap-2">
                 <input
@@ -338,7 +338,14 @@ export function DecisionForm({
                     {c.empresa ?? "sin empresa"}
                     {c.id === sugerido ? " · Sugerido por la IA" : ""}
                   </small>
-                  {mejor && <span className="mejor-afinidad">Mayor afinidad metodológica</span>}
+                  {mejor && (
+                    <span
+                      className="mejor-afinidad"
+                      title="Mayor score final entre los candidatos que preseleccionaste"
+                    >
+                      ★ Opción recomendada
+                    </span>
+                  )}
                   <div className="score-chips">
                     <ScoreChip
                       valor={a100(c.score_deterministico)}
@@ -354,6 +361,7 @@ export function DecisionForm({
                       valor={a100(c.score_final)}
                       texto={`Final ${pct(c.score_final)}`}
                       label="Score final"
+                      oro
                     />
                   </div>
                 </div>
