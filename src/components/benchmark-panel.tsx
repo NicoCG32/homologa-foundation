@@ -147,9 +147,7 @@ export function BenchmarkPanel({
             {TAMANOS.find((t) => t.valor === tamano)?.etiqueta.toLowerCase()}.
           </p>
           <p className="mt-1">
-            La encuesta cargada no reporta valores para este cargo en ese tamaño de empresa, por lo
-            que no se muestra ningún dato: nunca estimamos ni interpolamos cifras. Prueba con otro
-            tamaño o carga una encuesta que incluya este cargo.
+            La encuesta no reporta este cargo en ese tamaño y nunca estimamos cifras.
           </p>
         </div>
       ) : (
@@ -167,7 +165,8 @@ export function BenchmarkPanel({
                     cursor={{ fill: "var(--muted)" }}
                     formatter={(v) => [v == null ? ND : valorExactoGrafico(Number(v)), "Remuneración"]}
                     labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 6 }}
+                    itemStyle={{ color: "var(--foreground)" }}
+                    contentStyle={{ background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)", borderRadius: 6 }}
                   />
                   <Bar dataKey="valor" radius={[5, 5, 0, 0]} maxBarSize={64}>
                     {datosGrafico.map((dato) => (
@@ -231,14 +230,12 @@ export function BenchmarkPanel({
             </tbody>
           </table>
           <p className="text-xs text-muted-foreground">
-            Diferencia = Empresa − Encuesta. Brecha = (Empresa − Encuesta) / Encuesta × 100. Un valor
-            positivo indica que la empresa paga sobre el mercado.
+            Un valor positivo indica que la empresa paga sobre el mercado.
           </p>
         </div>
       )}
       <p className="text-xs text-muted-foreground">
-        Información referencial. La remuneración no participa en ningún puntaje ni en la selección
-        de candidatos.
+        Información referencial: no participa en ningún puntaje.
       </p>
     </div>
   );
