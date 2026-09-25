@@ -361,7 +361,7 @@ export function DecisionForm({
                       valor={a100(c.score_final)}
                       texto={`Final ${pct(c.score_final)}`}
                       label="Score final"
-                      oro
+                      oro={mejor}
                     />
                   </div>
                 </div>
