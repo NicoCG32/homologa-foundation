@@ -494,6 +494,10 @@
 .espejo-block h3 { display: flex; align-items: center; gap: 8px; font: 700 14px var(--font-display); }
 .espejo-block h3::before { content: ""; width: 14px; height: 14px; border-radius: 3px; background: linear-gradient(90deg, var(--primary) 0 50%, oklch(0.72 0.15 181) 50% 100%); }
 .espejo-block > p { font-size: 12px; }
+/* Bloque de consulta opcional: discreto y separado de los controles de decisión. */
+.espejo-opcional { margin-top: 24px; padding: 14px; border: 1px dashed var(--border); border-radius: 10px; background: color-mix(in oklch, var(--muted) 35%, transparent); }
+.espejo-opcional h3 { font-size: 13px; color: var(--muted-foreground); }
+.espejo-opcional h3 svg { width: 14px; height: 14px; }
 .espejo { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--card); margin-top: 14px; }
 .espejo-heads, .espejo-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .espejo-heads { padding: 9px 14px; background: var(--muted); color: var(--muted-foreground); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
