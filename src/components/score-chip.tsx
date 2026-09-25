@@ -1,7 +1,7 @@
 /**
- * Escala semáforo de afinidad para los tres scores (motor, semántico, final).
+ * Pastilla sobria para los tres scores (motor, semántico, final).
  * Sólo presentación: no altera cálculos ni decide por el analista.
- * Umbrales: alta >= 80%, media >= 60%, baja < 60%.
+ * El único resalte de color es el dorado de la opción recomendada.
  */
 export type NivelAfinidad = "alta" | "media" | "baja" | "nd";
 
@@ -12,34 +12,29 @@ export function nivelAfinidad(pct0a100: number | null | undefined): NivelAfinida
   return "baja";
 }
 
-const ETIQUETA: Record<NivelAfinidad, string> = {
-  alta: "Afinidad alta",
-  media: "Afinidad media",
-  baja: "Afinidad baja",
-  nd: "Sin dato",
-};
-
 /**
  * @param valor porcentaje 0–100 (null = pendiente / no disponible)
  * @param texto texto ya formateado a mostrar
+ * @param oro resalta el puntaje del candidato recomendado
  */
 export function ScoreChip({
   valor,
   texto,
   label,
+  oro,
 }: {
   valor: number | null | undefined;
   texto: string;
   label?: string;
+  oro?: boolean;
 }) {
-  const nivel = nivelAfinidad(valor);
+  const nd = nivelAfinidad(valor) === "nd";
   return (
     <span
-      className={`score-chip score-chip-${nivel}`}
-      title={`${label ? `${label}: ` : ""}${ETIQUETA[nivel]}`}
+      className={`score-chip${nd ? " score-chip-nd" : ""}${oro ? " score-chip-oro" : ""}`}
+      title={label}
     >
       {texto}
-      <em>{nivel === "nd" ? "—" : ETIQUETA[nivel].replace("Afinidad ", "")}</em>
     </span>
   );
 }
