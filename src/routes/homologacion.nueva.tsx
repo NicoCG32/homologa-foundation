@@ -348,7 +348,7 @@ function NuevaHomologacion() {
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
               <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score semántico</span><span>Score final</span></div>
-                {res.preseleccionados.map((p, i) => {
+                {preOrdenados.map((p, i) => {
                   const s = semOk?.analisis.scores_por_candidato.find(
                     (item) => item.candidato_id === p.cargo.id,
                   )?.score_semantico;
@@ -474,7 +474,7 @@ function NuevaHomologacion() {
                 {semOk.analisis.confianza}
               </p>
               <ul className="space-y-2">
-                {semOk.analisis.scores_por_candidato.map((s) => (
+                {ordenarPorPuntaje(semOk.analisis.scores_por_candidato, (s) => s.score_semantico).map((s) => (
                   <li key={s.candidato_id} className="border-b pb-2">
                     <p>
                       <strong>
