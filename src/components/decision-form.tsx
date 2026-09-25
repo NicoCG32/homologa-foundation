@@ -68,7 +68,7 @@ export function Brecha({
   );
 }
 
-function Scores({ c }: { c: CandidatoDecision }) {
+function Scores({ c, oro }: { c: CandidatoDecision; oro?: boolean }) {
   return (
     <>
       <span data-label="Score motor">
@@ -86,10 +86,24 @@ function Scores({ c }: { c: CandidatoDecision }) {
         />
       </span>
       <span data-label="Score final">
-        <ScoreChip valor={a100(c.score_final)} texto={pct(c.score_final)} label="Score final" />
+        <ScoreChip
+          valor={a100(c.score_final)}
+          texto={pct(c.score_final)}
+          label="Score final"
+          oro={oro}
+        />
       </span>
     </>
   );
+}
+
+/** Candidato con mayor score final dentro de la lista dada (sólo referencia visual). */
+function mejorDe(lista: { id: string; score_final: number | string | null }[]) {
+  return lista.reduce<{ id: string; v: number } | null>((mejor, c) => {
+    const v = a100(c.score_final);
+    if (v == null) return mejor;
+    return !mejor || v > mejor.v ? { id: c.id, v } : mejor;
+  }, null)?.id;
 }
 
 
