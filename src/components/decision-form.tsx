@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { getPreseleccion, guardarDecision, guardarPreseleccion } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { ScoreChip, a100 } from "@/components/score-chip";
+import { ScoreChip, a100, ordenarPorPuntaje } from "@/components/score-chip";
 import { VistaEspejo, type CargoEspejo } from "@/components/vista-espejo";
 
 export type CandidatoDecision = {
@@ -224,6 +224,10 @@ export function DecisionForm({
     // La recomendación se recalcula sobre lo que el analista marca; si no hay marcas, sobre todos.
     const marcadosArr = candidatos.filter((c) => marcados.has(c.id));
     const mejorEtapa1 = mejorDe(marcadosArr.length ? marcadosArr : candidatos);
+    // Tabla siempre ordenada de mayor a menor puntaje (pendientes al final).
+    const ordenados = ordenarPorPuntaje(candidatos, (c) =>
+      a100(c.score_final) ?? sem100(c.score_semantico) ?? a100(c.score_deterministico),
+    );
     return (
       <form
         className="space-y-3 text-sm"
