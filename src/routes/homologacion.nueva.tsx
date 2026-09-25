@@ -543,6 +543,38 @@ function NuevaHomologacion() {
         </div>
       )}
 
+      {/* Consulta opcional: queda bajo los botones para no interrumpir el avance del asistente. */}
+      {res && paso === 3 && res.preseleccionados.length > 0 && (
+        <section className="espejo-block espejo-opcional">
+          <h3>
+            <Columns2 aria-hidden="true" /> Detalle de la comparación (opcional)
+          </h3>
+          <p className="text-muted-foreground">
+            Solo para revisar lado a lado el contenido de ambos cargos. No es necesario para
+            continuar.
+          </p>
+          <div className="filter-chips" role="group" aria-label="Candidatos a comparar">
+            {res.preseleccionados.map((p, i) => (
+              <button
+                type="button"
+                key={p.cargo.id}
+                aria-pressed={(espejoId || res.preseleccionados[0]!.cargo.id) === p.cargo.id}
+                onClick={() => setEspejoId(p.cargo.id)}
+              >
+                {i + 1}. {p.cargo.codigo_cargo || p.cargo.nombre}
+              </button>
+            ))}
+          </div>
+          {(() => {
+            const sel =
+              res.preseleccionados.find((p) => p.cargo.id === espejoId) ??
+              res.preseleccionados[0]!;
+            return <VistaEspejo interno={res.cargo} candidato={sel.cargo} />;
+          })()}
+        </section>
+      )}
+
+
     </div>
   );
 }
