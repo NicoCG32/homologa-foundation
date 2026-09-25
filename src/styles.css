@@ -211,63 +211,58 @@
 .cargo-context-bar { height: 5px; border-radius: 999px; background: var(--muted); overflow: hidden; }
 .cargo-context-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), oklch(0.66 0.15 181)); transition: width 260ms ease; }
 
-/* Escala semáforo de afinidad (sólo lectura visual, nunca decide) */
+/* Pastillas de score: neutras y técnicas. El color se reserva a la recomendación. */
 .score-chip {
-  position: relative; display: inline-flex; align-items: center; gap: 7px;
-  padding: 5px 11px 5px 9px; border: 1px solid transparent; border-radius: 7px 999px 999px 7px;
-  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
-  background-clip: padding-box; overflow: hidden;
-  box-shadow: 0 1px 2px oklch(0.3 0.08 250 / 10%), inset 0 1px 0 oklch(1 0 0 / 35%);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 7px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklch, var(--muted) 55%, var(--card));
+  color: var(--foreground);
+  font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-/* Prisma: destello diagonal de refracción propio de la identidad Espejo */
-.score-chip::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(112deg, oklch(1 0 0 / 28%) 0 32%, transparent 33% 100%);
+.score-chip-nd { color: var(--muted-foreground); font-weight: 500; }
+/* Oro técnico: sólo el puntaje del candidato recomendado */
+.score-chip-oro {
+  color: oklch(0.38 0.07 78);
+  background: linear-gradient(108deg, oklch(0.95 0.05 92), oklch(0.91 0.08 80));
+  border-color: oklch(0.80 0.09 82);
+  box-shadow: 0 1px 2px oklch(0.55 0.10 80 / 22%);
 }
-.score-chip::before {
-  content: ""; width: 4px; align-self: stretch; margin: -5px 2px -5px -5px; border-radius: 2px;
-  background: currentColor; opacity: .75;
-}
-.score-chip em { font-style: normal; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .78; }
-.score-chip-alta {
-  color: oklch(0.33 0.10 172);
-  background: linear-gradient(108deg, oklch(0.94 0.07 178), oklch(0.90 0.09 160));
-  border-color: oklch(0.77 0.11 172);
-}
-.score-chip-media {
-  color: oklch(0.37 0.09 70);
-  background: linear-gradient(108deg, oklch(0.95 0.07 92), oklch(0.91 0.10 68));
-  border-color: oklch(0.81 0.11 78);
-}
-.score-chip-baja {
-  color: oklch(0.40 0.04 252);
-  background: linear-gradient(108deg, oklch(0.95 0.015 248), oklch(0.90 0.03 256));
-  border-color: oklch(0.84 0.025 250);
-}
-.score-chip-nd {
-  color: var(--muted-foreground);
-  background: linear-gradient(108deg, var(--muted), color-mix(in oklch, var(--muted) 70%, var(--card)));
-  border-color: var(--border);
-}
-.dark .score-chip { box-shadow: 0 1px 2px oklch(0 0 0 / 35%), inset 0 1px 0 oklch(1 0 0 / 10%); }
-.dark .score-chip::after { background: linear-gradient(112deg, oklch(1 0 0 / 10%) 0 32%, transparent 33% 100%); }
-.dark .score-chip-alta {
-  color: oklch(0.93 0.08 176);
-  background: linear-gradient(108deg, oklch(0.34 0.08 182), oklch(0.29 0.07 160));
-  border-color: oklch(0.52 0.10 174);
-}
-.dark .score-chip-media {
-  color: oklch(0.93 0.09 90);
-  background: linear-gradient(108deg, oklch(0.36 0.07 88), oklch(0.31 0.07 62));
-  border-color: oklch(0.54 0.10 80);
-}
-.dark .score-chip-baja {
-  color: oklch(0.86 0.025 250);
-  background: linear-gradient(108deg, oklch(0.32 0.03 252), oklch(0.27 0.035 262));
-  border-color: oklch(0.44 0.03 252);
+.dark .score-chip-oro {
+  color: oklch(0.92 0.08 88);
+  background: linear-gradient(108deg, oklch(0.36 0.06 82), oklch(0.31 0.06 66));
+  border-color: oklch(0.58 0.09 82);
+  box-shadow: none;
 }
 .score-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
-.mejor-afinidad { justify-self: start; padding: 3px 9px; border-radius: 999px; color: var(--primary); background: var(--secondary); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.mejor-afinidad {
+  justify-self: start; display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  color: oklch(0.36 0.07 76);
+  background: linear-gradient(108deg, oklch(0.95 0.05 92), oklch(0.90 0.08 78));
+  border: 1px solid oklch(0.79 0.09 82);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+}
+.dark .mejor-afinidad {
+  color: oklch(0.93 0.08 88);
+  background: linear-gradient(108deg, oklch(0.35 0.06 82), oklch(0.30 0.06 64));
+  border-color: oklch(0.56 0.09 82);
+}
+/* Tarjeta del candidato recomendado */
+.tarjeta-recomendada {
+  border-color: oklch(0.78 0.09 82) !important;
+  box-shadow: 0 0 0 1px oklch(0.78 0.09 82 / 35%), 0 6px 18px oklch(0.70 0.09 80 / 12%);
+  background: color-mix(in oklch, oklch(0.93 0.06 88) 14%, var(--card));
+}
+.dark .tarjeta-recomendada {
+  border-color: oklch(0.56 0.09 82) !important;
+  box-shadow: 0 0 0 1px oklch(0.60 0.09 82 / 35%);
+  background: color-mix(in oklch, oklch(0.45 0.07 82) 14%, var(--card));
+}
+.fila-recomendada strong::before {
+  content: "★"; margin-right: 6px; color: oklch(0.62 0.11 82);
+}
+.dark .fila-recomendada strong::before { color: oklch(0.80 0.10 86); }
 
 /* Bloques desplegables (cerrados por defecto) */
 .score-detail > summary, .panel-colapsable > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--primary); font-size: 12px; font-weight: 600; list-style: none; }
