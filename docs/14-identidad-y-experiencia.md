@@ -15,7 +15,20 @@ enfrentadas, con los mismos campos en el mismo orden. Ninguno se presenta como s
   acento de confirmación; degradados suaves, fondos claros, superficies translúcidas.
 - Todos los colores viven como tokens semánticos en `src/styles.css`. **Nunca** se escriben colores
   fijos en los componentes: rompen el tema y el modo oscuro.
-- Logotipo oficial en la navegación y el encabezado, sin redibujarlo ni alterar sus proporciones.
+- Isotipo vectorial (`logo-espejo.tsx`: dos prismas enfrentados) en navegación y cabecera móvil;
+  sus degradados salen de tokens `--logo-*`, por lo que se adapta a claro y oscuro. La portada usa
+  la ilustración `EspejoPrismas` y fondos con halos `--amb-*`.
+- El logotipo oficial se conserva en la pantalla de bienvenida (`bienvenida.tsx`), una vez por
+  sesión, con "Haz clic para comenzar"; también es el favicon.
+- Tipografía: Urbanist en títulos, Epilogue en texto, cifras tabulares en montos y percentiles.
+- Scores con distintivos en degradado: turquesa (alta), ámbar (media), pizarra (baja). Sin rojo.
+
+## Modo claro y oscuro
+
+Switch accesible (`role="switch"`) en el pie del menú lateral y en la cabecera móvil. El tema se
+aplica antes del primer pintado (sin parpadeo), se guarda en `localStorage` (`espejo-tema`) y parte
+de `prefers-color-scheme`. `.dark` declara `color-scheme: dark` para que campos, listas y barras
+nativas hereden el tema; todo texto usa tokens, nunca negro fijo. Contrastes WCAG AA como mínimo.
 
 ## Vocabulario
 
@@ -43,6 +56,14 @@ mensajes de error explican **qué pasó** y **qué hacer**, no la causa técnica
 | No disponible | "No disponible" — el dato no existe en la fuente |
 | En proceso | Texto de progreso real ("Analizando compatibilidad…") |
 | Error | Qué falló, qué sigue siendo válido y qué puede hacer el analista |
+
+## Orientación durante la homologación
+
+- Cápsula contextual fija (sticky) desde el paso 1 con el cargo evaluado y "Paso X de 5".
+- Bloques extensos (desglose de coincidencias, descartados, vista espejo) plegados por defecto.
+- Botones que se bloquean mientras procesan; el análisis IA se ejecuta **una sola vez**: tras
+  completarse el botón desaparece y queda "Continuar a la decisión".
+- Mensajes de espera por etapas con `aria-live`, y explicación clara cuando falta una banda salarial.
 
 ## Prevención de errores
 
