@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DecisionForm } from "@/components/decision-form";
-import { ScoreChip } from "@/components/score-chip";
+import { ScoreChip, ordenarPorPuntaje } from "@/components/score-chip";
 import { VistaEspejo } from "@/components/vista-espejo";
 
 export const Route = createFileRoute("/homologacion/nueva")({
@@ -143,6 +143,17 @@ function NuevaHomologacion() {
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
+  // Tabla de preseleccionados siempre ordenada de mayor a menor puntaje (pendientes al final).
+  const preOrdenados = res
+    ? ordenarPorPuntaje(res.preseleccionados, (p) => {
+        const f = semOk?.finales.find((i) => i.candidato_id === p.cargo.id)?.score_final;
+        if (f != null) return f * 100;
+        const s = semOk?.analisis.scores_por_candidato.find(
+          (i) => i.candidato_id === p.cargo.id,
+        )?.score_semantico;
+        return s ?? p.score * 100;
+      })
+    : [];
   const maxPaso = res ? PASOS.length : 1;
 
   // Cápsula de contexto: activa desde que el analista elige el cargo, no sólo tras ejecutar.
