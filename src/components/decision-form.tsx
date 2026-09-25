@@ -279,6 +279,7 @@ export function DecisionForm({
         {error && <p className="text-destructive">{error}</p>}
       </form>
     );
+  }
 
   return (
     <form
