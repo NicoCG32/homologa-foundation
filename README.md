@@ -68,6 +68,7 @@ Seis pilares definen qué es obligatorio en cada pantalla y cada decisión de di
 | **Robustez percibida** | Se valida antes de escribir, se bloquea sólo lo estructuralmente inconsistente y cada error explica qué pasó y qué hacer. |
 | **Control** | El analista pondera criterios, preselecciona varios candidatos y decide. La metodología acota; no decide por él. |
 | **Accesibilidad** | Vocabulario de compensaciones, no de software. Contraste alto, jerarquía tipográfica clara y detalle bajo demanda. |
+| **Modo claro/oscuro** | Switch accesible, tema sin parpadeo y contraste WCAG AA. |
 | **Responsive** | Escritorio, tablet y celular. En pantallas angostas las tablas se apilan con etiquetas legibles. |
 
 Queda **fuera del núcleo** (opcional, no implementado): autenticación de usuarios, multiempresa,
@@ -175,7 +176,9 @@ La decisión ocurre en dos etapas, y ninguna modifica ningún score.
    para el tamaño de empresa elegido. El analista confirma **un único** cargo definitivo.
 
 Se registran el candidato definitivo, la decisión, el comentario, la fecha, el nombre del analista,
-el tamaño de empresa y los scores vigentes en ese momento.
+el tamaño de empresa y los scores vigentes en ese momento. Los scores usan una escala semáforo
+(alta ≥ 80%, media ≥ 60%, baja) y la **vista espejo** —plegable, con destello al cambiar de
+candidato— enfrenta el cargo interno con cada candidato.
 
 ---
 
@@ -184,8 +187,10 @@ el tamaño de empresa y los scores vigentes en ese momento.
 El benchmark gráfico aparece **sólo después** de confirmar, y sólo para el cargo definitivo.
 
 - Un tamaño de empresa a la vez (Pequeña / Mediana / Grande), elegido por el analista.
-- Tabla y gráfico de barras con **P25, P50, P75 y promedio**, más fuente y año.
-- Sólo información de mercado: la remuneración interna no aparece en la ficha, la tabla ni el gráfico.
+- Gráfico de barras con **P25, P50, P75 y promedio**, más fuente y año.
+- Tabla de brechas bajo el gráfico: encuesta vs. remuneración de la empresa, diferencia en $ y en %.
+- La remuneración real también se muestra en la selección final y en la vista espejo, **sólo como
+  referencia para el analista**: nunca entra al motor ni a la IA.
 - Nunca se estima ni se interpola; lo que falta se muestra como "No disponible".
 
 ---
