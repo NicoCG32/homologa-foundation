@@ -26,7 +26,7 @@ export function ScoreChip({
   valor: number | null | undefined;
   texto: string;
   label?: string;
-  oro?: boolean;
+  oro?: boolean | undefined;
 }) {
   const nd = nivelAfinidad(valor) === "nd";
   return (
