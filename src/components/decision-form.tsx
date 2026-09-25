@@ -98,7 +98,7 @@ function Scores({ c, oro }: { c: CandidatoDecision; oro?: boolean }) {
 }
 
 /** Candidato con mayor score final dentro de la lista dada (sólo referencia visual). */
-function mejorDe(lista: { id: string; score_final: number | string | null }[]) {
+function mejorDe(lista: { id: string; score_final?: number | string | null }[]) {
   return lista.reduce<{ id: string; v: number } | null>((mejor, c) => {
     const v = a100(c.score_final);
     if (v == null) return mejor;
