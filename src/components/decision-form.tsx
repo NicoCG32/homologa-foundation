@@ -144,12 +144,9 @@ export function DecisionForm({
     queryFn: () => getPre({ data: { ejecucion_id: ejecucionId } }),
   });
   const preseleccion = pre.data ?? [];
-  // Referencia visual: el candidato con mayor score final persistido. No selecciona por el analista.
-  const mejorId = preseleccion.reduce<{ id: string; v: number } | null>((mejor, c) => {
-    const v = a100(c.score_final);
-    if (v == null) return mejor;
-    return !mejor || v > mejor.v ? { id: c.id, v } : mejor;
-  }, null)?.id;
+  // Referencia visual: el candidato con mayor score final entre los preseleccionados.
+  // Si el mejor global no se preselecciona, la recomendación pasa al mejor de los elegidos.
+  const mejorId = mejorDe(preseleccion);
 
 
   const [etapa, setEtapa] = useState<1 | 2>(1);
