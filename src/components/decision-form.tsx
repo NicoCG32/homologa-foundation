@@ -272,9 +272,7 @@ export function DecisionForm({
       <div className="remuneracion-real" role="note">
         <span>Remuneración real de la empresa</span>
         <strong>{num(sueldoInterno) == null ? "No informada" : formatSueldo(sueldoInterno)}</strong>
-        <small>
-          Referencia para tu decisión. No participa en ningún puntaje del motor ni de la IA.
-        </small>
+        <small>Referencia para tu decisión: no participa en ningún puntaje.</small>
       </div>
 
       <label className="block">
@@ -339,11 +337,7 @@ export function DecisionForm({
                 </div>
               </div>
 
-              {!tamano ? (
-                <p className="mt-2 text-muted-foreground">
-                  Selecciona un tamaño de empresa para ver sus datos de mercado.
-                </p>
-              ) : (
+              {!tamano ? null : (
                 <dl className="benchmark-grid mt-2">
                   <div><dt>Tamaño</dt><dd>{TAMANOS.find((t) => t.valor === tamano)?.etiqueta}</dd></div>
                   <div><dt>P25</dt><dd>{monto(banda?.p25)}</dd></div>
@@ -416,9 +410,6 @@ export function DecisionForm({
         />
       </label>
 
-      <p className="text-xs text-muted-foreground">
-        Los datos de mercado son sólo referenciales: no participan en ningún puntaje.
-      </p>
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" disabled={mut.isPending} onClick={() => setEtapa(1)}>
