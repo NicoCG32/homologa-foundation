@@ -45,3 +45,14 @@ export function a100(v: number | string | null | undefined): number | null {
   const n = Number(v);
   return Number.isNaN(n) ? null : n * 100;
 }
+
+/**
+ * Devuelve la lista ordenada de mayor a menor puntaje (0–100).
+ * Los pendientes (null) quedan al final, sin alterar la lista original.
+ */
+export function ordenarPorPuntaje<T>(
+  lista: T[],
+  puntaje: (x: T) => number | null | undefined,
+): T[] {
+  return [...lista].sort((a, b) => (puntaje(b) ?? -1) - (puntaje(a) ?? -1));
+}

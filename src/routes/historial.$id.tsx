@@ -7,6 +7,7 @@ import { formatFecha, formatSueldo } from "@/lib/format";
 import { DecisionForm } from "@/components/decision-form";
 import { BenchmarkPanel } from "@/components/benchmark-panel";
 import { VistaEspejo } from "@/components/vista-espejo";
+import { ordenarPorPuntaje } from "@/components/score-chip";
 
 
 function pct(v: number | null | undefined) {
@@ -222,7 +223,15 @@ function EjecucionDetalle() {
               </tr>
             </thead>
             <tbody>
-              {resultados.map((r) => (
+              {ordenarPorPuntaje(resultados, (r) =>
+                r.score_final != null
+                  ? Number(r.score_final) * 100
+                  : r.score_semantico != null
+                    ? Number(r.score_semantico)
+                    : r.score_deterministico != null
+                      ? Number(r.score_deterministico) * 100
+                      : null,
+              ).map((r) => (
                 <tr key={r.id}>
                   <td className="border-b py-2">
                     {r.cargos?.nombre ?? "—"}
@@ -279,7 +288,20 @@ function EjecucionDetalle() {
               <div className="mt-3">
                 <p className="mb-1 font-medium">Candidatos preseleccionados</p>
                 <ul className="space-y-1">
-                  {preseleccion.map((p) => {
+                  {ordenarPorPuntaje(preseleccion, (p) => {
+                    const s = (p.scores_utilizados ?? {}) as {
+                      score_deterministico?: number | null;
+                      score_semantico?: number | null;
+                      score_final?: number | null;
+                    };
+                    return s.score_final != null
+                      ? Number(s.score_final) * 100
+                      : s.score_semantico != null
+                        ? Number(s.score_semantico)
+                        : s.score_deterministico != null
+                          ? Number(s.score_deterministico) * 100
+                          : null;
+                  }).map((p) => {
                     const s = (p.scores_utilizados ?? {}) as {
                       score_deterministico?: number | null;
                       score_semantico?: number | null;
