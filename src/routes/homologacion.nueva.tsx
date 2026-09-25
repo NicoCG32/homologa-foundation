@@ -323,14 +323,6 @@ function NuevaHomologacion() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium"><ShieldCheck /> Cargo revisado</h2>
           <p className="text-sm">
-            <strong>{res.cargo.nombre}</strong> — {res.cargo.empresa_nombre ?? "sin empresa"}
-            {res.cargo.nombre_area ? ` · área ${res.cargo.nombre_area}` : ""}
-            {res.cargo.nivel_jerarquico ? ` · nivel ${res.cargo.nivel_jerarquico}` : ""}
-          </p>
-          {res.cargo.descripcion && (
-            <p className="mt-1 text-sm text-muted-foreground">{res.cargo.descripcion}</p>
-          )}
-          <p className="mt-3 text-sm">
             {res.evaluados} cargos de referencia revisados
             {res.pesoTotal <= 0 && " — no hay criterios activos para comparar"}
           </p>
@@ -404,7 +396,7 @@ function NuevaHomologacion() {
             <section className="rounded-lg border p-4">
               <h2 className="mb-2 font-medium"><Columns2 /> Vista espejo: cargo interno frente al candidato</h2>
               <p className="mb-3 text-sm text-muted-foreground">
-                Elige un candidato para comparar su contenido con el cargo que estás evaluando.
+                Elige un candidato para compararlo con el cargo evaluado.
               </p>
               <div className="filter-chips" role="group" aria-label="Candidatos a comparar">
                 {res.preseleccionados.map((p, i) => (
@@ -454,7 +446,7 @@ function NuevaHomologacion() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium"><Bot /> Análisis IA</h2>
           <p className="mb-3 text-sm text-muted-foreground">
-            La IA revisará únicamente los {res.preseleccionados.length} candidatos preseleccionados y comparará el contenido de cada cargo.
+            Se revisan los {res.preseleccionados.length} candidatos preseleccionados.
           </p>
           {!semOk ? (
             <Button
@@ -495,7 +487,6 @@ function NuevaHomologacion() {
                 · score semántico {semOk.analisis.score_semantico} · confianza{" "}
                 {semOk.analisis.confianza}
               </p>
-              <p className="text-muted-foreground">{semOk.analisis.explicacion_breve}</p>
               <ul className="space-y-2">
                 {semOk.analisis.scores_por_candidato.map((s) => (
                   <li key={s.candidato_id} className="border-b pb-2">
