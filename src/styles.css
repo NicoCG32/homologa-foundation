@@ -212,15 +212,60 @@
 .cargo-context-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), oklch(0.66 0.15 181)); transition: width 260ms ease; }
 
 /* Escala semáforo de afinidad (sólo lectura visual, nunca decide) */
-.score-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 9px; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.score-chip em { font-style: normal; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; opacity: .85; }
-.score-chip-alta { color: oklch(0.36 0.10 168); background: oklch(0.92 0.06 170); border-color: oklch(0.80 0.10 170); }
-.score-chip-media { color: oklch(0.38 0.09 72); background: oklch(0.94 0.07 85); border-color: oklch(0.83 0.11 82); }
-.score-chip-baja { color: oklch(0.42 0.03 250); background: oklch(0.93 0.01 250); border-color: oklch(0.85 0.015 250); }
-.score-chip-nd { color: var(--muted-foreground); background: var(--muted); border-color: var(--border); }
-.dark .score-chip-alta { color: oklch(0.90 0.09 172); background: oklch(0.31 0.07 170); border-color: oklch(0.47 0.10 172); }
-.dark .score-chip-media { color: oklch(0.91 0.10 88); background: oklch(0.33 0.07 78); border-color: oklch(0.50 0.10 82); }
-.dark .score-chip-baja { color: oklch(0.83 0.02 250); background: oklch(0.29 0.02 250); border-color: oklch(0.40 0.02 250); }
+.score-chip {
+  position: relative; display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 11px 5px 9px; border: 1px solid transparent; border-radius: 7px 999px 999px 7px;
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
+  background-clip: padding-box; overflow: hidden;
+  box-shadow: 0 1px 2px oklch(0.3 0.08 250 / 10%), inset 0 1px 0 oklch(1 0 0 / 35%);
+}
+/* Prisma: destello diagonal de refracción propio de la identidad Espejo */
+.score-chip::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(112deg, oklch(1 0 0 / 28%) 0 32%, transparent 33% 100%);
+}
+.score-chip::before {
+  content: ""; width: 4px; align-self: stretch; margin: -5px 2px -5px -5px; border-radius: 2px;
+  background: currentColor; opacity: .75;
+}
+.score-chip em { font-style: normal; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .78; }
+.score-chip-alta {
+  color: oklch(0.33 0.10 172);
+  background: linear-gradient(108deg, oklch(0.94 0.07 178), oklch(0.90 0.09 160));
+  border-color: oklch(0.77 0.11 172);
+}
+.score-chip-media {
+  color: oklch(0.37 0.09 70);
+  background: linear-gradient(108deg, oklch(0.95 0.07 92), oklch(0.91 0.10 68));
+  border-color: oklch(0.81 0.11 78);
+}
+.score-chip-baja {
+  color: oklch(0.40 0.04 252);
+  background: linear-gradient(108deg, oklch(0.95 0.015 248), oklch(0.90 0.03 256));
+  border-color: oklch(0.84 0.025 250);
+}
+.score-chip-nd {
+  color: var(--muted-foreground);
+  background: linear-gradient(108deg, var(--muted), color-mix(in oklch, var(--muted) 70%, var(--card)));
+  border-color: var(--border);
+}
+.dark .score-chip { box-shadow: 0 1px 2px oklch(0 0 0 / 35%), inset 0 1px 0 oklch(1 0 0 / 10%); }
+.dark .score-chip::after { background: linear-gradient(112deg, oklch(1 0 0 / 10%) 0 32%, transparent 33% 100%); }
+.dark .score-chip-alta {
+  color: oklch(0.93 0.08 176);
+  background: linear-gradient(108deg, oklch(0.34 0.08 182), oklch(0.29 0.07 160));
+  border-color: oklch(0.52 0.10 174);
+}
+.dark .score-chip-media {
+  color: oklch(0.93 0.09 90);
+  background: linear-gradient(108deg, oklch(0.36 0.07 88), oklch(0.31 0.07 62));
+  border-color: oklch(0.54 0.10 80);
+}
+.dark .score-chip-baja {
+  color: oklch(0.86 0.025 250);
+  background: linear-gradient(108deg, oklch(0.32 0.03 252), oklch(0.27 0.035 262));
+  border-color: oklch(0.44 0.03 252);
+}
 .score-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
 .mejor-afinidad { justify-self: start; padding: 3px 9px; border-radius: 999px; color: var(--primary); background: var(--secondary); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
 
