@@ -220,7 +220,10 @@ export function DecisionForm({
       </p>
     );
 
-  if (etapa === 1)
+  if (etapa === 1) {
+    // La recomendación se recalcula sobre lo que el analista marca; si no hay marcas, sobre todos.
+    const marcadosArr = candidatos.filter((c) => marcados.has(c.id));
+    const mejorEtapa1 = mejorDe(marcadosArr.length ? marcadosArr : candidatos);
     return (
       <form
         className="space-y-3 text-sm"
@@ -237,31 +240,38 @@ export function DecisionForm({
             <span>Score semántico</span>
             <span>Score final</span>
           </div>
-          {candidatos.map((c) => (
-            <label key={c.id} className="score-row cursor-pointer">
-              <div className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  className="mt-1"
-                  checked={marcados.has(c.id)}
-                  onChange={(e) => {
-                    const next = new Set(marcados);
-                    if (e.target.checked) next.add(c.id);
-                    else next.delete(c.id);
-                    setMarcados(next);
-                  }}
-                />
-                <span className="grid">
-                  <strong>{c.nombre}</strong>
-                  <small>
-                    {c.empresa ?? "sin empresa"}
-                    {c.id === sugerido ? " · Sugerido por la IA" : ""}
-                  </small>
-                </span>
-              </div>
-              <Scores c={c} />
-            </label>
-          ))}
+          {candidatos.map((c) => {
+            const mejor = mejorEtapa1 === c.id;
+            return (
+              <label
+                key={c.id}
+                className={`score-row cursor-pointer${mejor ? " fila-recomendada" : ""}`}
+              >
+                <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={marcados.has(c.id)}
+                    onChange={(e) => {
+                      const next = new Set(marcados);
+                      if (e.target.checked) next.add(c.id);
+                      else next.delete(c.id);
+                      setMarcados(next);
+                    }}
+                  />
+                  <span className="grid">
+                    <strong>{c.nombre}</strong>
+                    <small>
+                      {c.empresa ?? "sin empresa"}
+                      {mejor ? " · Opción recomendada" : ""}
+                      {c.id === sugerido ? " · Sugerido por la IA" : ""}
+                    </small>
+                  </span>
+                </div>
+                <Scores c={c} oro={mejor} />
+              </label>
+            );
+          })}
         </div>
         <Button type="submit" disabled={preMut.isPending || marcados.size === 0}>
           {preMut.isPending ? "Guardando…" : `Guardar preselección (${marcados.size})`}
