@@ -387,35 +387,6 @@ export function DecisionForm({
         })}
       </div>
 
-      {interno && fichaSel && (
-        <section className="espejo-block">
-          <h3>Vista espejo: cargo interno frente al candidato</h3>
-          <p className="text-muted-foreground">
-            {candidatoId
-              ? "Contraste del contenido del cargo que elegiste como definitivo."
-              : "Se muestra el primer preseleccionado; marca otro para compararlo."}
-          </p>
-          <VistaEspejo
-            interno={interno}
-            candidato={fichaSel}
-            remuneracionA={num(sueldoInterno) == null ? "No informada" : formatSueldo(sueldoInterno)}
-            remuneracionB={(() => {
-              if (!tamano) return "Selecciona un tamaño de empresa";
-              const b = preseleccion
-                .find((p) => p.id === idEspejo)
-                ?.bandas.find((x) => x.tipo_empresa === tamano);
-              if (num(b?.p50) != null) {
-                const rango =
-                  num(b?.p25) != null && num(b?.p75) != null
-                    ? ` (rango ${formatSueldo(b!.p25)} – ${formatSueldo(b!.p75)})`
-                    : "";
-                return `P50 ${formatSueldo(b!.p50)}${rango}`;
-              }
-              return ND;
-            })()}
-          />
-        </section>
-      )}
 
 
       <label className="block">
