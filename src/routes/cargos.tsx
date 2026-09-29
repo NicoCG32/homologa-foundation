@@ -725,8 +725,9 @@ function CargosPage() {
                       mapaHomologados.has(c.id) ? (
                         <Link
                           className="estado-chip ok"
-                          to="/historial/$id"
-                          params={{ id: mapaHomologados.get(c.id)! }}
+                          to="/historial"
+                          search={{ cargo: c.id }}
+                          title="Ver las homologaciones aceptadas de este cargo"
                         >
                           Homologado
                         </Link>
