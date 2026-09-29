@@ -26,6 +26,24 @@
 - Confirmación explícita ("Revisé la vista previa") antes de escribir en la base.
 - Listado tabular por columnas (código, cargo, empresa, tipo, área, sueldo) con detalle bajo demanda
   y borrado por fila. En celular las filas se apilan con etiquetas.
+- **Buscador en vivo** por código, nombre, empresa o área, con contador "N de M" y opción de limpiar
+  filtros cuando no hay coincidencias.
+- **Orden por encabezado**: un clic ordena ascendente, otro descendente, con indicador ↑/↓.
+- Los cargos ya homologados muestran una etiqueta que abre su historial filtrado por ese cargo.
+
+## Nueva homologación
+
+- Paso 1: buscador del cargo interno y filtro de estado (**Todos / Pendientes / Homologados**).
+- Tabla de candidatos ordenada por score de mayor a menor por defecto; los encabezados Score motor,
+  Score IA y Score final permiten reordenar.
+- La vista espejo aparece plegada al final de cada paso, bajo los botones, como
+  "Detalle de la comparación (opcional)".
+
+## Historial
+
+- Buscador por cargo o empresa y orden por cargo, empresa, fecha o estado; parte por lo más reciente.
+- Acepta `?cargoId=` para mostrar sólo las homologaciones aceptadas de un cargo, con enlace para
+  volver a ver todas.
 
 ## Empresas
 
