@@ -57,6 +57,11 @@ function NuevaHomologacion() {
 
   const [cargoId, setCargoId] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<"" | "PENDIENTE" | "HOMOLOGADO">("");
+  const [ordenScore, setOrdenScore] = useState<{ col: "motor" | "sem" | "final"; asc: boolean }>({
+    col: "final",
+    asc: false,
+  });
   const [espejoId, setEspejoId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [semError, setSemError] = useState<string | null>(null);
