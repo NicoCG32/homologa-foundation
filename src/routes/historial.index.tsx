@@ -73,7 +73,7 @@ function HistorialPage() {
         <p className="text-sm">
           Mostrando solo las homologaciones de{" "}
           <strong>{nombreCargo ?? "el cargo seleccionado"}</strong>.{" "}
-          <Link to="/historial" search={{ cargo: "" }} className="text-primary hover:underline">
+          <Link to="/historial" search={{}} className="text-primary hover:underline">
             Ver todas
           </Link>
         </p>
