@@ -386,7 +386,18 @@ function NuevaHomologacion() {
             {!res.preseleccionados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
-              <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score semántico</span><span>Score final</span></div>
+              <div className="score-table"><div className="score-row score-head"><span>Candidato</span>
+                {([["motor", "Score motor"], ["sem", "Score semántico"], ["final", "Score final"]] as const).map(
+                  ([col, texto]) => (
+                    <span key={col}>
+                      <button type="button" className="th-sort" onClick={() => ordenarScore(col)}>
+                        {texto}
+                        {ordenScore.col === col ? (ordenScore.asc ? " ↑" : " ↓") : ""}
+                      </button>
+                    </span>
+                  ),
+                )}
+              </div>
                 {preOrdenados.map((p, i) => {
                   const s = semOk?.analisis.scores_por_candidato.find(
                     (item) => item.candidato_id === p.cargo.id,
