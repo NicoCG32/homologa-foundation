@@ -149,17 +149,26 @@ function NuevaHomologacion() {
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
-  // Tabla de preseleccionados siempre ordenada de mayor a menor puntaje (pendientes al final).
+  // Por defecto, de mayor a menor score final (pendientes al final). El analista puede
+  // cambiar la columna de orden sin que ello altere ningún cálculo.
+  const valorScore = (p: { cargo: { id: string }; score: number }) => {
+    const f = semOk?.finales.find((i) => i.candidato_id === p.cargo.id)?.score_final;
+    const s = semOk?.analisis.scores_por_candidato.find(
+      (i) => i.candidato_id === p.cargo.id,
+    )?.score_semantico;
+    if (ordenScore.col === "motor") return p.score * 100;
+    if (ordenScore.col === "sem") return s ?? null;
+    if (f != null) return f * 100;
+    return s ?? p.score * 100;
+  };
   const preOrdenados = res
-    ? ordenarPorPuntaje(res.preseleccionados, (p) => {
-        const f = semOk?.finales.find((i) => i.candidato_id === p.cargo.id)?.score_final;
-        if (f != null) return f * 100;
-        const s = semOk?.analisis.scores_por_candidato.find(
-          (i) => i.candidato_id === p.cargo.id,
-        )?.score_semantico;
-        return s ?? p.score * 100;
-      })
+    ? (() => {
+        const base = ordenarPorPuntaje(res.preseleccionados, valorScore);
+        return ordenScore.asc ? [...base].reverse() : base;
+      })()
     : [];
+  const ordenarScore = (col: "motor" | "sem" | "final") =>
+    setOrdenScore((o) => (o.col === col ? { col, asc: !o.asc } : { col, asc: false }));
   const maxPaso = res ? PASOS.length : 1;
 
   // Cápsula de contexto: activa desde que el analista elige el cargo, no sólo tras ejecutar.
