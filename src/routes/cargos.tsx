@@ -670,12 +670,38 @@ function CargosPage() {
       {cargos.isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : !filtrados.length ? (
-        <p className="text-sm text-muted-foreground">No hay cargos que coincidan.</p>
+        <p className="text-sm text-muted-foreground">
+          No se encontraron cargos con ese criterio.{" "}
+          <button
+            type="button"
+            className="detail-toggle"
+            onClick={() => {
+              setBuscarCatalogo("");
+              setFiltroEmpresa("");
+              setFiltroTipo("");
+              setFiltroEstado("");
+            }}
+          >
+            Limpiar filtros
+          </button>
+        </p>
       ) : (
         <div className="data-table">
+          <p className="text-xs text-muted-foreground">
+            Mostrando {filtrados.length} de {(cargos.data ?? []).length} cargos
+          </p>
           <div className="data-row data-head">
-            <span>Código</span><span>Cargo</span><span>Empresa</span><span>Tipo</span><span>Área</span><span>Sueldo</span><span />
+            {COLS_CARGO.map(([col, texto]) => (
+              <span key={col}>
+                <button type="button" className="th-sort" onClick={() => ordenar(col)}>
+                  {texto}
+                  {flecha(col)}
+                </button>
+              </span>
+            ))}
+            <span />
           </div>
+
           {filtrados.map((c) => {
             const abierto = detalleFila === c.id;
             return (
