@@ -621,7 +621,15 @@ function CargosPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-3 text-sm">
+        <input
+          className="min-w-[14rem] flex-1 rounded-md border bg-background px-3 py-2"
+          placeholder="Buscar por nombre, código, empresa o área…"
+          aria-label="Buscar en el catálogo de cargos"
+          value={buscarCatalogo}
+          onChange={(e) => setBuscarCatalogo(e.target.value)}
+        />
         <select
+
           className="rounded-md border bg-background px-3 py-2"
           value={filtroEmpresa}
           onChange={(e) => setFiltroEmpresa(e.target.value)}
