@@ -9,8 +9,8 @@ import { formatFecha } from "@/lib/format";
 
 export const Route = createFileRoute("/historial/")({
   // `cargo` permite llegar desde el catálogo y ver sólo las homologaciones de ese cargo.
-  validateSearch: (search: Record<string, unknown>) => ({
-    cargo: typeof search.cargo === "string" ? search.cargo : "",
+  validateSearch: (search: Record<string, unknown>): { cargo?: string } => ({
+    cargo: typeof search["cargo"] === "string" ? (search["cargo"] as string) : undefined,
   }),
   head: () => ({
     meta: [
