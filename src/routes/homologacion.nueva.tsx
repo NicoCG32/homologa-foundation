@@ -69,13 +69,14 @@ function NuevaHomologacion() {
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
   const q = busqueda.trim().toLowerCase();
-  const internosFiltrados = !q
-    ? internos
-    : internos.filter((c) =>
-        [c.codigo_cargo, c.nombre, c.empresas?.nombre, c.nombre_area, c.nombre_subarea]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q)),
-      );
+  const internosFiltrados = internos.filter((c) => {
+    if (filtroEstado === "HOMOLOGADO" && !hechos.has(c.id)) return false;
+    if (filtroEstado === "PENDIENTE" && hechos.has(c.id)) return false;
+    if (!q) return true;
+    return [c.codigo_cargo, c.nombre, c.empresas?.nombre, c.nombre_area, c.nombre_subarea]
+      .filter(Boolean)
+      .some((v) => String(v).toLowerCase().includes(q));
+  });
   const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
   const activos = criterios.data ?? [];
   const totalPesos = activos.reduce((s, c) => s + Number(pesos[c.id] ?? 0), 0);
