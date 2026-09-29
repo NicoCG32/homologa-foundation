@@ -102,6 +102,12 @@ function CargosPage() {
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<"" | "PENDIENTE" | "HOMOLOGADO">("");
+  const [buscarCatalogo, setBuscarCatalogo] = useState("");
+  const [orden, setOrden] = useState<{ col: ColCargo; asc: boolean } | null>(null);
+  const ordenar = (col: ColCargo) =>
+    setOrden((o) => (o?.col === col ? { col, asc: !o.asc } : { col, asc: true }));
+  const flecha = (col: ColCargo) => (orden?.col === col ? (orden.asc ? " ↑" : " ↓") : "");
+
 
   const listH = useServerFn(listHomologados);
   const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
