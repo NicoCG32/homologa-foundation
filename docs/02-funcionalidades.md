@@ -3,12 +3,12 @@
 | Ruta | Pestaña | Qué permite |
 |------|---------|-------------|
 | `/` | Inicio | Punto de entrada "¿Qué cargo quieres homologar?", accesos rápidos y reinicio total de datos |
-| `/cargos` | Cargos | Carga masiva desde Excel/CSV, vista previa en tarjetas, listado en columnas, alta y borrado individual |
+| `/cargos` | Cargos | Carga masiva desde Excel/CSV, vista previa en tarjetas, listado con buscador y orden por columna, alta y borrado individual |
 | `/empresas` | Empresas | Listado, alta manual y definición del tamaño (Pequeña / Mediana / Grande) |
 | `/criterios` | Criterios | Ponderación global por columna con sliders, criterios obligatorios, presets y reparto motor/IA del score final |
 | `/diccionario` | Diccionario | Áreas, subáreas y niveles jerárquicos editables (código + nombre) |
 | `/homologacion/nueva` | Nueva homologación | Flujo por pasos: Cargo → Revisión → Candidatos → Análisis IA → Decisión |
-| `/historial` | Historial | Listado de ejecuciones con fecha y estado |
+| `/historial` | Historial | Listado de ejecuciones con buscador, orden por columna y filtro por cargo (`?cargoId=`) |
 | `/historial/$id` | Detalle | Scores por candidato, criterios usados, análisis IA, decisión, benchmark de mercado y exportación a Excel |
 
 ## Inicio
