@@ -176,9 +176,22 @@ La decisión ocurre en dos etapas, y ninguna modifica ningún score.
    para el tamaño de empresa elegido. El analista confirma **un único** cargo definitivo.
 
 Se registran el candidato definitivo, la decisión, el comentario, la fecha, el nombre del analista,
-el tamaño de empresa y los scores vigentes en ese momento. Los scores usan una escala semáforo
-(alta ≥ 80%, media ≥ 60%, baja) y la **vista espejo** —plegable, con destello al cambiar de
-candidato— enfrenta el cargo interno con cada candidato.
+el tamaño de empresa y los scores vigentes en ese momento.
+
+Los puntajes se muestran con distintivos **neutros y de cifras alineadas**, sin escala semáforo: el
+color no compite por la atención. El único resalte es **dorado**, con la etiqueta
+"★ Opción recomendada", sobre el candidato de mayor score final. Ese resalte es **dinámico**: si el
+analista no incluye al mejor candidato en su preselección, la recomendación pasa automáticamente al
+de mayor puntaje **dentro del grupo elegido**.
+
+Todas las listas de candidatos —tabla del paso 3, análisis IA, decisión e historial— vienen
+ordenadas de **mayor a menor score** por defecto (final y, si aún no hay IA, el del motor; los
+pendientes quedan al final) y sus encabezados de score permiten reordenar con un clic.
+
+La **vista espejo** enfrenta el cargo interno con el candidato. Aparece **plegada y al final de cada
+paso, debajo de los botones de acción**, rotulada "Detalle de la comparación (opcional)": es una
+herramienta de auditoría, no un paso obligatorio. Al cambiar de candidato destella brevemente.
+
 
 ---
 
@@ -223,15 +236,27 @@ Detalle en [docs/12-resiliencia-ia.md](./docs/12-resiliencia-ia.md).
 | Ruta | Pestaña | Para qué sirve |
 |---|---|---|
 | `/` | Inicio | Entrada al proceso y reinicio total de datos de prueba |
-| `/cargos` | Cargos | Carga masiva de planillas, vista previa y catálogo completo |
+| `/cargos` | Cargos | Carga masiva de planillas, vista previa, catálogo con buscador y orden por columna |
 | `/empresas` | Empresas | Alta y tamaño de empresa (Pequeña / Mediana / Grande) |
 | `/criterios` | Criterios | Ponderación por columna, criterios obligatorios, presets y reparto motor/IA |
 | `/diccionario` | Diccionario | Áreas, subáreas y niveles jerárquicos |
-| `/homologacion/nueva` | Nueva homologación | El flujo por pasos |
-| `/historial` | Historial | Ejecuciones con fecha y estado |
+| `/homologacion/nueva` | Nueva homologación | El flujo por pasos, con buscador y filtro de estado del cargo interno |
+| `/historial` | Historial | Ejecuciones con buscador, orden por columna y filtro por cargo |
 | `/historial/$id` | Detalle | Scores, criterios usados, análisis, decisión, benchmark y exportación |
 
+### Búsqueda, orden y trazabilidad
+
+- **Buscador en vivo** en el catálogo de cargos, en el historial y en la elección del cargo interno:
+  filtra por código, nombre, empresa o área mientras se escribe, e indica cuántos registros se ven
+  del total.
+- **Orden por encabezado** en catálogo, historial y tablas de candidatos, con indicador ↑/↓. El
+  historial parte por lo más reciente; los candidatos, por mayor score.
+- **Filtro de estado** en el paso 1 (Todos / Pendientes / Homologados) para ocultar lo ya procesado.
+- **Trazabilidad**: un cargo ya homologado muestra una etiqueta que abre su historial filtrado por
+  ese cargo, con enlace para volver a ver todas las ejecuciones.
+
 Detalle en [docs/02-funcionalidades.md](./docs/02-funcionalidades.md).
+
 
 ---
 

@@ -15,16 +15,21 @@ al momento de marcarlos.
 - El analista ve Score motor, Score IA y Score final de cada candidato.
 - El candidato sugerido por la IA sólo se **etiqueta**; nunca se marca solo.
 - La preselección puede rehacerse mientras no exista decisión definitiva.
-- Cada score se muestra con una escala semáforo (`score-chip`): alta ≥ 80%, media 60–79,9%,
-  baja < 60%. El porcentaje siempre es visible: el color nunca es la única señal.
+- Los scores se muestran con distintivos **neutros**, de cifras tabulares alineadas: no hay escala
+  semáforo. El color dejó de usarse como señal de calidad.
+- La lista viene ordenada de **mayor a menor score final** (o de motor si aún no hay IA; los
+  pendientes al final) y los encabezados de score permiten reordenar.
+- Sólo el mejor candidato lleva acento **dorado** y la etiqueta "★ Opción recomendada".
 
 ### 2 · Selección final
 
 `getPreseleccion` devuelve los preseleccionados con sus scores y sus bandas. Se muestran apilados,
 con los datos de mercado del tamaño elegido. Arriba se muestra la **remuneración real de la
 empresa** para el cargo evaluado ("No informada" si no existe); cada tarjeta presenta P25, P50, P75
-y promedio en una tira compacta con la diferencia frente a P50. El de mayor score final lleva la
-etiqueta "Mayor afinidad metodológica". El analista confirma **uno**, y `guardarDecision`
+y promedio en una tira compacta con la diferencia frente a P50. La **recomendación dorada es
+dinámica**: se recalcula sobre el subconjunto preseleccionado, de modo que si el mejor candidato
+global no fue marcado, el acento pasa al de mayor score dentro del grupo elegido. El analista
+confirma **uno**, y `guardarDecision`
 registra en `decisiones` (una fila por ejecución):
 
 | Campo | Contenido |

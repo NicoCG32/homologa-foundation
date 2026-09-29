@@ -3,12 +3,12 @@
 | Ruta | Pestaña | Qué permite |
 |------|---------|-------------|
 | `/` | Inicio | Punto de entrada "¿Qué cargo quieres homologar?", accesos rápidos y reinicio total de datos |
-| `/cargos` | Cargos | Carga masiva desde Excel/CSV, vista previa en tarjetas, listado en columnas, alta y borrado individual |
+| `/cargos` | Cargos | Carga masiva desde Excel/CSV, vista previa en tarjetas, listado con buscador y orden por columna, alta y borrado individual |
 | `/empresas` | Empresas | Listado, alta manual y definición del tamaño (Pequeña / Mediana / Grande) |
 | `/criterios` | Criterios | Ponderación global por columna con sliders, criterios obligatorios, presets y reparto motor/IA del score final |
 | `/diccionario` | Diccionario | Áreas, subáreas y niveles jerárquicos editables (código + nombre) |
 | `/homologacion/nueva` | Nueva homologación | Flujo por pasos: Cargo → Revisión → Candidatos → Análisis IA → Decisión |
-| `/historial` | Historial | Listado de ejecuciones con fecha y estado |
+| `/historial` | Historial | Listado de ejecuciones con buscador, orden por columna y filtro por cargo (`?cargoId=`) |
 | `/historial/$id` | Detalle | Scores por candidato, criterios usados, análisis IA, decisión, benchmark de mercado y exportación a Excel |
 
 ## Inicio
@@ -26,6 +26,24 @@
 - Confirmación explícita ("Revisé la vista previa") antes de escribir en la base.
 - Listado tabular por columnas (código, cargo, empresa, tipo, área, sueldo) con detalle bajo demanda
   y borrado por fila. En celular las filas se apilan con etiquetas.
+- **Buscador en vivo** por código, nombre, empresa o área, con contador "N de M" y opción de limpiar
+  filtros cuando no hay coincidencias.
+- **Orden por encabezado**: un clic ordena ascendente, otro descendente, con indicador ↑/↓.
+- Los cargos ya homologados muestran una etiqueta que abre su historial filtrado por ese cargo.
+
+## Nueva homologación
+
+- Paso 1: buscador del cargo interno y filtro de estado (**Todos / Pendientes / Homologados**).
+- Tabla de candidatos ordenada por score de mayor a menor por defecto; los encabezados Score motor,
+  Score IA y Score final permiten reordenar.
+- La vista espejo aparece plegada al final de cada paso, bajo los botones, como
+  "Detalle de la comparación (opcional)".
+
+## Historial
+
+- Buscador por cargo o empresa y orden por cargo, empresa, fecha o estado; parte por lo más reciente.
+- Acepta `?cargoId=` para mostrar sólo las homologaciones aceptadas de un cargo, con enlace para
+  volver a ver todas.
 
 ## Empresas
 
