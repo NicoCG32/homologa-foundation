@@ -236,15 +236,27 @@ Detalle en [docs/12-resiliencia-ia.md](./docs/12-resiliencia-ia.md).
 | Ruta | Pestaña | Para qué sirve |
 |---|---|---|
 | `/` | Inicio | Entrada al proceso y reinicio total de datos de prueba |
-| `/cargos` | Cargos | Carga masiva de planillas, vista previa y catálogo completo |
+| `/cargos` | Cargos | Carga masiva de planillas, vista previa, catálogo con buscador y orden por columna |
 | `/empresas` | Empresas | Alta y tamaño de empresa (Pequeña / Mediana / Grande) |
 | `/criterios` | Criterios | Ponderación por columna, criterios obligatorios, presets y reparto motor/IA |
 | `/diccionario` | Diccionario | Áreas, subáreas y niveles jerárquicos |
-| `/homologacion/nueva` | Nueva homologación | El flujo por pasos |
-| `/historial` | Historial | Ejecuciones con fecha y estado |
+| `/homologacion/nueva` | Nueva homologación | El flujo por pasos, con buscador y filtro de estado del cargo interno |
+| `/historial` | Historial | Ejecuciones con buscador, orden por columna y filtro por cargo |
 | `/historial/$id` | Detalle | Scores, criterios usados, análisis, decisión, benchmark y exportación |
 
+### Búsqueda, orden y trazabilidad
+
+- **Buscador en vivo** en el catálogo de cargos, en el historial y en la elección del cargo interno:
+  filtra por código, nombre, empresa o área mientras se escribe, e indica cuántos registros se ven
+  del total.
+- **Orden por encabezado** en catálogo, historial y tablas de candidatos, con indicador ↑/↓. El
+  historial parte por lo más reciente; los candidatos, por mayor score.
+- **Filtro de estado** en el paso 1 (Todos / Pendientes / Homologados) para ocultar lo ya procesado.
+- **Trazabilidad**: un cargo ya homologado muestra una etiqueta que abre su historial filtrado por
+  ese cargo, con enlace para volver a ver todas las ejecuciones.
+
 Detalle en [docs/02-funcionalidades.md](./docs/02-funcionalidades.md).
+
 
 ---
 
