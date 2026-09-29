@@ -279,32 +279,56 @@ function NuevaHomologacion() {
                 placeholder="Busca por código, nombre, empresa o área…"
               />
             </div>
+            <div className="filter-chips" role="group" aria-label="Estado de homologación">
+              {([["", "Todos"], ["PENDIENTE", "Pendientes"], ["HOMOLOGADO", "Homologados"]] as const).map(
+                ([valor, texto]) => (
+                  <button
+                    type="button"
+                    key={texto}
+                    aria-pressed={filtroEstado === valor}
+                    onClick={() => setFiltroEstado(valor)}
+                  >
+                    {texto}
+                  </button>
+                ),
+              )}
+            </div>
             {!internosFiltrados.length ? (
               <p className="text-sm text-muted-foreground">No hay cargos internos que coincidan.</p>
             ) : (
               <div className="cargo-picker-list" role="listbox" aria-label="Cargos internos">
                 {internosFiltrados.slice(0, 30).map((c) => (
-                  <button
-                    type="button"
-                    key={c.id}
-                    className="cargo-option"
-                    aria-pressed={cargoId === c.id}
-                    onClick={() => setCargoId(c.id)}
-                  >
-                    <span>
-                      <strong>
-                        {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
-                        {c.nombre}
-                      </strong>
-                      <small>
-                        {c.empresas?.nombre ?? "Sin empresa"}
-                        {c.nombre_area ? ` · ${c.nombre_area}` : ""}
-                      </small>
-                    </span>
-                    <span className={`estado-chip ${hechos.has(c.id) ? "ok" : "pend"}`}>
-                      {hechos.has(c.id) ? "Homologado" : "Pendiente"}
-                    </span>
-                  </button>
+                  <div key={c.id} className="cargo-option-row">
+                    <button
+                      type="button"
+                      className="cargo-option"
+                      aria-pressed={cargoId === c.id}
+                      onClick={() => setCargoId(c.id)}
+                    >
+                      <span>
+                        <strong>
+                          {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
+                          {c.nombre}
+                        </strong>
+                        <small>
+                          {c.empresas?.nombre ?? "Sin empresa"}
+                          {c.nombre_area ? ` · ${c.nombre_area}` : ""}
+                        </small>
+                      </span>
+                    </button>
+                    {hechos.has(c.id) ? (
+                      <Link
+                        className="estado-chip ok"
+                        to="/historial"
+                        search={{ cargo: c.id }}
+                        title="Ver las homologaciones aceptadas de este cargo"
+                      >
+                        Homologado
+                      </Link>
+                    ) : (
+                      <span className="estado-chip pend">Pendiente</span>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
