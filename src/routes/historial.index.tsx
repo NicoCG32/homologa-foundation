@@ -8,6 +8,10 @@ import { listEjecuciones } from "@/lib/homologacion.functions";
 import { formatFecha } from "@/lib/format";
 
 export const Route = createFileRoute("/historial/")({
+  // `cargo` permite llegar desde el catálogo y ver sólo las homologaciones de ese cargo.
+  validateSearch: (search: Record<string, unknown>) => ({
+    cargo: typeof search.cargo === "string" ? search.cargo : "",
+  }),
   head: () => ({
     meta: [
       { title: "Historial — Espejo: Homologa" },
@@ -30,14 +34,26 @@ const COLS_HIST: [ColHist, string][] = [
 ];
 
 function HistorialPage() {
+  const { cargo } = Route.useSearch();
   const list = useServerFn(listEjecuciones);
   const { data, isLoading } = useQuery({ queryKey: ["ejecuciones"], queryFn: () => list() });
   const [orden, setOrden] = useState<{ col: ColHist; asc: boolean }>({ col: "fecha", asc: false });
+  const [buscar, setBuscar] = useState("");
   const ordenar = (col: ColHist) =>
     setOrden((o) => (o.col === col ? { col, asc: !o.asc } : { col, asc: true }));
 
+  const nombreCargo = (data ?? []).find((e) => e.cargos?.id === cargo)?.cargos?.nombre ?? null;
+
   const filas = useMemo(() => {
-    const valor = (e: NonNullable<typeof data>[number]) =>
+    const q = buscar.trim().toLowerCase();
+    const base = (data ?? []).filter((e) => {
+      if (cargo && e.cargos?.id !== cargo) return false;
+      if (!q) return true;
+      return `${e.cargos?.nombre ?? ""} ${e.cargos?.empresas?.nombre ?? ""} ${e.estado ?? ""}`
+        .toLowerCase()
+        .includes(q);
+    });
+    const valor = (e: (typeof base)[number]) =>
       orden.col === "cargo"
         ? e.cargos?.nombre ?? ""
         : orden.col === "empresa"
@@ -46,17 +62,37 @@ function HistorialPage() {
             ? e.estado ?? ""
             : e.fecha ?? "";
     const dir = orden.asc ? 1 : -1;
-    return [...(data ?? [])].sort((a, b) => String(valor(a)).localeCompare(String(valor(b)), "es") * dir);
-  }, [data, orden]);
+    return base.sort((a, b) => String(valor(a)).localeCompare(String(valor(b)), "es") * dir);
+  }, [data, orden, buscar, cargo]);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-2xl font-semibold">Historial</h1>
 
+      {cargo && (
+        <p className="text-sm">
+          Mostrando solo las homologaciones de{" "}
+          <strong>{nombreCargo ?? "el cargo seleccionado"}</strong>.{" "}
+          <Link to="/historial" search={{ cargo: "" }} className="text-primary hover:underline">
+            Ver todas
+          </Link>
+        </p>
+      )}
+
+      <input
+        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+        placeholder="Buscar por cargo, empresa o estado…"
+        aria-label="Buscar en el historial"
+        value={buscar}
+        onChange={(e) => setBuscar(e.target.value)}
+      />
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : !data?.length ? (
         <p className="text-sm text-muted-foreground">Aún no hay ejecuciones.</p>
+      ) : !filas.length ? (
+        <p className="text-sm text-muted-foreground">No hay homologaciones que coincidan.</p>
       ) : (
         <table className="w-full text-sm">
           <thead className="text-left text-muted-foreground">
