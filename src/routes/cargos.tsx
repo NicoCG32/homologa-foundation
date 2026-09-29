@@ -59,6 +59,17 @@ function contarAtributos(raw: unknown) {
     .length;
 }
 
+type ColCargo = "codigo" | "nombre" | "empresa" | "tipo" | "area" | "sueldo";
+const COLS_CARGO: [ColCargo, string][] = [
+  ["codigo", "Código"],
+  ["nombre", "Cargo"],
+  ["empresa", "Empresa"],
+  ["tipo", "Tipo"],
+  ["area", "Área"],
+  ["sueldo", "Sueldo"],
+];
+
+
 function CargosPage() {
   const qc = useQueryClient();
   const listC = useServerFn(listCargos);
