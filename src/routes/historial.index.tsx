@@ -72,7 +72,7 @@ function HistorialPage() {
           </thead>
           <tbody>
 
-            {data.map((e) => (
+            {filas.map((e) => (
               <tr key={e.id}>
                 <td className="border-b py-2">{e.cargos?.nombre ?? "—"}</td>
                 <td className="border-b py-2">{e.cargos?.empresas?.nombre ?? "—"}</td>
