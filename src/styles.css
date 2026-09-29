@@ -669,3 +669,19 @@
 }
 .espejo-flash { animation: espejo-destello 700ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .espejo-flash { animation: none; } }
+
+/* Encabezados de tabla ordenables */
+.th-sort {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  letter-spacing: inherit;
+}
+.th-sort:hover { color: var(--primary); }
+.th-sort:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }

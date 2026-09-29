@@ -59,6 +59,17 @@ function contarAtributos(raw: unknown) {
     .length;
 }
 
+type ColCargo = "codigo" | "nombre" | "empresa" | "tipo" | "area" | "sueldo";
+const COLS_CARGO: [ColCargo, string][] = [
+  ["codigo", "Código"],
+  ["nombre", "Cargo"],
+  ["empresa", "Empresa"],
+  ["tipo", "Tipo"],
+  ["area", "Área"],
+  ["sueldo", "Sueldo"],
+];
+
+
 function CargosPage() {
   const qc = useQueryClient();
   const listC = useServerFn(listCargos);
@@ -102,6 +113,12 @@ function CargosPage() {
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<"" | "PENDIENTE" | "HOMOLOGADO">("");
+  const [buscarCatalogo, setBuscarCatalogo] = useState("");
+  const [orden, setOrden] = useState<{ col: ColCargo; asc: boolean } | null>(null);
+  const ordenar = (col: ColCargo) =>
+    setOrden((o) => (o?.col === col ? { col, asc: !o.asc } : { col, asc: true }));
+  const flecha = (col: ColCargo) => (orden?.col === col ? (orden.asc ? " ↑" : " ↓") : "");
+
 
   const listH = useServerFn(listHomologados);
   const homologados = useQuery({ queryKey: ["homologados"], queryFn: () => listH() });
@@ -306,21 +323,44 @@ function CargosPage() {
   const puedeGuardar =
     !!cargosCarga.length && !faltaEmpresa && !erroresCarga.length && revisado && !importMut.isPending;
 
-  const filtrados = useMemo(
-    () =>
-      (cargos.data ?? []).filter((c) => {
-        if (filtroEmpresa && c.empresa_id !== filtroEmpresa) return false;
-        if (filtroTipo && c.tipo !== filtroTipo) return false;
-        if (filtroEstado) {
-          if (c.tipo !== "INTERNO") return false;
-          const hecho = mapaHomologados.has(c.id);
-          if (filtroEstado === "HOMOLOGADO" && !hecho) return false;
-          if (filtroEstado === "PENDIENTE" && hecho) return false;
-        }
-        return true;
-      }),
-    [cargos.data, filtroEmpresa, filtroTipo, filtroEstado, mapaHomologados],
-  );
+  const filtrados = useMemo(() => {
+    const q = normalizarNombreEmpresa(buscarCatalogo);
+    const base = (cargos.data ?? []).filter((c) => {
+      if (filtroEmpresa && c.empresa_id !== filtroEmpresa) return false;
+      if (filtroTipo && c.tipo !== filtroTipo) return false;
+      if (filtroEstado) {
+        if (c.tipo !== "INTERNO") return false;
+        const hecho = mapaHomologados.has(c.id);
+        if (filtroEstado === "HOMOLOGADO" && !hecho) return false;
+        if (filtroEstado === "PENDIENTE" && hecho) return false;
+      }
+      if (q && !normalizarNombreEmpresa(
+        `${c.nombre} ${c.codigo_cargo ?? ""} ${c.empresas?.nombre ?? ""} ${c.nombre_area ?? ""}`,
+      ).includes(q)) return false;
+      return true;
+    });
+    if (!orden) return base;
+    const valor = (c: (typeof base)[number]) => {
+      switch (orden.col) {
+        case "codigo": return c.codigo_cargo ?? "";
+        case "nombre": return c.nombre ?? "";
+        case "empresa": return c.empresas?.nombre ?? "";
+        case "tipo": return c.tipo ?? "";
+        case "area": return c.nombre_area ?? "";
+        default: return c.sueldo == null ? null : Number(c.sueldo);
+      }
+    };
+    const dir = orden.asc ? 1 : -1;
+    return [...base].sort((a, b) => {
+      const x = valor(a), y = valor(b);
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      if (typeof x === "number" && typeof y === "number") return (x - y) * dir;
+      return String(x).localeCompare(String(y), "es") * dir;
+    });
+  }, [cargos.data, filtroEmpresa, filtroTipo, filtroEstado, mapaHomologados, buscarCatalogo, orden]);
+
 
 
   const sinEmpresas = !empresas.isLoading && !empresas.data?.length;
@@ -592,7 +632,15 @@ function CargosPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-wrap gap-3 text-sm">
+        <input
+          className="min-w-[14rem] flex-1 rounded-md border bg-background px-3 py-2"
+          placeholder="Buscar por nombre, código, empresa o área…"
+          aria-label="Buscar en el catálogo de cargos"
+          value={buscarCatalogo}
+          onChange={(e) => setBuscarCatalogo(e.target.value)}
+        />
         <select
+
           className="rounded-md border bg-background px-3 py-2"
           value={filtroEmpresa}
           onChange={(e) => setFiltroEmpresa(e.target.value)}
@@ -633,12 +681,38 @@ function CargosPage() {
       {cargos.isLoading ? (
         <p className="text-sm text-muted-foreground">Cargando…</p>
       ) : !filtrados.length ? (
-        <p className="text-sm text-muted-foreground">No hay cargos que coincidan.</p>
+        <p className="text-sm text-muted-foreground">
+          No se encontraron cargos con ese criterio.{" "}
+          <button
+            type="button"
+            className="detail-toggle"
+            onClick={() => {
+              setBuscarCatalogo("");
+              setFiltroEmpresa("");
+              setFiltroTipo("");
+              setFiltroEstado("");
+            }}
+          >
+            Limpiar filtros
+          </button>
+        </p>
       ) : (
         <div className="data-table">
+          <p className="text-xs text-muted-foreground">
+            Mostrando {filtrados.length} de {(cargos.data ?? []).length} cargos
+          </p>
           <div className="data-row data-head">
-            <span>Código</span><span>Cargo</span><span>Empresa</span><span>Tipo</span><span>Área</span><span>Sueldo</span><span />
+            {COLS_CARGO.map(([col, texto]) => (
+              <span key={col}>
+                <button type="button" className="th-sort" onClick={() => ordenar(col)}>
+                  {texto}
+                  {flecha(col)}
+                </button>
+              </span>
+            ))}
+            <span />
           </div>
+
           {filtrados.map((c) => {
             const abierto = detalleFila === c.id;
             return (
