@@ -57,6 +57,11 @@ function NuevaHomologacion() {
 
   const [cargoId, setCargoId] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<"" | "PENDIENTE" | "HOMOLOGADO">("");
+  const [ordenScore, setOrdenScore] = useState<{ col: "motor" | "sem" | "final"; asc: boolean }>({
+    col: "final",
+    asc: false,
+  });
   const [espejoId, setEspejoId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [semError, setSemError] = useState<string | null>(null);
@@ -69,13 +74,14 @@ function NuevaHomologacion() {
 
   const internos = (cargos.data ?? []).filter((c) => c.tipo === "INTERNO");
   const q = busqueda.trim().toLowerCase();
-  const internosFiltrados = !q
-    ? internos
-    : internos.filter((c) =>
-        [c.codigo_cargo, c.nombre, c.empresas?.nombre, c.nombre_area, c.nombre_subarea]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q)),
-      );
+  const internosFiltrados = internos.filter((c) => {
+    if (filtroEstado === "HOMOLOGADO" && !hechos.has(c.id)) return false;
+    if (filtroEstado === "PENDIENTE" && hechos.has(c.id)) return false;
+    if (!q) return true;
+    return [c.codigo_cargo, c.nombre, c.empresas?.nombre, c.nombre_area, c.nombre_subarea]
+      .filter(Boolean)
+      .some((v) => String(v).toLowerCase().includes(q));
+  });
   const referencias = (cargos.data ?? []).filter((c) => c.tipo === "REFERENCIA");
   const activos = criterios.data ?? [];
   const totalPesos = activos.reduce((s, c) => s + Number(pesos[c.id] ?? 0), 0);
@@ -143,17 +149,26 @@ function NuevaHomologacion() {
 
   const res = mut.data;
   const semOk = sem.data && sem.data.ok ? sem.data : null;
-  // Tabla de preseleccionados siempre ordenada de mayor a menor puntaje (pendientes al final).
+  // Por defecto, de mayor a menor score final (pendientes al final). El analista puede
+  // cambiar la columna de orden sin que ello altere ningún cálculo.
+  const valorScore = (p: { cargo: { id: string }; score: number }) => {
+    const f = semOk?.finales.find((i) => i.candidato_id === p.cargo.id)?.score_final;
+    const s = semOk?.analisis.scores_por_candidato.find(
+      (i) => i.candidato_id === p.cargo.id,
+    )?.score_semantico;
+    if (ordenScore.col === "motor") return p.score * 100;
+    if (ordenScore.col === "sem") return s ?? null;
+    if (f != null) return f * 100;
+    return s ?? p.score * 100;
+  };
   const preOrdenados = res
-    ? ordenarPorPuntaje(res.preseleccionados, (p) => {
-        const f = semOk?.finales.find((i) => i.candidato_id === p.cargo.id)?.score_final;
-        if (f != null) return f * 100;
-        const s = semOk?.analisis.scores_por_candidato.find(
-          (i) => i.candidato_id === p.cargo.id,
-        )?.score_semantico;
-        return s ?? p.score * 100;
-      })
+    ? (() => {
+        const base = ordenarPorPuntaje(res.preseleccionados, valorScore);
+        return ordenScore.asc ? [...base].reverse() : base;
+      })()
     : [];
+  const ordenarScore = (col: "motor" | "sem" | "final") =>
+    setOrdenScore((o) => (o.col === col ? { col, asc: !o.asc } : { col, asc: false }));
   const maxPaso = res ? PASOS.length : 1;
 
   // Cápsula de contexto: activa desde que el analista elige el cargo, no sólo tras ejecutar.
@@ -264,32 +279,56 @@ function NuevaHomologacion() {
                 placeholder="Busca por código, nombre, empresa o área…"
               />
             </div>
+            <div className="filter-chips" role="group" aria-label="Estado de homologación">
+              {([["", "Todos"], ["PENDIENTE", "Pendientes"], ["HOMOLOGADO", "Homologados"]] as const).map(
+                ([valor, texto]) => (
+                  <button
+                    type="button"
+                    key={texto}
+                    aria-pressed={filtroEstado === valor}
+                    onClick={() => setFiltroEstado(valor)}
+                  >
+                    {texto}
+                  </button>
+                ),
+              )}
+            </div>
             {!internosFiltrados.length ? (
               <p className="text-sm text-muted-foreground">No hay cargos internos que coincidan.</p>
             ) : (
               <div className="cargo-picker-list" role="listbox" aria-label="Cargos internos">
                 {internosFiltrados.slice(0, 30).map((c) => (
-                  <button
-                    type="button"
-                    key={c.id}
-                    className="cargo-option"
-                    aria-pressed={cargoId === c.id}
-                    onClick={() => setCargoId(c.id)}
-                  >
-                    <span>
-                      <strong>
-                        {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
-                        {c.nombre}
-                      </strong>
-                      <small>
-                        {c.empresas?.nombre ?? "Sin empresa"}
-                        {c.nombre_area ? ` · ${c.nombre_area}` : ""}
-                      </small>
-                    </span>
-                    <span className={`estado-chip ${hechos.has(c.id) ? "ok" : "pend"}`}>
-                      {hechos.has(c.id) ? "Homologado" : "Pendiente"}
-                    </span>
-                  </button>
+                  <div key={c.id} className="cargo-option-row">
+                    <button
+                      type="button"
+                      className="cargo-option"
+                      aria-pressed={cargoId === c.id}
+                      onClick={() => setCargoId(c.id)}
+                    >
+                      <span>
+                        <strong>
+                          {c.codigo_cargo ? `${c.codigo_cargo} · ` : ""}
+                          {c.nombre}
+                        </strong>
+                        <small>
+                          {c.empresas?.nombre ?? "Sin empresa"}
+                          {c.nombre_area ? ` · ${c.nombre_area}` : ""}
+                        </small>
+                      </span>
+                    </button>
+                    {hechos.has(c.id) ? (
+                      <Link
+                        className="estado-chip ok"
+                        to="/historial"
+                        search={{ cargo: c.id }}
+                        title="Ver las homologaciones aceptadas de este cargo"
+                      >
+                        Homologado
+                      </Link>
+                    ) : (
+                      <span className="estado-chip pend">Pendiente</span>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -347,7 +386,18 @@ function NuevaHomologacion() {
             {!res.preseleccionados.length ? (
               <p className="text-sm text-muted-foreground">Ninguno.</p>
             ) : (
-              <div className="score-table"><div className="score-row score-head"><span>Candidato</span><span>Score motor</span><span>Score semántico</span><span>Score final</span></div>
+              <div className="score-table"><div className="score-row score-head"><span>Candidato</span>
+                {([["motor", "Score motor"], ["sem", "Score semántico"], ["final", "Score final"]] as const).map(
+                  ([col, texto]) => (
+                    <span key={col}>
+                      <button type="button" className="th-sort" onClick={() => ordenarScore(col)}>
+                        {texto}
+                        {ordenScore.col === col ? (ordenScore.asc ? " ↑" : " ↓") : ""}
+                      </button>
+                    </span>
+                  ),
+                )}
+              </div>
                 {preOrdenados.map((p, i) => {
                   const s = semOk?.analisis.scores_por_candidato.find(
                     (item) => item.candidato_id === p.cargo.id,

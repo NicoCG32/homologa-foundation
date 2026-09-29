@@ -685,3 +685,11 @@
 }
 .th-sort:hover { color: var(--primary); }
 .th-sort:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+
+/* Fila de la lista de cargos: selección a la izquierda, estado enlazable a la derecha. */
+.cargo-option-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.cargo-option-row .estado-chip { justify-self: end; }
+@media (max-width: 620px) {
+  .cargo-option-row { grid-template-columns: minmax(0, 1fr); }
+  .cargo-option-row .estado-chip { justify-self: start; }
+}
