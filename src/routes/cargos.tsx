@@ -306,21 +306,44 @@ function CargosPage() {
   const puedeGuardar =
     !!cargosCarga.length && !faltaEmpresa && !erroresCarga.length && revisado && !importMut.isPending;
 
-  const filtrados = useMemo(
-    () =>
-      (cargos.data ?? []).filter((c) => {
-        if (filtroEmpresa && c.empresa_id !== filtroEmpresa) return false;
-        if (filtroTipo && c.tipo !== filtroTipo) return false;
-        if (filtroEstado) {
-          if (c.tipo !== "INTERNO") return false;
-          const hecho = mapaHomologados.has(c.id);
-          if (filtroEstado === "HOMOLOGADO" && !hecho) return false;
-          if (filtroEstado === "PENDIENTE" && hecho) return false;
-        }
-        return true;
-      }),
-    [cargos.data, filtroEmpresa, filtroTipo, filtroEstado, mapaHomologados],
-  );
+  const filtrados = useMemo(() => {
+    const q = normalizarNombreEmpresa(buscarCatalogo);
+    const base = (cargos.data ?? []).filter((c) => {
+      if (filtroEmpresa && c.empresa_id !== filtroEmpresa) return false;
+      if (filtroTipo && c.tipo !== filtroTipo) return false;
+      if (filtroEstado) {
+        if (c.tipo !== "INTERNO") return false;
+        const hecho = mapaHomologados.has(c.id);
+        if (filtroEstado === "HOMOLOGADO" && !hecho) return false;
+        if (filtroEstado === "PENDIENTE" && hecho) return false;
+      }
+      if (q && !normalizarNombreEmpresa(
+        `${c.nombre} ${c.codigo_cargo ?? ""} ${c.empresas?.nombre ?? ""} ${c.nombre_area ?? ""}`,
+      ).includes(q)) return false;
+      return true;
+    });
+    if (!orden) return base;
+    const valor = (c: (typeof base)[number]) => {
+      switch (orden.col) {
+        case "codigo": return c.codigo_cargo ?? "";
+        case "nombre": return c.nombre ?? "";
+        case "empresa": return c.empresas?.nombre ?? "";
+        case "tipo": return c.tipo ?? "";
+        case "area": return c.nombre_area ?? "";
+        default: return c.sueldo == null ? null : Number(c.sueldo);
+      }
+    };
+    const dir = orden.asc ? 1 : -1;
+    return [...base].sort((a, b) => {
+      const x = valor(a), y = valor(b);
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      if (typeof x === "number" && typeof y === "number") return (x - y) * dir;
+      return String(x).localeCompare(String(y), "es") * dir;
+    });
+  }, [cargos.data, filtroEmpresa, filtroTipo, filtroEstado, mapaHomologados, buscarCatalogo, orden]);
+
 
 
   const sinEmpresas = !empresas.isLoading && !empresas.data?.length;
