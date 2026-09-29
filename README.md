@@ -176,9 +176,22 @@ La decisión ocurre en dos etapas, y ninguna modifica ningún score.
    para el tamaño de empresa elegido. El analista confirma **un único** cargo definitivo.
 
 Se registran el candidato definitivo, la decisión, el comentario, la fecha, el nombre del analista,
-el tamaño de empresa y los scores vigentes en ese momento. Los scores usan una escala semáforo
-(alta ≥ 80%, media ≥ 60%, baja) y la **vista espejo** —plegable, con destello al cambiar de
-candidato— enfrenta el cargo interno con cada candidato.
+el tamaño de empresa y los scores vigentes en ese momento.
+
+Los puntajes se muestran con distintivos **neutros y de cifras alineadas**, sin escala semáforo: el
+color no compite por la atención. El único resalte es **dorado**, con la etiqueta
+"★ Opción recomendada", sobre el candidato de mayor score final. Ese resalte es **dinámico**: si el
+analista no incluye al mejor candidato en su preselección, la recomendación pasa automáticamente al
+de mayor puntaje **dentro del grupo elegido**.
+
+Todas las listas de candidatos —tabla del paso 3, análisis IA, decisión e historial— vienen
+ordenadas de **mayor a menor score** por defecto (final y, si aún no hay IA, el del motor; los
+pendientes quedan al final) y sus encabezados de score permiten reordenar con un clic.
+
+La **vista espejo** enfrenta el cargo interno con el candidato. Aparece **plegada y al final de cada
+paso, debajo de los botones de acción**, rotulada "Detalle de la comparación (opcional)": es una
+herramienta de auditoría, no un paso obligatorio. Al cambiar de candidato destella brevemente.
+
 
 ---
 
