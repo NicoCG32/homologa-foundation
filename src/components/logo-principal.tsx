@@ -9,9 +9,7 @@ type LogoPrincipalProps = {
 };
 
 export function LogoPrincipal({ className, alt = "Espejo: Homologa", eager = false }: LogoPrincipalProps) {
-  const [cargados, setCargados] = useState(0);
-  const listo = cargados >= 2;
-  const completarCarga = () => setCargados((actual) => Math.min(actual + 1, 2));
+  const [listo, setListo] = useState(false);
 
   return (
     <span
@@ -29,7 +27,7 @@ export function LogoPrincipal({ className, alt = "Espejo: Homologa", eager = fal
         loading={eager ? "eager" : "lazy"}
         fetchPriority={eager ? "high" : "auto"}
         decoding="async"
-        onLoad={completarCarga}
+        onLoad={() => setListo(true)}
       />
       <img
         src={darkLogo.url}
@@ -39,7 +37,7 @@ export function LogoPrincipal({ className, alt = "Espejo: Homologa", eager = fal
         loading={eager ? "eager" : "lazy"}
         fetchPriority={eager ? "high" : "auto"}
         decoding="async"
-        onLoad={completarCarga}
+        onLoad={() => setListo(true)}
       />
     </span>
   );
