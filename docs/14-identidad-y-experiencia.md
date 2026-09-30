@@ -67,6 +67,10 @@ mensajes de error explican **qué pasó** y **qué hacer**, no la causa técnica
 - Botones que se bloquean mientras procesan; el análisis IA se ejecuta **una sola vez**: tras
   completarse el botón desaparece y queda "Continuar a la decisión".
 - Mensajes de espera por etapas con `aria-live`, y explicación clara cuando falta una banda salarial.
+- El flujo principal nunca se interrumpe con material de auditoría: la vista espejo va **después**
+  de los botones de acción, rotulada como opcional.
+- Toda lista comparable llega **ya ordenada** (candidatos por score descendente, historial por fecha
+  reciente) y permite reordenar desde el encabezado, con buscador en vivo donde hay volumen.
 
 ## Prevención de errores
 
