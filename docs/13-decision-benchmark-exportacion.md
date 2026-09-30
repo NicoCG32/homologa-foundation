@@ -70,6 +70,10 @@ coincidencias); los textos largos se cortan en dos líneas con "Ver texto comple
 candidato la ficha destella brevemente para hacer evidente el cambio (se respeta
 `prefers-reduced-motion`). Se usa en Candidatos, Decisión y el detalle del historial.
 
+Se ubica **al final de la pantalla, debajo de los botones de acción**, bajo el rótulo
+"Detalle de la comparación (opcional)" y con la nota de que no hace falta abrirla para continuar:
+es una herramienta de auditoría, no un paso del flujo.
+
 ## Exportación a Excel
 
 Botón **Exportar resultados** en el detalle del historial, visible **sólo** cuando existe decisión.

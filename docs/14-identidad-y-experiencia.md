@@ -21,7 +21,10 @@ enfrentadas, con los mismos campos en el mismo orden. Ninguno se presenta como s
 - El logotipo oficial se conserva en la pantalla de bienvenida (`bienvenida.tsx`), una vez por
   sesión, con "Haz clic para comenzar"; también es el favicon.
 - Tipografía: Urbanist en títulos, Epilogue en texto, cifras tabulares en montos y percentiles.
-- Scores con distintivos en degradado: turquesa (alta), ámbar (media), pizarra (baja). Sin rojo.
+- Scores con distintivos **neutros** y cifras tabulares alineadas. No hay escala semáforo: repetir
+  verde/ámbar/gris en cada casilla generaba fatiga visual y restaba sobriedad técnica. El único
+  acento cromático es **dorado**, reservado a la "★ Opción recomendada", y se recalcula según el
+  grupo de candidatos que el analista preseleccione.
 
 ## Modo claro y oscuro
 
@@ -64,6 +67,10 @@ mensajes de error explican **qué pasó** y **qué hacer**, no la causa técnica
 - Botones que se bloquean mientras procesan; el análisis IA se ejecuta **una sola vez**: tras
   completarse el botón desaparece y queda "Continuar a la decisión".
 - Mensajes de espera por etapas con `aria-live`, y explicación clara cuando falta una banda salarial.
+- El flujo principal nunca se interrumpe con material de auditoría: la vista espejo va **después**
+  de los botones de acción, rotulada como opcional.
+- Toda lista comparable llega **ya ordenada** (candidatos por score descendente, historial por fecha
+  reciente) y permite reordenar desde el encabezado, con buscador en vivo donde hay volumen.
 
 ## Prevención de errores
 
