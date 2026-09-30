@@ -21,7 +21,10 @@ enfrentadas, con los mismos campos en el mismo orden. Ninguno se presenta como s
 - El logotipo oficial se conserva en la pantalla de bienvenida (`bienvenida.tsx`), una vez por
   sesión, con "Haz clic para comenzar"; también es el favicon.
 - Tipografía: Urbanist en títulos, Epilogue en texto, cifras tabulares en montos y percentiles.
-- Scores con distintivos en degradado: turquesa (alta), ámbar (media), pizarra (baja). Sin rojo.
+- Scores con distintivos **neutros** y cifras tabulares alineadas. No hay escala semáforo: repetir
+  verde/ámbar/gris en cada casilla generaba fatiga visual y restaba sobriedad técnica. El único
+  acento cromático es **dorado**, reservado a la "★ Opción recomendada", y se recalcula según el
+  grupo de candidatos que el analista preseleccione.
 
 ## Modo claro y oscuro
 
