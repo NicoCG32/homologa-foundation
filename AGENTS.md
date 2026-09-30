@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Use `LogoPrincipal` for large brand presentations and keep `LogoEspejo` for compact navigation, so each context retains the intended level of detail.
