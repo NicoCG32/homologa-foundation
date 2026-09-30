@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import logo from "@/assets/espejo-logo.jpg.asset.json";
+import { LogoPrincipal } from "@/components/logo-principal";
 
 const CLAVE = "espejo-bienvenida";
 
@@ -46,7 +46,7 @@ export function Bienvenida() {
       onClick={entrar}
     >
       <div className="bienvenida-card">
-        <img src={logo.url} alt="Espejo: Homologa" className="bienvenida-logo" />
+        <LogoPrincipal className="bienvenida-logo" eager />
         <p className="bienvenida-lema">
           Homologación de cargos y comparación con el mercado, paso a paso.
         </p>

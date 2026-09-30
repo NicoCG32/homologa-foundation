@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, BriefcaseBusiness, Building2, History, Search, Settings2 } from "lucide-react";
-import { EspejoPrismas } from "@/components/logo-espejo";
 import { Bienvenida } from "@/components/bienvenida";
+import { LogoPrincipal } from "@/components/logo-principal";
 import { listCargos } from "@/lib/cargos.functions";
 import { listHomologados } from "@/lib/homologacion.functions";
 
@@ -52,8 +52,8 @@ function Index() {
             <Search aria-hidden="true" /> Seleccionar cargo <ArrowRight aria-hidden="true" />
           </Link>
         </div>
-        <div className="home-logo-wrap" aria-hidden="true">
-          <EspejoPrismas className="home-hero-art" />
+        <div className="home-logo-wrap">
+          <LogoPrincipal className="home-hero-logo" eager />
         </div>
       </section>
 
