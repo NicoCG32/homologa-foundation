@@ -11,6 +11,7 @@ import {
 import { PesosEditor, pesosIniciales, type MapaPesos } from "@/components/pesos-editor";
 import { getPesosScore, setPesosScore } from "@/lib/configuracion.functions";
 import { Button } from "@/components/ui/button";
+import { CardsSkeleton, Skeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/criterios")({
   head: () => ({
@@ -103,7 +104,7 @@ function CriteriosPage() {
       </p>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <CardsSkeleton count={4} />
       ) : (
         <div className="rounded-lg border p-4">
           <PesosEditor
@@ -132,7 +133,13 @@ function CriteriosPage() {
           suman 100%. Si la IA no alcanza a analizar, el resultado final queda pendiente y la
           comparación por reglas se conserva intacta.
         </p>
-        <div className="flex items-center gap-3">
+        {hibrido.isLoading ? (
+          <div className="skeleton-panel" role="status" aria-label="Cargando ponderación del resultado">
+            <span className="sr-only">Cargando ponderación…</span>
+            <Skeleton className="skeleton-line skeleton-wide" />
+            <Skeleton className="skeleton-line skeleton-short" />
+          </div>
+        ) : <div className="flex items-center gap-3">
           <input
             type="range"
             min={0}
@@ -146,7 +153,7 @@ function CriteriosPage() {
           <span className="text-sm whitespace-nowrap">
             Reglas {pesoMotor}% · IA {100 - pesoMotor}%
           </span>
-        </div>
+        </div>}
         <Button type="button" disabled={hibridoMut.isPending} onClick={() => hibridoMut.mutate()}>
           {hibridoMut.isPending ? "Guardando…" : "Guardar ponderación del resultado"}
         </Button>

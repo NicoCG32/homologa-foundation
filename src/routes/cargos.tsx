@@ -38,6 +38,7 @@ import { listHomologados } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ReiniciarDatos } from "@/components/reiniciar-datos";
+import { CardsSkeleton, TableSkeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/cargos")({
   head: () => ({
@@ -512,6 +513,7 @@ function CargosPage() {
         )}
 
         <div className="import-actions"><Button type="button" variant="outline" onClick={descargarPlantilla}>Descargar plantilla</Button><Button type="button" disabled={!puedeGuardar} onClick={() => importMut.mutate()}>{importMut.isPending ? "Cargando…" : "Guardar datos"}</Button></div>
+        {importMut.isPending && <CardsSkeleton count={3} />}
         {importMut.data && <p className="text-sm">Carga lista: {importMut.data.empresas} empresas nuevas, {importMut.data.creados} cargos nuevos, {importMut.data.actualizados} actualizados y {importMut.data.bandas} bandas.</p>}
       </section>
 
@@ -679,7 +681,7 @@ function CargosPage() {
 
 
       {cargos.isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <TableSkeleton rows={7} columns={7} />
       ) : !filtrados.length ? (
         <p className="text-sm text-muted-foreground">
           No se encontraron cargos con ese criterio.{" "}

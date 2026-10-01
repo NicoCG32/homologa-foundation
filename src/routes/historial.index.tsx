@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import { listEjecuciones } from "@/lib/homologacion.functions";
 import { formatFecha } from "@/lib/format";
+import { TableSkeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/historial/")({
   // `cargo` permite llegar desde el catálogo y ver sólo las homologaciones de ese cargo.
@@ -89,7 +90,7 @@ function HistorialPage() {
       />
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <TableSkeleton rows={5} columns={5} />
       ) : !data?.length ? (
         <p className="text-sm text-muted-foreground">Aún no hay ejecuciones.</p>
       ) : !filas.length ? (

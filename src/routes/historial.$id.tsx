@@ -8,6 +8,7 @@ import { DecisionForm } from "@/components/decision-form";
 import { BenchmarkPanel } from "@/components/benchmark-panel";
 import { VistaEspejo } from "@/components/vista-espejo";
 import { ordenarPorPuntaje } from "@/components/score-chip";
+import { DetailSkeleton } from "@/components/loading-skeleton";
 
 
 function pct(v: number | null | undefined) {
@@ -36,7 +37,7 @@ function EjecucionDetalle() {
     queryFn: () => get({ data: { id } }),
   });
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Cargando…</p>;
+  if (isLoading) return <DetailSkeleton />;
   if (!data?.ejecucion) return <p className="text-sm text-muted-foreground">Ejecución no encontrada.</p>;
 
   const { ejecucion } = data;

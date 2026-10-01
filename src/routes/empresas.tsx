@@ -12,6 +12,7 @@ import {
   type EmpresaTipo,
 } from "@/lib/empresas.functions";
 import { TIPOS_EMPRESA } from "@/lib/format";
+import { TableSkeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/empresas")({
   head: () => ({
@@ -122,7 +123,7 @@ function EmpresasPage() {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <TableSkeleton rows={5} columns={3} />
       ) : !data?.length ? (
         <p className="text-sm text-muted-foreground">Aún no hay empresas registradas.</p>
       ) : (

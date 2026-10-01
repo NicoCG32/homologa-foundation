@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { DecisionForm } from "@/components/decision-form";
 import { ScoreChip, ordenarPorPuntaje } from "@/components/score-chip";
 import { VistaEspejo } from "@/components/vista-espejo";
+import { CardsSkeleton, ScoreTableSkeleton, Skeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/homologacion/nueva")({
   head: () => ({
@@ -293,7 +294,19 @@ function NuevaHomologacion() {
                 ),
               )}
             </div>
-            {!internosFiltrados.length ? (
+            {cargos.isLoading || homologados.isLoading ? (
+              <div className="cargo-picker-list" role="status" aria-label="Cargando cargos internos">
+                <span className="sr-only">Cargando cargos internos…</span>
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div className="cargo-option" key={i}>
+                    <span className="skeleton-copy">
+                      <Skeleton className="skeleton-line skeleton-wide" />
+                      <Skeleton className="skeleton-line skeleton-short" />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : !internosFiltrados.length ? (
               <p className="text-sm text-muted-foreground">No hay cargos internos que coincidan.</p>
             ) : (
               <div className="cargo-picker-list" role="listbox" aria-label="Cargos internos">
@@ -342,7 +355,7 @@ function NuevaHomologacion() {
 
           <details className="criteria-summary"><summary>Ajustar ponderación de esta homologación</summary><div>
             {criterios.isLoading
-              ? "…"
+              ? <CardsSkeleton count={3} />
               : activos.length
                 ? <PesosEditor criterios={activos} pesos={pesos} onChange={setPesos} />
                 : "ninguna definida"}
@@ -365,6 +378,11 @@ function NuevaHomologacion() {
           <Button type="submit" disabled={mut.isPending || !cargoId || faltantes.length > 0} size="lg">
             {mut.isPending ? "Buscando equivalencias…" : <>Encontrar candidatos <ArrowRight /></>}
           </Button>
+          {mut.isPending && (
+            <div className="skeleton-action">
+              <ScoreTableSkeleton rows={5} />
+            </div>
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
         </form>
       )}
@@ -504,9 +522,17 @@ function NuevaHomologacion() {
             </div>
           )}
           {sem.isPending && (
-            <p className="mt-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-              {MENSAJES_ESPERA[semEtapa] || MENSAJES_ESPERA[1]}
-            </p>
+            <div className="skeleton-ai" role="status" aria-live="polite">
+              <p className="text-sm text-muted-foreground">
+                {MENSAJES_ESPERA[semEtapa] || MENSAJES_ESPERA[1]}
+              </p>
+              <div className="skeleton-panel skeleton-ai-copy">
+                <Skeleton className="skeleton-line skeleton-short" />
+                <Skeleton className="skeleton-line skeleton-wide" />
+                <Skeleton className="skeleton-line" />
+              </div>
+              <ScoreTableSkeleton rows={res.preseleccionados.length || 3} />
+            </div>
           )}
 
           {semError && !semOk && <p className="mt-2 text-sm text-destructive">{semError}</p>}
