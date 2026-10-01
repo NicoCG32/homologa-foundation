@@ -38,6 +38,7 @@ import { listHomologados } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ReiniciarDatos } from "@/components/reiniciar-datos";
+import { TableSkeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/cargos")({
   head: () => ({
@@ -679,7 +680,7 @@ function CargosPage() {
 
 
       {cargos.isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando…</p>
+        <TableSkeleton rows={7} columns={7} />
       ) : !filtrados.length ? (
         <p className="text-sm text-muted-foreground">
           No se encontraron cargos con ese criterio.{" "}

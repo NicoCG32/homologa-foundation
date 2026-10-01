@@ -7,6 +7,7 @@ import { formatSueldo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ScoreChip, a100, ordenarPorPuntaje } from "@/components/score-chip";
 import { VistaEspejo, type CargoEspejo } from "@/components/vista-espejo";
+import { ScoreTableSkeleton } from "@/components/loading-skeleton";
 
 export type CandidatoDecision = {
   id: string;
@@ -211,7 +212,7 @@ export function DecisionForm({
       </p>
     );
 
-  if (pre.isLoading) return <p className="text-sm text-muted-foreground">Cargando…</p>;
+  if (pre.isLoading) return <ScoreTableSkeleton rows={4} />;
 
   if (listo)
     return (

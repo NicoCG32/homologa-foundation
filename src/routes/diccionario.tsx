@@ -13,6 +13,7 @@ import {
   type DiccionarioTipo,
 } from "@/lib/diccionario.functions";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/diccionario")({
   head: () => ({
@@ -101,7 +102,7 @@ function DiccionarioPage() {
           <section key={tipo} className="rounded-lg border p-4">
             <h2 className="mb-3 text-lg font-semibold">{etiqueta}</h2>
             {entradas.isLoading ? (
-              <p className="text-sm text-muted-foreground">Cargando…</p>
+              <TableSkeleton rows={4} columns={3} />
             ) : !filas.length ? (
               <p className="text-sm text-muted-foreground">Sin entradas todavía.</p>
             ) : (

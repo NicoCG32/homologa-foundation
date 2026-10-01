@@ -6,6 +6,7 @@ import { Bienvenida } from "@/components/bienvenida";
 import { LogoPrincipal } from "@/components/logo-principal";
 import { listCargos } from "@/lib/cargos.functions";
 import { listHomologados } from "@/lib/homologacion.functions";
+import { Skeleton } from "@/components/loading-skeleton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,23 +62,23 @@ function Index() {
         <div className="avance-grid">
           <article className="avance-card">
             <span>Cargos internos</span>
-            <strong>{cargos.isLoading ? "—" : internos.length}</strong>
+            {cargos.isLoading ? <Skeleton className="skeleton-title" /> : <strong>{internos.length}</strong>}
             <small>En el catálogo de tu empresa</small>
           </article>
           <article className="avance-card">
             <span>Ya homologados</span>
-            <strong>{cargos.isLoading ? "—" : completados}</strong>
+            {cargos.isLoading || homologados.isLoading ? <Skeleton className="skeleton-title" /> : <strong>{completados}</strong>}
             <small>Con decisión registrada</small>
           </article>
           <article className="avance-card">
             <span>Pendientes</span>
-            <strong>{cargos.isLoading ? "—" : Math.max(0, pendientes)}</strong>
+            {cargos.isLoading || homologados.isLoading ? <Skeleton className="skeleton-title" /> : <strong>{Math.max(0, pendientes)}</strong>}
             <small>Aún sin equivalencia elegida</small>
           </article>
         </div>
-        <div className="avance-bar" aria-hidden="true">
-          <i style={{ width: `${avance}%` }} />
-        </div>
+        {cargos.isLoading || homologados.isLoading
+          ? <Skeleton className="avance-bar" />
+          : <div className="avance-bar" aria-hidden="true"><i style={{ width: `${avance}%` }} /></div>}
         <div className="avance-foot">
           <p>{internos.length ? `${avance}% del catálogo interno ya tiene una equivalencia decidida.` : "Aún no hay cargos internos cargados."}</p>
           {pendientes > 0 && (
