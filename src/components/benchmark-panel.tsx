@@ -15,6 +15,7 @@ import {
 
 import { setTamanoBenchmark } from "@/lib/homologacion.functions";
 import { formatSueldo } from "@/lib/format";
+import { Skeleton, TableSkeleton } from "@/components/loading-skeleton";
 
 export type BandaBenchmark = {
   tipo_empresa: "P" | "M" | "G" | string;
@@ -136,7 +137,21 @@ export function BenchmarkPanel({
       </label>
       {error && <p className="text-destructive">{error}</p>}
 
-      {!tamano ? (
+      {mut.isPending ? (
+        <div className="skeleton-benchmark" role="status" aria-label="Cargando benchmark">
+          <span className="sr-only">Cargando comparación salarial…</span>
+          <div className="skeleton-benchmark-grid">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div className="skeleton-card" key={i}>
+                <Skeleton className="skeleton-line skeleton-short" />
+                <Skeleton className="skeleton-line skeleton-wide" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="skeleton-chart" />
+          <TableSkeleton rows={4} columns={5} />
+        </div>
+      ) : !tamano ? (
         <p className="text-muted-foreground">
           Elige el tamaño de empresa para ver la referencia de mercado del cargo confirmado.
         </p>
@@ -186,7 +201,7 @@ export function BenchmarkPanel({
         </div>
       )}
 
-      {tamano && banda && (
+      {!mut.isPending && tamano && banda && (
         <div className="brecha-tabla-wrap">
           <h3 className="font-medium">Diferencias frente a la remuneración de la empresa</h3>
           <table className="benchmark-table brecha-tabla w-full">

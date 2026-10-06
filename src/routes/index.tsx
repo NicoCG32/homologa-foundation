@@ -80,8 +80,10 @@ function Index() {
           ? <Skeleton className="avance-bar" />
           : <div className="avance-bar" aria-hidden="true"><i style={{ width: `${avance}%` }} /></div>}
         <div className="avance-foot">
-          <p>{internos.length ? `${avance}% del catálogo interno ya tiene una equivalencia decidida.` : "Aún no hay cargos internos cargados."}</p>
-          {pendientes > 0 && (
+          {cargos.isLoading || homologados.isLoading ? (
+            <><Skeleton className="skeleton-line skeleton-wide" /><Skeleton className="skeleton-pill" /></>
+          ) : <p>{internos.length ? `${avance}% del catálogo interno ya tiene una equivalencia decidida.` : "Aún no hay cargos internos cargados."}</p>}
+          {!cargos.isLoading && !homologados.isLoading && pendientes > 0 && (
             <Link to="/homologacion/nueva" className="primary-action">
               Homologar el siguiente pendiente <ArrowRight aria-hidden="true" />
             </Link>
